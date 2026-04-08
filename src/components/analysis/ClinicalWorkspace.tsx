@@ -40,12 +40,16 @@ export function ClinicalWorkspace() {
     const img = new Image();
     img.crossOrigin = "anonymous";
     img.onload = async () => {
+      console.log("Analyzing clinical image...");
       setIsProcessing(true);
       try {
         const result = await detectFace(img);
         if (result && result.faceLandmarks && result.faceLandmarks.length > 0) {
+          console.log(`Success: Found ${result.faceLandmarks[0].length} facial landmarks.`);
           setLandmarks(result.faceLandmarks[0]);
           setLastAnalyzedFile(imageFile);
+        } else {
+          console.warn("No face detected in the image.");
         }
       } catch (err) {
         console.error("Clinical analysis failed:", err);

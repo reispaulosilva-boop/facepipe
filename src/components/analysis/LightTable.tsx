@@ -34,8 +34,6 @@ export function LightTable({
 }: LightTableProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const photoRef = useRef<HTMLImageElement>(null);
-  const landmarksCanvasRef = useRef<HTMLCanvasElement>(null);
-  const d3OverlayRef = useRef<SVGSVGElement>(null);
   
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [isLoaded, setIsLoaded] = useState(false);
@@ -44,50 +42,35 @@ export function LightTable({
   const handleImageLoad = () => {
     if (!photoRef.current) return;
     const { naturalWidth, naturalHeight } = photoRef.current;
-    setDimensions({ width: naturalWidth, height: naturalHeight });
-    setIsLoaded(true);
-    if (onLandmarksLoad && landmarks.length > 0) {
-      onLandmarksLoad(landmarks.length);
+    
+    // Crucial: Only set dimensions if they are valid
+    if (naturalWidth > 0 && naturalHeight > 0) {
+      setDimensions({ width: naturalWidth, height: naturalHeight });
+      setIsLoaded(true);
+      if (onLandmarksLoad && landmarks.length > 0) {
+        onLandmarksLoad(landmarks.length);
+      }
     }
   };
 
-  // ── Layer 1: Draw Landmarks (Cold Cyan) ───────────────────────────────────
-  useEffect(() => {
-    const canvas = landmarksCanvasRef.current;
-    if (!canvas || !isLoaded) return;
+  // ── Landmark Layer Logic (SVG Based) ──────────────────────────────────────
+  const renderLandmarks = () => {
+    if (!showLandmarks || !landmarks || landmarks.length === 0 || !dimensions.width) return null;
 
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    canvas.width = dimensions.width;
-    canvas.height = dimensions.height;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    if (!showLandmarks || landmarks.length === 0) return;
-
-    const COLOR_MESH = "rgba(0, 251, 204, 0.12)"; // Very soft cyan mesh
-    const COLOR_CONTOURS = "rgba(0, 251, 204, 0.45)"; // Stronger cyan for key lines
-    const COLOR_DOTS = "#00fbcc"; // Solid Cold Cyan for points
+    const CYAN = "#00fbcc";
     
-    ctx.save();
-    
-    // 1. Draw Mesh Tesselation
-    ctx.lineWidth = 0.5;
-    ctx.strokeStyle = COLOR_MESH;
-    ctx.beginPath();
+    // Generate Path Data for Tesselation
+    let meshPath = "";
     for (const connection of FaceLandmarker.FACE_LANDMARKS_TESSELATION) {
       const from = landmarks[connection.start];
       const to = landmarks[connection.end];
       if (from && to) {
-        ctx.moveTo(from.x * dimensions.width, from.y * dimensions.height);
-        ctx.lineTo(to.x * dimensions.width, to.y * dimensions.height);
+        meshPath += `M ${from.x * dimensions.width} ${from.y * dimensions.height} L ${to.x * dimensions.width} ${to.y * dimensions.height} `;
       }
     }
-    ctx.stroke();
 
-    // 2. Draw Anatomical Contours
-    ctx.lineWidth = 1.2;
-    ctx.strokeStyle = COLOR_CONTOURS;
+    // Generate Path Data for Contours
+    let contoursPath = "";
     const contours = [
       FaceLandmarker.FACE_LANDMARKS_FACE_OVAL,
       FaceLandmarker.FACE_LANDMARKS_LEFT_EYE,
@@ -95,149 +78,89 @@ export function LightTable({
       FaceLandmarker.FACE_LANDMARKS_LIPS,
     ];
     for (const contour of contours) {
-      ctx.beginPath();
       for (const connection of contour) {
         const from = landmarks[connection.start];
         const to = landmarks[connection.end];
         if (from && to) {
-          ctx.moveTo(from.x * dimensions.width, from.y * dimensions.height);
-          ctx.lineTo(to.x * dimensions.width, to.y * dimensions.height);
+          contoursPath += `M ${from.x * dimensions.width} ${from.y * dimensions.height} L ${to.x * dimensions.width} ${to.y * dimensions.height} `;
         }
       }
-      ctx.stroke();
     }
 
-    // 3. Draw High-Precision Points
-    ctx.globalAlpha = 0.6;
-    ctx.fillStyle = COLOR_DOTS;
-    landmarks.forEach((pt: any) => {
-      ctx.beginPath();
-      ctx.arc(pt.x * dimensions.width, pt.y * dimensions.height, 1, 0, 2 * Math.PI);
-      ctx.fill();
-    });
+    return (
+      <g className="biometric-mesh-layer">
+        {/* Tesselation */}
+        <path 
+           d={meshPath} 
+           stroke={CYAN} 
+           strokeWidth="0.5" 
+           fill="none" 
+           style={{ opacity: 0.15 }}
+        />
+        {/* Anatomical Contours */}
+        <path 
+           d={contoursPath} 
+           stroke={CYAN} 
+           strokeWidth="1.2" 
+           fill="none" 
+           style={{ opacity: 0.5 }}
+        />
+        {/* Landmark Points (Sampled for performance or all) */}
+        {landmarks.map((pt, i) => (
+          <circle 
+            key={i}
+            cx={pt.x * dimensions.width}
+            cy={pt.y * dimensions.height}
+            r="1"
+            fill={CYAN}
+            style={{ opacity: 0.6 }}
+          />
+        ))}
+      </g>
+    );
+  };
+
+  // ── Clinical Facilitators Logic (SVG Based) ────────────────────────────────
+  const renderClinicalFacilitators = () => {
+    // Keep this only if activeTool is select (or always if desired)
+    if (!landmarks || landmarks.length === 0 || !dimensions.width) return null;
     
-    ctx.restore();
-  }, [landmarks, showLandmarks, isLoaded, dimensions]);
+    const GOLD = "#F5E1A4";
+    const keyPoints = [
+      { idx: 33, label: "L. CANTHUS (L)" },
+      { idx: 133, label: "I. CANTHUS (L)" },
+      { idx: 362, label: "I. CANTHUS (R)" },
+      { idx: 263, label: "L. CANTHUS (R)" },
+      { idx: 1, label: "PRONASALE" },
+      { idx: 0, label: "LABIAL (SUP)" },
+      { idx: 17, label: "LABIAL (INF)" },
+      { idx: 61, label: "COMMISSURE (L)" },
+      { idx: 291, label: "COMMISSURE (R)" },
+      { idx: 152, label: "MENTON" }
+    ];
 
-  // ── Layer 2: Clinical Illustrations (Soft Gold) ───────────────────────────
-  useEffect(() => {
-    if (!d3OverlayRef.current || !isLoaded) return;
-
-    const svg = d3.select(d3OverlayRef.current);
-    svg.selectAll("*").remove(); 
-
-    svg.attr("viewBox", `0 0 ${dimensions.width} ${dimensions.height}`);
-
-    if (activeTool === "draw" && landmarks.length > 0) {
-      const GOLD = "#F5E1A4"; // Soft Gold
-      
-      const keyPoints = [
-        { idx: 33, label: "L. CANTHUS (L)" },
-        { idx: 133, label: "I. CANTHUS (L)" },
-        { idx: 362, label: "I. CANTHUS (R)" },
-        { idx: 263, label: "L. CANTHUS (R)" },
-        { idx: 1, label: "PRONASALE" },
-        { idx: 0, label: "LABIAL (SUP)" },
-        { idx: 17, label: "LABIAL (INF)" },
-        { idx: 61, label: "COMMISSURE (L)" },
-        { idx: 291, label: "COMMISSURE (R)" },
-        { idx: 10, label: "TRICHION" },
-        { idx: 152, label: "MENTON" }
-      ];
-      
-      const pointData = keyPoints.map(kp => {
-        const pt = landmarks[kp.idx];
-        if (!pt) return null;
-        return {
-          id: kp.idx.toString(),
-          x: pt.x * dimensions.width,
-          y: pt.y * dimensions.height,
-          label: kp.label
-        };
-      }).filter(Boolean);
-
-      const g = svg.selectAll(".clinical-facilitator")
-        .data(pointData)
-        .enter()
-        .append("g")
-        .attr("class", "clinical-facilitator")
-        .style("cursor", "pointer")
-        .style("pointer-events", "all");
-
-      // Animated rotation ring
-      g.append("circle")
-        .attr("cx", d => d!.x)
-        .attr("cy", d => d!.y)
-        .attr("r", 7)
-        .attr("fill", "transparent")
-        .attr("stroke", GOLD)
-        .attr("stroke-width", 0.4)
-        .attr("stroke-dasharray", "1,3")
-        .append("animateTransform")
-        .attr("attributeName", "transform")
-        .attr("type", "rotate")
-        .attr("from", d => `0 ${d!.x} ${d!.y}`)
-        .attr("to", d => `360 ${d!.x} ${d!.y}`)
-        .attr("dur", "15s")
-        .attr("repeatCount", "indefinite");
-
-      // Core anchor point
-      g.append("circle")
-        .attr("cx", d => d!.x)
-        .attr("cy", d => d!.y)
-        .attr("r", 3)
-        .attr("fill", GOLD)
-        .style("filter", `drop-shadow(0 0 6px ${GOLD}88)`);
-
-      // Clinical annotation label
-      g.append("text")
-        .attr("x", d => d!.x + 14)
-        .attr("y", d => d!.y + 3)
-        .text(d => d!.label)
-        .attr("fill", GOLD)
-        .attr("font-size", "8px")
-        .attr("font-family", "monospace")
-        .attr("font-weight", "600")
-        .attr("letter-spacing", "1px")
-        .style("opacity", 0)
-        .transition()
-        .delay((d, i) => i * 30)
-        .duration(600)
-        .style("opacity", 0.8);
-
-      // Interactive hover behavior
-      g.on("mouseenter", function() {
-        d3.select(this).select("text").transition().duration(250).style("opacity", 1).attr("font-size", "10px").attr("fill", "#fff");
-        d3.select(this).select("circle:last-of-type").transition().duration(250).attr("r", 5);
-      }).on("mouseleave", function() {
-        d3.select(this).select("text").transition().duration(250).style("opacity", 0.8).attr("font-size", "8px").attr("fill", GOLD);
-        d3.select(this).select("circle:last-of-type").transition().duration(250).attr("r", 3);
-      });
-      
-      // Eye symmetry guides
-      const guides = [
-        { from: "33", to: "133" },
-        { from: "362", to: "263" },
-        { from: "61", to: "291" }
-      ];
-
-      guides.forEach(guide => {
-        const p1 = pointData.find(d => d!.id === guide.from);
-        const p2 = pointData.find(d => d!.id === guide.to);
-        if (p1 && p2) {
-          svg.append("line")
-            .attr("x1", p1.x)
-            .attr("y1", p1.y)
-            .attr("x2", p2.x)
-            .attr("y2", p2.y)
-            .attr("stroke", GOLD)
-            .attr("stroke-width", 0.35)
-            .attr("stroke-dasharray", "3,3")
-            .style("opacity", 0.25);
-        }
-      });
-    }
-  }, [landmarks, isLoaded, dimensions, activeTool]);
+    return (
+      <g className="clinical-facilitators-layer">
+        {keyPoints.map(kp => {
+          const pt = landmarks[kp.idx];
+          if (!pt) return null;
+          const x = pt.x * dimensions.width;
+          const y = pt.y * dimensions.height;
+          return (
+            <g key={kp.idx} className="facilitator-group group/facilitator pointer-events-auto cursor-help">
+              <circle cx={x} cy={y} r={3} fill={GOLD} className="drop-shadow-[0_0_4px_rgba(245,225,164,0.6)]" />
+              <circle cx={x} cy={y} r={7} fill="transparent" stroke={GOLD} strokeWidth={0.5} strokeDasharray="2,2">
+                <animateTransform attributeName="transform" type="rotate" from={`0 ${x} ${y}`} to={`360 ${x} ${y}`} dur="10s" repeatCount="indefinite" />
+              </circle>
+              <text x={x+10} y={y+3} fill={GOLD} fontSize="8px" fontFamily="monospace" fontWeight="600" className="opacity-0 group-hover/facilitator:opacity-100 transition-opacity pointer-events-none">
+                {kp.label}
+              </text>
+            </g>
+          );
+        })}
+      </g>
+    );
+  };
 
   return (
     <div ref={containerRef} className="flex-1 w-full h-full bg-[#000105] relative flex items-center justify-center overflow-hidden">
@@ -296,19 +219,17 @@ export function LightTable({
               style={{ userSelect: "none", background: "#000" }}
             />
 
-            {/* Layer 1: Landmarks Reference Overlay */}
-            <canvas
-              ref={landmarksCanvasRef}
-              className="absolute inset-0 pointer-events-none z-10"
-              style={{ mixBlendMode: "lighten" }}
-            />
-
-            {/* Layer 2: Intelligent Illustrations Overlay */}
-            <svg
-              ref={d3OverlayRef}
-              className="absolute inset-0 z-20 pointer-events-none"
-              style={{ width: "100%", height: "100%" }}
-            />
+            {/* Combined SVG Overlay: Landmarks + Clinical Facilitators */}
+            {isLoaded && dimensions.width > 0 && (
+              <svg
+                viewBox={`0 0 ${dimensions.width} ${dimensions.height}`}
+                className="absolute inset-0 z-10 pointer-events-none"
+                style={{ width: "100%", height: "100%" }}
+              >
+                {renderLandmarks()}
+                {renderClinicalFacilitators()}
+              </svg>
+            )}
           </div>
         </TransformComponent>
       </TransformWrapper>
