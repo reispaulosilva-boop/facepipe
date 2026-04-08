@@ -15,6 +15,7 @@ interface LightTableProps {
   showLandmarks: boolean;
   activeTool: string;
   onLandmarksLoad?: (count: number) => void;
+  resetKey?: number;
 }
 
 export function LightTable({
@@ -22,7 +23,8 @@ export function LightTable({
   landmarks,
   showLandmarks,
   activeTool,
-  onLandmarksLoad
+  onLandmarksLoad,
+  resetKey = 0
 }: LightTableProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const photoRef = useRef<HTMLImageElement>(null);
@@ -196,11 +198,20 @@ export function LightTable({
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(6,182,212,0.06)_0%,transparent_80%)] pointer-events-none" />
       
       <TransformWrapper
-        initialScale={0.8}
-        minScale={0.05}
-        maxScale={15}
+        key={`${dimensions.width}-${dimensions.height}-${resetKey}`}
+        initialScale={
+          dimensions.width > 0 && containerRef.current
+            ? Math.min(
+                (containerRef.current.offsetWidth * 0.85) / dimensions.width,
+                (containerRef.current.offsetHeight * 0.85) / dimensions.height
+              )
+            : 0.8
+        }
+        minScale={0.01}
+        maxScale={20}
         centerOnInit
-        wheel={{ step: 0.12 }}
+        limitToBounds={false}
+        wheel={{ step: 0.1 }}
         doubleClick={{ mode: "reset" }}
       >
         <TransformComponent

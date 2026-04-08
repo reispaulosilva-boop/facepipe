@@ -69,11 +69,11 @@ export function ClinicalWorkspace() {
     }
   }, []);
 
-  const handleReset = () => {
-    // This is handled via trigger in LightTable if we pass a key, 
-    // but for now let's just use the internal reset of transform-wrapper
-    window.location.reload(); // Simple way to reset state/transform for a workspace
-  };
+  const [resetKey, setResetKey] = useState(0);
+
+  const handleReset = useCallback(() => {
+    setResetKey(prev => prev + 1);
+  }, []);
 
   if (!imageUrl) return null;
 
@@ -113,6 +113,7 @@ export function ClinicalWorkspace() {
           landmarks={landmarks}
           showLandmarks={showLandmarks}
           activeTool={activeTool}
+          resetKey={resetKey}
         />
         
         {/* Animated Processing Bar */}
