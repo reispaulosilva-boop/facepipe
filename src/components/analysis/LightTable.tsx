@@ -6,7 +6,6 @@ import {
   TransformComponent,
   ReactZoomPanPinchRef
 } from "react-zoom-pan-pinch";
-import * as d3 from "d3";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { FaceLandmarker } from "@mediapipe/tasks-vision";
