@@ -112,10 +112,19 @@ export function ClinicalWorkspace() {
 
     setIsGeneratingReport(true);
     setDiagnosticReport(null);
-
     try {
       // 1. Capturar imagem com overlays
-      const dataUrl = await toPng(captureTarget, { quality: 0.8, pixelRatio: 1.5 });
+      console.log("Capturing screen for AI...");
+      const dataUrl = await toPng(captureTarget, { 
+        quality: 0.8, 
+        pixelRatio: 1.5,
+        cacheBust: true,
+      });
+      
+      if (!dataUrl || !dataUrl.includes(",")) {
+        throw new Error("Falha ao capturar imagem da análise.");
+      }
+      
       const base64Data = dataUrl.split(",")[1];
 
       // 2. Construir prompt especializado (AB Face)
@@ -139,6 +148,7 @@ Com base nestes dados, identifique desproporções faciais nos terços, quintos 
 O laudo deve ser conciso, profissional e incluir uma seção de 'Diagnóstico' e 'Plano de Tratamento Sugerido' em Markdown.`;
 
       // 3. Chamar API Proxy do Gemini
+      console.log("Sending request to Gemini API...");
       const response = await fetch("/api/gemini", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -173,13 +183,21 @@ O laudo deve ser conciso, profissional e incluir uma seção de 'Diagnóstico' e
         })
       });
 
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: "Erro desconhecido no servidor" }));
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      }
+
       const result = await response.json();
-      if (result.error) throw new Error(result.error);
+      if (!result.text) {
+        throw new Error("A IA não retornou um texto válido.");
+      }
       
       setDiagnosticReport(result.text);
     } catch (err: any) {
-      console.error("Failed to generate report:", err);
-      alert(`Erro ao gerar laudo: ${err.message}`);
+      console.error("Detailed error generating report:", err);
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      alert(`Erro ao gerar laudo: ${errorMessage}`);
     } finally {
       setIsGeneratingReport(false);
     }
