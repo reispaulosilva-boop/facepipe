@@ -3,7 +3,8 @@
 import React, { useRef, useEffect, useState } from "react";
 import { 
   TransformWrapper, 
-  TransformComponent 
+  TransformComponent,
+  ReactZoomPanPinchRef
 } from "react-zoom-pan-pinch";
 import * as d3 from "d3";
 import { motion, AnimatePresence } from "framer-motion";
@@ -15,7 +16,9 @@ interface LightTableProps {
   showLandmarks: boolean;
   activeTool: string;
   onLandmarksLoad?: (count: number) => void;
+  onZoomChange?: (zoom: number, baseScale: number) => void;
   resetKey?: number;
+  transformRef?: React.RefObject<ReactZoomPanPinchRef | null>;
 }
 
 export function LightTable({
@@ -24,7 +27,9 @@ export function LightTable({
   showLandmarks,
   activeTool,
   onLandmarksLoad,
-  resetKey = 0
+  onZoomChange,
+  resetKey = 0,
+  transformRef
 }: LightTableProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const photoRef = useRef<HTMLImageElement>(null);
@@ -198,6 +203,7 @@ export function LightTable({
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(6,182,212,0.06)_0%,transparent_80%)] pointer-events-none" />
       
       <TransformWrapper
+        ref={transformRef}
         key={`${dimensions.width}-${dimensions.height}-${resetKey}`}
         initialScale={
           dimensions.width > 0 && containerRef.current
@@ -207,6 +213,15 @@ export function LightTable({
               )
             : 0.8
         }
+        onTransform={(ref) => {
+          if (onZoomChange && dimensions.width > 0 && containerRef.current) {
+            const base = Math.min(
+              (containerRef.current.offsetWidth * 0.85) / dimensions.width,
+              (containerRef.current.offsetHeight * 0.85) / dimensions.height
+            );
+            onZoomChange(ref.state.scale, base);
+          }
+        }}
         minScale={0.01}
         maxScale={20}
         centerOnInit

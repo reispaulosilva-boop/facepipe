@@ -10,7 +10,9 @@ import {
   MousePointer2, 
   Trash2, 
   Settings2,
-  Maximize2
+  Maximize2,
+  Plus,
+  Minus
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -56,6 +58,8 @@ interface ToolboxProps {
   onExport: () => void;
   onClearIllustrations: () => void;
   onReset: () => void;
+  zoomPercent: number;
+  setZoomPercent: (percent: number) => void;
 }
 
 export function Toolbox({
@@ -65,7 +69,9 @@ export function Toolbox({
   setShowLandmarks,
   onExport,
   onClearIllustrations,
-  onReset
+  onReset,
+  zoomPercent,
+  setZoomPercent
 }: ToolboxProps) {
   return (
     <motion.aside 
@@ -105,9 +111,63 @@ export function Toolbox({
         />
         <ToolButton 
           icon={<Maximize2 className="w-5 h-5" />} 
-          label="Resetar Vista" 
+          label={`Resetar Vista (${Math.round(zoomPercent)}%)`} 
           onClick={onReset}
         />
+      </div>
+
+      <div className="h-px bg-white/5 mx-2" />
+
+      {/* Zoom Precise Controls */}
+      <div className="flex flex-col items-center gap-3 py-2 px-1 rounded-xl bg-white/5 border border-white/5">
+        <button 
+          onClick={() => setZoomPercent(zoomPercent + 25)}
+          className="p-1 hover:text-cyan-400 text-white/40 transition-colors"
+          title="Aumentar"
+        >
+          <Plus className="w-4 h-4" />
+        </button>
+        
+        <div className="relative h-32 w-1.5 bg-white/10 rounded-full overflow-hidden flex flex-col justify-end">
+          <motion.div 
+            animate={{ height: `${Math.min(zoomPercent / 5, 100)}%` }}
+            className="w-full bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]" 
+          />
+          <input 
+            type="range"
+            min="10"
+            max="500"
+            value={zoomPercent}
+            onChange={(e) => setZoomPercent(Number(e.target.value))}
+            className="absolute inset-0 opacity-0 cursor-ns-resize"
+            style={{ writingMode: 'bt-lr' as any, appearance: 'slider-vertical' as any }}
+          />
+        </div>
+
+        <button 
+           onClick={() => setZoomPercent(zoomPercent - 25)}
+           className="p-1 hover:text-cyan-400 text-white/40 transition-colors"
+           title="Diminuir"
+        >
+          <Minus className="w-4 h-4" />
+        </button>
+
+        <div className="flex flex-col gap-1 mt-1">
+          {[75, 100, 150, 200].map(p => (
+            <button
+              key={p}
+              onClick={() => setZoomPercent(p)}
+              className={cn(
+                "text-[7px] font-bold px-1 py-0.5 rounded transition-all",
+                zoomPercent >= p - 5 && zoomPercent <= p + 5 
+                  ? "bg-cyan-500 text-black" 
+                  : "text-white/30 hover:text-white"
+              )}
+            >
+              {p}%
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="h-px bg-white/5 mx-2" />

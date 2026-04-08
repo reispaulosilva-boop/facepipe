@@ -7,6 +7,7 @@ import { useFaceLandmarker } from "@/hooks/useFaceLandmarker";
 import { useFaceStore } from "@/store/useFaceStore";
 import { toPng } from "html-to-image";
 import { motion } from "framer-motion";
+import { ReactZoomPanPinchRef } from "react-zoom-pan-pinch";
 
 export function ClinicalWorkspace() {
   const { imageFile } = useFaceStore();
@@ -17,6 +18,9 @@ export function ClinicalWorkspace() {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   
   const workspaceRef = useRef<HTMLDivElement>(null);
+  const transformRef = useRef<ReactZoomPanPinchRef>(null);
+  const baseScaleRef = useRef<number>(1);
+  const [zoomPercent, setZoomPercent] = useState(100);
 
   const { isLoaded: landmarkerLoaded, detectFace } = useFaceLandmarker();
 
@@ -73,6 +77,22 @@ export function ClinicalWorkspace() {
 
   const handleReset = useCallback(() => {
     setResetKey(prev => prev + 1);
+    setZoomPercent(100);
+  }, []);
+
+  const handleZoomChange = useCallback((currentScale: number, baseScale: number) => {
+    baseScaleRef.current = baseScale;
+    const percent = (currentScale / baseScale) * 100;
+    setZoomPercent(percent);
+  }, []);
+
+  const handleZoomPercentChange = useCallback((percent: number) => {
+    if (transformRef.current) {
+      const { state } = transformRef.current;
+      const targetScale = baseScaleRef.current * (percent / 100);
+      transformRef.current.setTransform(state.positionX, state.positionY, targetScale, 300);
+    }
+    setZoomPercent(percent);
   }, []);
 
   if (!imageUrl) return null;
@@ -85,8 +105,10 @@ export function ClinicalWorkspace() {
         showLandmarks={showLandmarks}
         setShowLandmarks={setShowLandmarks}
         onExport={handleExport}
-        onClearIllustrations={() => {}} // Reset state logic here
+        onClearIllustrations={() => {}} 
         onReset={handleReset}
+        zoomPercent={zoomPercent}
+        setZoomPercent={handleZoomPercentChange}
       />
       
       <main className="flex-1 relative flex flex-col h-full">
@@ -114,6 +136,8 @@ export function ClinicalWorkspace() {
           showLandmarks={showLandmarks}
           activeTool={activeTool}
           resetKey={resetKey}
+          transformRef={transformRef}
+          onZoomChange={handleZoomChange}
         />
         
         {/* Animated Processing Bar */}
