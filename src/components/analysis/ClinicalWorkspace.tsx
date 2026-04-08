@@ -1,0 +1,130 @@
+"use client";
+
+import React, { useState, useCallback, useRef } from "react";
+import { Toolbox } from "./Toolbox";
+import { LightTable } from "./LightTable";
+import { useFaceLandmarker } from "@/hooks/useFaceLandmarker";
+import { useFaceStore } from "@/store/useFaceStore";
+import { toPng } from "html-to-image";
+import { motion } from "framer-motion";
+
+export function ClinicalWorkspace() {
+  const { imageFile } = useFaceStore();
+  const [activeTool, setActiveTool] = useState("select");
+  const [showLandmarks, setShowLandmarks] = useState(true);
+  const [landmarks, setLandmarks] = useState<any[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  
+  const workspaceRef = useRef<HTMLDivElement>(null);
+
+  const { isLoaded: landmarkerLoaded, detectFace } = useFaceLandmarker();
+
+  // Load image URL
+  React.useEffect(() => {
+    if (imageFile) {
+      const url = URL.createObjectURL(imageFile);
+      setImageUrl(url);
+      
+      // Auto-detect when image loads
+      const img = new Image();
+      img.onload = async () => {
+        if (landmarkerLoaded) {
+          setIsProcessing(true);
+          const result = await detectFace(img);
+          if (result && result.faceLandmarks) {
+            setLandmarks(result.faceLandmarks[0]);
+          }
+          setIsProcessing(false);
+        }
+      };
+      img.src = url;
+
+      return () => URL.revokeObjectURL(url);
+    }
+  }, [imageFile, landmarkerLoaded, detectFace]);
+
+  const handleExport = useCallback(async () => {
+    if (!workspaceRef.current) return;
+    
+    // Aesthetic notification
+    console.log("Exporting analysis...");
+    
+    try {
+      // Find the inner container with layered canvases
+      const captureTarget = document.querySelector(".relative.shadow-\\[0_0_100px_rgba\\(0\\,0\\,0\\,1\\)\\]") as HTMLElement;
+      if (!captureTarget) return;
+
+      const dataUrl = await toPng(captureTarget, {
+        quality: 1.0,
+        pixelRatio: 2, // 4K-ish quality
+      });
+      
+      const link = document.createElement('a');
+      link.download = `facepipe-analysis-${new Date().getTime()}.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch (err) {
+      console.error("Export failed", err);
+    }
+  }, []);
+
+  const handleReset = () => {
+    // This is handled via trigger in LightTable if we pass a key, 
+    // but for now let's just use the internal reset of transform-wrapper
+    window.location.reload(); // Simple way to reset state/transform for a workspace
+  };
+
+  if (!imageUrl) return null;
+
+  return (
+    <div className="flex w-full h-screen bg-[#020617] overflow-hidden font-sans text-white">
+      <Toolbox 
+        activeTool={activeTool}
+        setActiveTool={setActiveTool}
+        showLandmarks={showLandmarks}
+        setShowLandmarks={setShowLandmarks}
+        onExport={handleExport}
+        onClearIllustrations={() => {}} // Reset state logic here
+        onReset={handleReset}
+      />
+      
+      <main className="flex-1 relative flex flex-col h-full">
+        {/* Header Branding */}
+        <header className="absolute top-0 left-0 right-0 h-16 flex items-center justify-between px-10 z-30 pointer-events-none">
+          <div className="flex items-center gap-2">
+            <span className="text-cyan-500 font-bold tracking-tighter text-xl">FACEPIPE</span>
+            <div className="h-4 w-px bg-white/20 mx-2" />
+            <span className="text-white/40 text-[10px] uppercase tracking-widest font-medium">Smart Clinical Workspace</span>
+          </div>
+          
+          <div className="flex items-center gap-6 pointer-events-auto">
+            <div className="flex flex-col items-end">
+              <span className="text-[10px] text-white/40 uppercase font-bold tracking-widest">Status</span>
+              <span className={isProcessing ? "text-amber-500 text-xs font-medium" : "text-emerald-500 text-xs font-medium"}>
+                {isProcessing ? "ANALYZING TISSUES..." : "DIAGNOSTIC READY"}
+              </span>
+            </div>
+          </div>
+        </header>
+
+        <LightTable 
+          imageUrl={imageUrl}
+          landmarks={landmarks}
+          showLandmarks={showLandmarks}
+          activeTool={activeTool}
+        />
+        
+        {/* Animated Processing Bar */}
+        {isProcessing && (
+          <motion.div 
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            className="absolute top-0 left-0 right-0 h-0.5 bg-cyan-500 z-40 origin-left"
+            transition={{ duration: 2, repeat: Infinity }}
+          />
+        )}
+      </main>
+    </div>
+  );
+}
