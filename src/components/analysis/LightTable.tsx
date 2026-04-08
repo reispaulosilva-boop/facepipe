@@ -666,10 +666,12 @@ export function LightTable({
           contentStyle={{ position: "relative" }}
         >
           <div 
-            className="relative shadow-[0_0_150px_rgba(0,0,0,1),0_0_1px_rgba(255,255,255,0.05)] rounded-[1px] p-[2px] bg-white/5"
+            data-capture="face-table"
+            className="relative rounded-[1px] p-[2px] bg-white/5 overflow-hidden"
             style={{ 
               width: dimensions.width || "auto", 
               height: dimensions.height || "auto",
+              boxShadow: isLoaded ? '0 0 100px rgba(0,0,0,0.8)' : 'none'
             }}
           >
             {/* Layer 0: Original Clinical Photo */}

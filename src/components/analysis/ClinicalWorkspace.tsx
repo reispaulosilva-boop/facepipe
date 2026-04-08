@@ -81,7 +81,7 @@ export function ClinicalWorkspace() {
     console.log("Exporting analysis...");
     
     try {
-      const captureTarget = document.querySelector(".relative.shadow-\\[0_0_150px_rgba\\(0\\,0\\,0\\,1\\)\\,0_0_1px_rgba\\(255\\,255\\,255\\,0\\.05\\)\\]") as HTMLElement;
+      const captureTarget = document.querySelector('[data-capture="face-table"]') as HTMLElement;
       if (!captureTarget) {
         console.error("Capture target not found");
         return;
@@ -104,7 +104,7 @@ export function ClinicalWorkspace() {
   const generateDiagnosticReport = useCallback(async () => {
     if (isGeneratingReport) return;
     
-    const captureTarget = document.querySelector(".relative.shadow-\\[0_0_150px_rgba\\(0\\,0\\,0\\,1\\)\\,0_0_1px_rgba\\(255\\,255\\,255\\,0\\.05\\)\\]") as HTMLElement;
+    const captureTarget = document.querySelector('[data-capture="face-table"]') as HTMLElement;
     if (!captureTarget || !analysisResults.thirds) {
       alert("Por favor, realize a análise facial primeiro.");
       return;
@@ -196,7 +196,18 @@ O laudo deve ser conciso, profissional e incluir uma seção de 'Diagnóstico' e
       setDiagnosticReport(result.text);
     } catch (err: any) {
       console.error("Detailed error generating report:", err);
-      const errorMessage = err instanceof Error ? err.message : String(err);
+      let errorMessage = "Erro desconhecido";
+      
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      } else if (err && typeof err === 'object' && err.type) {
+        // Provavelmente um ErrorEvent do html-to-image
+        errorMessage = `Erro de renderização (Event: ${err.type})`;
+        if (err.target) console.log("Erro no alvo:", err.target);
+      } else {
+        errorMessage = String(err);
+      }
+      
       alert(`Erro ao gerar laudo: ${errorMessage}`);
     } finally {
       setIsGeneratingReport(false);
