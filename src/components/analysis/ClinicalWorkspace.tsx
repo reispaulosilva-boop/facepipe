@@ -111,16 +111,16 @@ export function ClinicalWorkspace() {
         setZoomPercent={handleZoomPercentChange}
       />
       
-      <main className="flex-1 relative flex flex-col h-full">
-        {/* Header Branding */}
-        <header className="absolute top-0 left-0 right-0 h-16 flex items-center justify-between px-10 z-30 pointer-events-none">
+      <main className="flex-1 flex flex-col h-full overflow-hidden">
+        {/* Header Branding - Now static in the flex flow */}
+        <header className="h-16 flex items-center justify-between px-10 border-b border-white/5 bg-[#000105]/40 backdrop-blur-md z-30">
           <div className="flex items-center gap-2">
             <span className="text-cyan-500 font-bold tracking-tighter text-xl">FACEPIPE</span>
             <div className="h-4 w-px bg-white/20 mx-2" />
             <span className="text-white/40 text-[10px] uppercase tracking-widest font-medium">Smart Clinical Workspace</span>
           </div>
           
-          <div className="flex items-center gap-6 pointer-events-auto">
+          <div className="flex items-center gap-6">
             <div className="flex flex-col items-end">
               <span className="text-[10px] text-white/40 uppercase font-bold tracking-widest">Status</span>
               <span className={isProcessing ? "text-amber-500 text-xs font-medium" : "text-emerald-500 text-xs font-medium"}>
