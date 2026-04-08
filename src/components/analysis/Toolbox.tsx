@@ -5,7 +5,9 @@ import {
   Eye, 
   EyeOff, 
   Plus, 
-  Minus 
+  Minus,
+  AlignVerticalDistributeCenter,
+  AlignHorizontalDistributeCenter,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -15,9 +17,15 @@ interface ToolButtonProps {
   label: string;
   active?: boolean;
   onClick: () => void;
+  colorScheme?: "cyan" | "amber";
 }
 
-function ToolButton({ icon, label, active, onClick }: ToolButtonProps) {
+function ToolButton({ icon, label, active, onClick, colorScheme = "cyan" }: ToolButtonProps) {
+  const activeStyles = {
+    cyan:  "bg-cyan-500/20 border-cyan-500/50 text-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.15)]",
+    amber: "bg-amber-500/20 border-amber-500/50 text-amber-400 shadow-[0_0_20px_rgba(251,191,36,0.15)]",
+  };
+
   return (
     <motion.button
       whileHover={{ scale: 1.05, x: 2 }}
@@ -26,7 +34,7 @@ function ToolButton({ icon, label, active, onClick }: ToolButtonProps) {
       className={cn(
         "group relative flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300",
         "bg-white/5 border border-white/10 hover:border-white/20",
-        active && "bg-cyan-500/20 border-cyan-500/50 text-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.15)]"
+        active && activeStyles[colorScheme]
       )}
       title={label}
     >
@@ -41,6 +49,10 @@ function ToolButton({ icon, label, active, onClick }: ToolButtonProps) {
 interface ToolboxProps {
   showLandmarks: boolean;
   setShowLandmarks: (show: boolean) => void;
+  showThirds: boolean;
+  toggleThirds: () => void;
+  showFifths: boolean;
+  toggleFifths: () => void;
   zoomPercent: number;
   setZoomPercent: (percent: number) => void;
 }
@@ -48,6 +60,10 @@ interface ToolboxProps {
 export function Toolbox({
   showLandmarks,
   setShowLandmarks,
+  showThirds,
+  toggleThirds,
+  showFifths,
+  toggleFifths,
   zoomPercent,
   setZoomPercent
 }: ToolboxProps) {
@@ -57,13 +73,62 @@ export function Toolbox({
       animate={{ x: 0, opacity: 1 }}
       className="fixed left-6 top-1/2 -translate-y-1/2 flex flex-col gap-4 p-3 rounded-2xl bg-[#030712]/40 backdrop-blur-xl border border-white/5 z-50 shadow-2xl"
     >
-      {/* Visual State Toggle */}
+      {/* Visual State — Landmarks */}
       <div className="flex flex-col gap-2">
         <ToolButton 
           icon={showLandmarks ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />} 
           label={showLandmarks ? "Ocultar Landmarks" : "Mostrar Landmarks"}
           active={showLandmarks}
           onClick={() => setShowLandmarks(!showLandmarks)}
+          colorScheme="cyan"
+        />
+      </div>
+
+      <div className="h-px bg-white/5 mx-2" />
+
+      {/* Analysis toggles */}
+      <div className="flex flex-col gap-2">
+        {/* Section label */}
+        <span className="text-[7px] font-bold text-white/20 uppercase tracking-[0.15em] text-center select-none">
+          Análise
+        </span>
+
+        {/* Terços — Análise Vertical */}
+        <ToolButton
+          icon={
+            <div className="relative flex items-center justify-center w-5 h-5">
+              <AlignVerticalDistributeCenter className="w-5 h-5" />
+              {showThirds && (
+                <motion.div 
+                  layoutId="thirds-indicator"
+                  className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-amber-400"
+                />
+              )}
+            </div>
+          }
+          label="Análise Vertical (Terços)"
+          active={showThirds}
+          onClick={toggleThirds}
+          colorScheme="amber"
+        />
+
+        {/* Quintos — Análise Horizontal */}
+        <ToolButton
+          icon={
+            <div className="relative flex items-center justify-center w-5 h-5">
+              <AlignHorizontalDistributeCenter className="w-5 h-5" />
+              {showFifths && (
+                <motion.div
+                  layoutId="fifths-indicator"
+                  className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-amber-400"
+                />
+              )}
+            </div>
+          }
+          label="Análise Horizontal (Quintos)"
+          active={showFifths}
+          onClick={toggleFifths}
+          colorScheme="amber"
         />
       </div>
 

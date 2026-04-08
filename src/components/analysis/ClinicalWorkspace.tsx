@@ -10,7 +10,14 @@ import { motion } from "framer-motion";
 import { ReactZoomPanPinchRef } from "react-zoom-pan-pinch";
 
 export function ClinicalWorkspace() {
-  const { imageFile } = useFaceStore();
+  const { 
+    imageFile,
+    showThirds,
+    toggleThirds,
+    showFifths,
+    toggleFifths,
+  } = useFaceStore();
+
   const [activeTool, setActiveTool] = useState("select");
   const [showLandmarks, setShowLandmarks] = useState(true);
   const [landmarks, setLandmarks] = useState<any[]>([]);
@@ -24,14 +31,11 @@ export function ClinicalWorkspace() {
 
   const { isLoaded: landmarkerLoaded, detectFace } = useFaceLandmarker();
 
-  // State to track if current image has been analyzed
   const [lastAnalyzedFile, setLastAnalyzedFile] = useState<File | null>(null);
 
   // Load and analyze image
   React.useEffect(() => {
     if (!imageFile || !landmarkerLoaded) return;
-
-    // Avoid redundant processing
     if (imageFile === lastAnalyzedFile) return;
 
     const url = URL.createObjectURL(imageFile);
@@ -64,18 +68,15 @@ export function ClinicalWorkspace() {
 
   const handleExport = useCallback(async () => {
     if (!workspaceRef.current) return;
-    
-    // Aesthetic notification
     console.log("Exporting analysis...");
     
     try {
-      // Find the inner container with layered canvases
       const captureTarget = document.querySelector(".relative.shadow-\\[0_0_100px_rgba\\(0\\,0\\,0\\,1\\)\\]") as HTMLElement;
       if (!captureTarget) return;
 
       const dataUrl = await toPng(captureTarget, {
         quality: 1.0,
-        pixelRatio: 2, // 4K-ish quality
+        pixelRatio: 2,
       });
       
       const link = document.createElement('a');
@@ -116,12 +117,16 @@ export function ClinicalWorkspace() {
       <Toolbox 
         showLandmarks={showLandmarks}
         setShowLandmarks={setShowLandmarks}
+        showThirds={showThirds}
+        toggleThirds={toggleThirds}
+        showFifths={showFifths}
+        toggleFifths={toggleFifths}
         zoomPercent={zoomPercent}
         setZoomPercent={handleZoomPercentChange}
       />
       
       <main className="flex-1 flex flex-col h-full overflow-hidden">
-        {/* Header Branding - Now static in the flex flow */}
+        {/* Header Branding */}
         <header className="h-16 flex items-center justify-between px-10 border-b border-white/5 bg-[#000105]/40 backdrop-blur-md z-30">
           <div className="flex items-center gap-2">
             <span className="text-cyan-500 font-bold tracking-tighter text-xl">FACEPIPE</span>
@@ -130,6 +135,30 @@ export function ClinicalWorkspace() {
           </div>
           
           <div className="flex items-center gap-6">
+            {/* Analysis badges */}
+            <div className="flex items-center gap-2">
+              {showThirds && (
+                <motion.span
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  className="text-[8px] font-bold px-2 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 uppercase tracking-widest"
+                >
+                  Terços ativos
+                </motion.span>
+              )}
+              {showFifths && (
+                <motion.span
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  className="text-[8px] font-bold px-2 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 uppercase tracking-widest"
+                >
+                  Quintos ativos
+                </motion.span>
+              )}
+            </div>
+
             <div className="flex flex-col items-end">
               <span className="text-[10px] text-white/40 uppercase font-bold tracking-widest">Status</span>
               <span className={isProcessing ? "text-amber-500 text-xs font-medium" : "text-emerald-500 text-xs font-medium"}>
@@ -143,6 +172,8 @@ export function ClinicalWorkspace() {
           imageUrl={imageUrl}
           landmarks={landmarks}
           showLandmarks={showLandmarks}
+          showThirds={showThirds}
+          showFifths={showFifths}
           activeTool={activeTool}
           resetKey={resetKey}
           transformRef={transformRef}
