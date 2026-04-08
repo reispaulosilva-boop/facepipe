@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   experimental: {
     esmExternals: true,
   },
+  turbopack: {},
   webpack: (config, { isServer }) => {
     // Allow MediaPipe and TensorFlow.js ESM modules
     config.resolve.extensionAlias = {
