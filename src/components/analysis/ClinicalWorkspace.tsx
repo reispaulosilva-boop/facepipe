@@ -3,6 +3,7 @@
 import React, { useState, useCallback, useRef } from "react";
 import { Toolbox } from "./Toolbox";
 import { LightTable } from "./LightTable";
+import { DiagnosticReport } from "./DiagnosticReport";
 import { useFaceLandmarker } from "@/hooks/useFaceLandmarker";
 import { useFaceStore } from "@/store/useFaceStore";
 import { toPng } from "html-to-image";
@@ -19,6 +20,12 @@ export function ClinicalWorkspace() {
     trichionOverrideY,
     setTrichionOverrideY,
     resetTrichion,
+    analysisResults,
+    setDiagnosticReport,
+    setIsGeneratingReport,
+    isGeneratingReport,
+    patientGender,
+    patientAge,
   } = useFaceStore();
 
   const [activeTool, setActiveTool] = useState("select");
@@ -74,8 +81,11 @@ export function ClinicalWorkspace() {
     console.log("Exporting analysis...");
     
     try {
-      const captureTarget = document.querySelector(".relative.shadow-\\[0_0_100px_rgba\\(0\\,0\\,0\\,1\\)\\]") as HTMLElement;
-      if (!captureTarget) return;
+      const captureTarget = document.querySelector(".relative.shadow-\\[0_0_150px_rgba\\(0\\,0\\,0\\,1\\)\\,0_0_1px_rgba\\(255\\,255\\,255\\,0\\.05\\)\\]") as HTMLElement;
+      if (!captureTarget) {
+        console.error("Capture target not found");
+        return;
+      }
 
       const dataUrl = await toPng(captureTarget, {
         quality: 1.0,
@@ -90,6 +100,90 @@ export function ClinicalWorkspace() {
       console.error("Export failed", err);
     }
   }, []);
+
+  const generateDiagnosticReport = useCallback(async () => {
+    if (isGeneratingReport) return;
+    
+    const captureTarget = document.querySelector(".relative.shadow-\\[0_0_150px_rgba\\(0\\,0\\,0\\,1\\)\\,0_0_1px_rgba\\(255\\,255\\,255\\,0\\.05\\)\\]") as HTMLElement;
+    if (!captureTarget || !analysisResults.thirds) {
+      alert("Por favor, realize a análise facial primeiro.");
+      return;
+    }
+
+    setIsGeneratingReport(true);
+    setDiagnosticReport(null);
+
+    try {
+      // 1. Capturar imagem com overlays
+      const dataUrl = await toPng(captureTarget, { quality: 0.8, pixelRatio: 1.5 });
+      const base64Data = dataUrl.split(",")[1];
+
+      // 2. Construir prompt especializado (AB Face)
+      const { thirds, lipRatio, landmarks, topographicRegions } = analysisResults;
+      
+      const prompt = `Você é um dermatologista especialista em harmonização facial, com profundo conhecimento da técnica AB Face do Dr. André Braz. Sua análise deve ser ética, científica e focada em proporções e suporte estrutural.
+      
+Analise a imagem e os seguintes dados métricos faciais:
+- Terço Superior: ${thirds.upperThird.mm} mm
+- Terço Médio: ${thirds.middleThird.mm} mm
+- Terço Inferior: ${thirds.lowerThird.mm} mm
+- Lábio Superior: ${lipRatio?.superiorMm} mm
+- Lábio Inferior: ${lipRatio?.inferiorMm} mm (Proporção 1:${lipRatio?.ratio})
+- Gênero do Paciente: ${patientGender}
+- Idade Estimada: ${patientAge || "Não informada"}
+
+Regiões Topográficas Detectadas: ${topographicRegions?.map(r => r.name).join(", ")}
+
+Com base nestes dados, identifique desproporções faciais nos terços, quintos e lábios. Sugira intervenções de harmonização facial (ex: preenchimento com ácido hialurônico, bioestimuladores) alinhadas com a técnica AB Face, focando em suporte estrutural, projeção e contorno. 
+
+O laudo deve ser conciso, profissional e incluir uma seção de 'Diagnóstico' e 'Plano de Tratamento Sugerido' em Markdown.`;
+
+      // 3. Chamar API Proxy do Gemini
+      const response = await fetch("/api/gemini", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt,
+          imageParts: [
+            {
+              inlineData: {
+                mimeType: "image/png",
+                data: base64Data
+              }
+            }
+          ],
+          facialMetrics: {
+            thirds: {
+              superior: thirds.upperThird.mm,
+              medio: thirds.middleThird.mm,
+              inferior: thirds.lowerThird.mm
+            },
+            lipRatio: {
+              superior: lipRatio?.superiorMm,
+              inferior: lipRatio?.inferiorMm,
+              ratio: lipRatio?.ratio
+            },
+            landmarks: JSON.stringify(landmarks),
+            topographicRegions: JSON.stringify(topographicRegions?.map(r => ({ name: r.name, points: r.points })))
+          },
+          patientInfo: {
+            gender: patientGender,
+            age: patientAge
+          }
+        })
+      });
+
+      const result = await response.json();
+      if (result.error) throw new Error(result.error);
+      
+      setDiagnosticReport(result.text);
+    } catch (err: any) {
+      console.error("Failed to generate report:", err);
+      alert(`Erro ao gerar laudo: ${err.message}`);
+    } finally {
+      setIsGeneratingReport(false);
+    }
+  }, [analysisResults, isGeneratingReport, patientGender, patientAge, setDiagnosticReport, setIsGeneratingReport]);
 
   const [resetKey, setResetKey] = useState(0);
 
@@ -128,6 +222,8 @@ export function ClinicalWorkspace() {
         resetTrichion={resetTrichion}
         zoomPercent={zoomPercent}
         setZoomPercent={handleZoomPercentChange}
+        onGenerateReport={generateDiagnosticReport}
+        isGenerating={isGeneratingReport}
       />
       
       <main className="flex-1 flex flex-col h-full overflow-hidden">
@@ -206,6 +302,8 @@ export function ClinicalWorkspace() {
             transition={{ duration: 2, repeat: Infinity }}
           />
         )}
+
+        <DiagnosticReport />
       </main>
     </div>
   );

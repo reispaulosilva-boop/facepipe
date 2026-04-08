@@ -40,3 +40,35 @@ body {
   animation: progress-slide 1.5s ease-in-out infinite;
 }
 
+/* Diagnostic Report Markdown Styles */
+.markdown-report h1, .markdown-report h2, .markdown-report h3 {
+  color: #22d3ee; /* cyan-400 */
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.markdown-report h2 { font-size: 0.875rem; }
+.markdown-report h3 { font-size: 0.75rem; }
+
+.markdown-report p {
+  margin-bottom: 1rem;
+}
+
+.markdown-report ul {
+  list-style-type: disc;
+  margin-left: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.markdown-report li {
+  margin-bottom: 0.5rem;
+}
+
+.markdown-report strong {
+  color: #fff;
+  font-weight: 600;
+}
+

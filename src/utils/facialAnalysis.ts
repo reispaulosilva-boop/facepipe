@@ -38,6 +38,20 @@ export interface FifthsResult {
   pxPerMm: number;
 }
 
+export interface LipRatioResult {
+  superiorPx: number;
+  superiorMm: number;
+  inferiorPx: number;
+  inferiorMm: number;
+  ratio: number; // superior / inferior
+}
+
+export interface TopographicRegion {
+  name: string;
+  points: Landmark[];
+  indices: number[];
+}
+
 /**
  * Calcula a distância euclidiana em pixels entre dois landmarks normalizados.
  * Os landmarks têm coordenadas [0, 1] relativas à dimensão da imagem.
@@ -228,6 +242,59 @@ export function calcFifths(
     },
     pxPerMm,
   };
+}
+
+/**
+ * Calcula a Proporção Labial Vertical.
+ * Referências AB Face: Vermelhão superior vs inferior (ideal ~1:1.6).
+ *
+ * Landmarks:
+ * 0:  Labial Superior (ponto mais alto)
+ * 13: Labial Médio (contato entre lábios)
+ * 14: Labial Médio (contato inferior)
+ * 17: Labial Inferior (ponto mais baixo)
+ */
+export function calcLipRatio(
+  landmarks: Landmark[],
+  imageHeight: number,
+  pxPerMm: number
+): LipRatioResult | null {
+  const top = landmarks[0];
+  const mid = landmarks[13];
+  const bot = landmarks[17];
+
+  if (!top || !mid || !bot) return null;
+
+  const superiorPx = verticalDistancePx(top, mid, imageHeight);
+  const inferiorPx = verticalDistancePx(mid, bot, imageHeight);
+
+  return {
+    superiorPx,
+    superiorMm: pxToMm(superiorPx, pxPerMm),
+    inferiorPx,
+    inferiorMm: pxToMm(inferiorPx, pxPerMm),
+    ratio: parseFloat((superiorPx / inferiorPx).toFixed(2)),
+  };
+}
+
+/**
+ * Define as regiões topográficas baseadas em índices do MediaPipe.
+ */
+const TOPOGRAPHIC_INDICES = {
+  frontal: [10, 338, 297, 332, 284, 251, 389, 356, 454, 323, 361, 288, 397, 365, 379, 378, 400, 377, 152, 148, 176, 149, 150, 136, 172, 58, 132, 93, 234, 127, 162, 21, 54, 103, 67, 109, 10], // Simplified oval for reference
+  malar_r: [454, 323, 361, 288, 397, 365, 379, 378, 400, 377, 454],
+  malar_l: [234, 93, 132, 58, 172, 136, 150, 149, 176, 148, 234],
+  mandibular: [172, 136, 150, 149, 176, 148, 152, 377, 400, 378, 379, 365, 397, 288, 361, 323, 454], // Simplified
+  temp_r: [10, 338, 297, 332, 284, 251, 389, 356, 454],
+  temp_l: [10, 109, 67, 103, 54, 21, 162, 127, 234],
+};
+
+export function getTopographicRegions(landmarks: Landmark[]): TopographicRegion[] {
+  return Object.entries(TOPOGRAPHIC_INDICES).map(([name, indices]) => ({
+    name: name.toUpperCase(),
+    indices,
+    points: indices.map(idx => landmarks[idx]).filter(Boolean),
+  }));
 }
 
 /**

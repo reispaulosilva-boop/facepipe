@@ -17,7 +17,12 @@ import {
   ThirdsResult,
   FifthsResult,
   Landmark,
+  LipRatioResult,
+  TopographicRegion,
+  calcLipRatio,
+  getTopographicRegions
 } from "@/utils/facialAnalysis";
+import { useFaceStore } from "@/store/useFaceStore";
 
 // ── Design Tokens ─────────────────────────────────────────────────────────────
 const AMBER = "rgba(251, 191, 36, 0.5)";   // amber-400/50
@@ -60,6 +65,7 @@ export function LightTable({
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [isLoaded, setIsLoaded] = useState(false);
   const [isDraggingTrichion, setIsDraggingTrichion] = useState(false);
+  const { setAnalysisResults, showThirds: storeShowThirds, showFifths: storeShowFifths } = useFaceStore();
 
   // Sync dimensions with image
   const handleImageLoad = () => {
@@ -118,6 +124,31 @@ export function LightTable({
     if (!landmarks || landmarks.length === 0 || !dimensions.width) return null;
     return calcFifths(landmarks as Landmark[], dimensions.width, dimensions.height);
   }, [landmarks, dimensions]);
+
+  const lipRatioData = useMemo<LipRatioResult | null>(() => {
+    if (!landmarks || landmarks.length === 0 || !dimensions.height) return null;
+    const pxPerMm = calcPixelsPerMm(landmarks as Landmark[], dimensions.width, dimensions.height) ?? 1;
+    return calcLipRatio(landmarks as Landmark[], dimensions.height, pxPerMm);
+  }, [landmarks, dimensions]);
+
+  const topographicRegions = useMemo<TopographicRegion[] | null>(() => {
+    if (!landmarks || landmarks.length === 0) return null;
+    return getTopographicRegions(landmarks as Landmark[]);
+  }, [landmarks]);
+
+  // Sync with store
+  useEffect(() => {
+    if (landmarks && landmarks.length > 0 && dimensions.width > 0) {
+      setAnalysisResults({
+        thirds: thirdsData,
+        fifths: fifthsData,
+        lipRatio: lipRatioData,
+        landmarks: landmarks,
+        topographicRegions: topographicRegions,
+        pxPerMm: thirdsData?.pxPerMm || null
+      });
+    }
+  }, [landmarks, dimensions, thirdsData, fifthsData, lipRatioData, topographicRegions, setAnalysisResults]);
 
   // ── Landmark Layer Logic (SVG Based) ───────────────────────────────────────
   const renderLandmarks = () => {
@@ -549,6 +580,55 @@ export function LightTable({
     );
   };
 
+  // ── Topographic Regions Layer ───────────────────────────────────────────────
+  const renderTopographicRegions = () => {
+    if (!topographicRegions || !dimensions.width) return null;
+
+    return (
+      <g className="topographic-regions-layer">
+        {topographicRegions.map((region, i) => {
+          const pathD = region.points
+            .map((p, idx) => `${idx === 0 ? "M" : "L"} ${p.x * dimensions.width} ${p.y * dimensions.height}`)
+            .join(" ") + " Z";
+          
+          return (
+            <path
+              key={i}
+              d={pathD}
+              fill="rgba(6,182,212,0.03)"
+              stroke="rgba(6,182,212,0.15)"
+              strokeWidth="1"
+              strokeDasharray="4,4"
+              className="hover:fill-cyan-500/10 transition-colors pointer-events-auto"
+            />
+          );
+        })}
+      </g>
+    );
+  };
+
+  const renderLipRatio = () => {
+    if (!lipRatioData || !landmarks || landmarks.length === 0 || !dimensions.width) return null;
+    const S = Math.max(dimensions.width, dimensions.height) / 1000;
+    const lp = lipRatioData;
+    const midX = landmarks[13].x * dimensions.width;
+    const topY = landmarks[0].y * dimensions.height;
+    const midY = landmarks[13].y * dimensions.height;
+    const botY = landmarks[17].y * dimensions.height;
+
+    return (
+      <g className="lip-ratio-layer">
+         <line x1={midX - S*20} y1={topY} x2={midX + S*20} y2={topY} stroke="#F5BB5C" strokeWidth={S*1.5} />
+         <line x1={midX - S*20} y1={midY} x2={midX + S*20} y2={midY} stroke="#F5BB5C" strokeWidth={S*1.5} />
+         <line x1={midX - S*20} y1={botY} x2={midX + S*20} y2={botY} stroke="#F5BB5C" strokeWidth={S*1.5} />
+         
+         <text x={midX + S*25} y={(topY + midY)/2} fill="#F5BB5C" fontSize={S*9} fontFamily="monospace">{lp.superiorMm}mm (S)</text>
+         <text x={midX + S*25} y={(midY + botY)/2} fill="#F5BB5C" fontSize={S*9} fontFamily="monospace">{lp.inferiorMm}mm (I)</text>
+         <text x={midX + S*25} y={botY + S*15} fill="#F5BB5C" fontSize={S*10} fontWeight="bold" fontFamily="monospace">Ratio 1:{lp.ratio}</text>
+      </g>
+    );
+  };
+
   return (
     <div ref={containerRef} className="flex-1 w-full h-full bg-[#000105] relative flex items-center justify-center overflow-hidden">
       {/* Cinematic ambient lighting */}
@@ -616,6 +696,7 @@ export function LightTable({
               >
                 {renderLandmarks()}
                 {renderClinicalFacilitators()}
+                {renderTopographicRegions()}
 
                 {/* Thirds layer — animated with framer-motion via SVG foreignObject trick: use AnimatePresence wrapper at SVG level */}
                 <AnimatePresence mode="wait">
@@ -628,6 +709,7 @@ export function LightTable({
                       transition={{ duration: 0.4, ease: "easeInOut" }}
                     >
                       {renderThirds()}
+                      {renderLipRatio()}
                     </motion.g>
                   )}
                 </AnimatePresence>
@@ -648,6 +730,8 @@ export function LightTable({
                 </AnimatePresence>
               </svg>
             )}
+            {/* Capture Area Ref */}
+            <div id="clinical-capture-area" className="sr-only" />
           </div>
         </TransformComponent>
       </TransformWrapper>

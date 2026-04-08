@@ -1,9 +1,12 @@
 import { create } from "zustand";
-import { ThirdsResult, FifthsResult } from "@/utils/facialAnalysis";
+import { ThirdsResult, FifthsResult, LipRatioResult, TopographicRegion } from "@/utils/facialAnalysis";
 
 interface AnalysisResults {
   thirds: ThirdsResult | null;
   fifths: FifthsResult | null;
+  lipRatio: LipRatioResult | null;
+  landmarks: any[] | null;
+  topographicRegions: TopographicRegion[] | null;
   calibrationMm: number | null; // diâmetro da íris em mm (constante 11.7)
   pxPerMm: number | null;
 }
@@ -31,11 +34,25 @@ interface FaceStore {
   analysisResults: AnalysisResults;
   setAnalysisResults: (results: Partial<AnalysisResults>) => void;
   clearAnalysisResults: () => void;
+
+  // AI Diagnostic Report
+  diagnosticReport: string | null;
+  isGeneratingReport: boolean;
+  setDiagnosticReport: (report: string | null) => void;
+  setIsGeneratingReport: (v: boolean) => void;
+
+  // Patient Info
+  patientGender: string;
+  patientAge: string;
+  setPatientInfo: (info: { gender?: string; age?: string }) => void;
 }
 
 const defaultAnalysisResults: AnalysisResults = {
   thirds: null,
   fifths: null,
+  lipRatio: null,
+  landmarks: null,
+  topographicRegions: null,
   calibrationMm: null,
   pxPerMm: null,
 };
@@ -65,4 +82,16 @@ export const useFaceStore = create<FaceStore>((set) => ({
     })),
   clearAnalysisResults: () =>
     set({ analysisResults: defaultAnalysisResults }),
+
+  diagnosticReport: null,
+  isGeneratingReport: false,
+  setDiagnosticReport: (report) => set({ diagnosticReport: report }),
+  setIsGeneratingReport: (v) => set({ isGeneratingReport: v }),
+
+  patientGender: "Feminino",
+  patientAge: "",
+  setPatientInfo: (info) => set((s) => ({ 
+    patientGender: info.gender ?? s.patientGender, 
+    patientAge: info.age ?? s.patientAge 
+  })),
 }));

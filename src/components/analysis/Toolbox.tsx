@@ -9,6 +9,7 @@ import {
   AlignVerticalDistributeCenter,
   AlignHorizontalDistributeCenter,
   RotateCcw,
+  Sparkles,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -58,6 +59,8 @@ interface ToolboxProps {
   resetTrichion: () => void;
   zoomPercent: number;
   setZoomPercent: (percent: number) => void;
+  onGenerateReport: () => void;
+  isGenerating?: boolean;
 }
 
 export function Toolbox({
@@ -70,7 +73,9 @@ export function Toolbox({
   trichionOverrideY,
   resetTrichion,
   zoomPercent,
-  setZoomPercent
+  setZoomPercent,
+  onGenerateReport,
+  isGenerating
 }: ToolboxProps) {
   return (
     <motion.aside 
@@ -134,6 +139,19 @@ export function Toolbox({
           active={showFifths}
           onClick={toggleFifths}
           colorScheme="amber"
+        />
+
+        {/* AI Report Button */}
+        <ToolButton
+          icon={
+            <div className="relative flex items-center justify-center w-5 h-5">
+              <Sparkles className={cn("w-5 h-5", isGenerating && "animate-pulse")} />
+            </div>
+          }
+          label="Gerar Laudo IA"
+          onClick={onGenerateReport}
+          colorScheme="cyan"
+          active={isGenerating}
         />
       </div>
 
