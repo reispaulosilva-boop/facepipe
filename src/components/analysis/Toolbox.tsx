@@ -8,6 +8,7 @@ import {
   Minus,
   AlignVerticalDistributeCenter,
   AlignHorizontalDistributeCenter,
+  RotateCcw,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -53,6 +54,8 @@ interface ToolboxProps {
   toggleThirds: () => void;
   showFifths: boolean;
   toggleFifths: () => void;
+  trichionOverrideY: number | null;
+  resetTrichion: () => void;
   zoomPercent: number;
   setZoomPercent: (percent: number) => void;
 }
@@ -64,6 +67,8 @@ export function Toolbox({
   toggleThirds,
   showFifths,
   toggleFifths,
+  trichionOverrideY,
+  resetTrichion,
   zoomPercent,
   setZoomPercent
 }: ToolboxProps) {
@@ -131,6 +136,30 @@ export function Toolbox({
           colorScheme="amber"
         />
       </div>
+
+      {/* Trichion Reset — only visible when manually adjusted */}
+      {trichionOverrideY != null && (
+        <>
+          <div className="h-px bg-white/5 mx-2" />
+          <div className="flex flex-col items-center gap-2 py-2 px-1">
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              whileHover={{ scale: 1.05, x: 2 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={resetTrichion}
+              className="group relative flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 bg-green-500/20 border border-green-500/50 text-green-400 shadow-[0_0_20px_rgba(74,222,128,0.15)]"
+              title="Resetar Trichion"
+            >
+              <RotateCcw className="w-5 h-5" />
+              <div className="absolute left-16 px-2 py-1 rounded bg-black/80 border border-white/10 text-white/70 text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity font-medium tracking-wide z-50">
+                Resetar Trichion
+              </div>
+            </motion.button>
+          </div>
+        </>
+      )}
 
       <div className="h-px bg-white/5 mx-2" />
 

@@ -115,18 +115,27 @@ export function pxToMm(px: number, pxPerMm: number): number {
  * - Glabela:    índice 168 (raiz nasal, entre as sobrancelhas)
  * - Subnasale:  índice 2   (base da columela, junção nariz-lábio)
  * - Menton:     índice 152 (ponto mais inferior do queixo)
+ *
+ * @param trichionYOverride — coordenada Y normalizada (0–1) para substituir o landmark 10
+ *                            quando o médico ajusta manualmente a linha de implantação capilar.
  */
 export function calcThirds(
   landmarks: Landmark[],
   imageWidth: number,
-  imageHeight: number
+  imageHeight: number,
+  trichionYOverride?: number | null
 ): ThirdsResult | null {
-  const trichion = landmarks[10];
+  const trichionLm = landmarks[10];
   const glabela = landmarks[168];
   const subnasale = landmarks[2];
   const menton = landmarks[152];
 
-  if (!trichion || !glabela || !subnasale || !menton) return null;
+  if (!trichionLm || !glabela || !subnasale || !menton) return null;
+
+  // Usar override do médico se fornecido, senão o landmark automático
+  const trichion: Landmark = trichionYOverride != null
+    ? { x: trichionLm.x, y: trichionYOverride }
+    : trichionLm;
 
   const pxPerMm = calcPixelsPerMm(landmarks, imageWidth, imageHeight) ?? 1;
 

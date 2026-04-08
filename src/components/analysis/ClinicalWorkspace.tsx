@@ -16,6 +16,9 @@ export function ClinicalWorkspace() {
     toggleThirds,
     showFifths,
     toggleFifths,
+    trichionOverrideY,
+    setTrichionOverrideY,
+    resetTrichion,
   } = useFaceStore();
 
   const [activeTool, setActiveTool] = useState("select");
@@ -121,6 +124,8 @@ export function ClinicalWorkspace() {
         toggleThirds={toggleThirds}
         showFifths={showFifths}
         toggleFifths={toggleFifths}
+        trichionOverrideY={trichionOverrideY}
+        resetTrichion={resetTrichion}
         zoomPercent={zoomPercent}
         setZoomPercent={handleZoomPercentChange}
       />
@@ -157,6 +162,16 @@ export function ClinicalWorkspace() {
                   Quintos ativos
                 </motion.span>
               )}
+              {trichionOverrideY != null && (
+                <motion.span
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  className="text-[8px] font-bold px-2 py-1 rounded-full bg-green-500/10 border border-green-500/30 text-green-400 uppercase tracking-widest"
+                >
+                  Trichion Ajustado
+                </motion.span>
+              )}
             </div>
 
             <div className="flex flex-col items-end">
@@ -175,6 +190,8 @@ export function ClinicalWorkspace() {
           showThirds={showThirds}
           showFifths={showFifths}
           activeTool={activeTool}
+          trichionOverrideY={trichionOverrideY}
+          onTrichionAdjust={setTrichionOverrideY}
           resetKey={resetKey}
           transformRef={transformRef}
           onZoomChange={handleZoomChange}

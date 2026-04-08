@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useEffect, useState, useMemo } from "react";
+import React, { useRef, useEffect, useState, useMemo, useCallback } from "react";
 import { 
   TransformWrapper, 
   TransformComponent,
@@ -31,6 +31,8 @@ interface LightTableProps {
   showThirds: boolean;
   showFifths: boolean;
   activeTool: string;
+  trichionOverrideY: number | null;
+  onTrichionAdjust: (y: number) => void;
   onLandmarksLoad?: (count: number) => void;
   onZoomChange?: (zoom: number, baseScale: number) => void;
   resetKey?: number;
@@ -44,6 +46,8 @@ export function LightTable({
   showThirds,
   showFifths,
   activeTool,
+  trichionOverrideY,
+  onTrichionAdjust,
   onLandmarksLoad,
   onZoomChange,
   resetKey = 0,
@@ -51,9 +55,11 @@ export function LightTable({
 }: LightTableProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const photoRef = useRef<HTMLImageElement>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
   
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isDraggingTrichion, setIsDraggingTrichion] = useState(false);
 
   // Sync dimensions with image
   const handleImageLoad = () => {
@@ -69,11 +75,44 @@ export function LightTable({
     }
   };
 
+  // ── Trichion Drag Handlers ─────────────────────────────────────────────────
+  const screenToSvgY = useCallback((clientY: number): number => {
+    if (!svgRef.current) return 0;
+    const ctm = svgRef.current.getScreenCTM();
+    if (!ctm) return 0;
+    const pt = svgRef.current.createSVGPoint();
+    pt.x = 0;
+    pt.y = clientY;
+    const svgPt = pt.matrixTransform(ctm.inverse());
+    return svgPt.y;
+  }, []);
+
+  const handleTrichionPointerDown = useCallback((e: React.PointerEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    (e.target as SVGElement).setPointerCapture(e.pointerId);
+    setIsDraggingTrichion(true);
+  }, []);
+
+  const handleTrichionPointerMove = useCallback((e: React.PointerEvent) => {
+    if (!isDraggingTrichion || !dimensions.height) return;
+    e.stopPropagation();
+    e.preventDefault();
+    const svgY = screenToSvgY(e.clientY);
+    const normalizedY = Math.max(0, Math.min(1, svgY / dimensions.height));
+    onTrichionAdjust(normalizedY);
+  }, [isDraggingTrichion, dimensions.height, screenToSvgY, onTrichionAdjust]);
+
+  const handleTrichionPointerUp = useCallback((e: React.PointerEvent) => {
+    e.stopPropagation();
+    setIsDraggingTrichion(false);
+  }, []);
+
   // ── Analysis Calculations (memoized) ───────────────────────────────────────
   const thirdsData = useMemo<ThirdsResult | null>(() => {
     if (!landmarks || landmarks.length === 0 || !dimensions.width) return null;
-    return calcThirds(landmarks as Landmark[], dimensions.width, dimensions.height);
-  }, [landmarks, dimensions]);
+    return calcThirds(landmarks as Landmark[], dimensions.width, dimensions.height, trichionOverrideY);
+  }, [landmarks, dimensions, trichionOverrideY]);
 
   const fifthsData = useMemo<FifthsResult | null>(() => {
     if (!landmarks || landmarks.length === 0 || !dimensions.width) return null;
@@ -202,16 +241,20 @@ export function LightTable({
     // Scale factor: normalize all visual sizes to a 1000px reference image
     const S = Math.max(W, H) / 1000;
 
-    // Pontos âncora (corrigido: subnasale = 2, não 4)
-    const trichion  = lm[10];
+    // Pontos âncora
+    const trichionLm = lm[10];
     const glabela   = lm[168];
     const subnasale = lm[2];
     const menton    = lm[152];
 
-    if (!trichion || !glabela || !subnasale || !menton) return null;
+    if (!trichionLm || !glabela || !subnasale || !menton) return null;
+
+    // Usar override do médico se disponível
+    const trichionY = trichionOverrideY != null ? trichionOverrideY : trichionLm.y;
+    const isManual  = trichionOverrideY != null;
 
     // Coordenadas Y absolutas
-    const y_trichion  = trichion.y  * H;
+    const y_trichion  = trichionY * H;
     const y_glabela   = glabela.y   * H;
     const y_subnasale = subnasale.y * H;
     const y_menton    = menton.y    * H;
@@ -251,29 +294,77 @@ export function LightTable({
           </filter>
         </defs>
 
-        {lines.map((line, i) => (
-          <g key={i}>
-            {/* Linha horizontal tracejada */}
-            <line
-              x1={xStart} y1={line.y}
-              x2={xEnd}   y2={line.y}
-              stroke={AMBER}
-              strokeWidth={strokeW}
-              strokeDasharray={dashArr}
-              filter="url(#amber-glow-thirds)"
-            />
-            {/* Linha sólida fina sobre a tracejada para reforço */}
-            <line
-              x1={xStart} y1={line.y}
-              x2={xEnd}   y2={line.y}
-              stroke={AMBER_SOLID}
-              strokeWidth={strokeW * 0.4}
-            />
-            {/* Tick markers nas pontas */}
-            <line x1={xStart} y1={line.y - tickLen} x2={xStart} y2={line.y + tickLen} stroke={AMBER_SOLID} strokeWidth={tickW} />
-            <line x1={xEnd}   y1={line.y - tickLen} x2={xEnd}   y2={line.y + tickLen} stroke={AMBER_SOLID} strokeWidth={tickW} />
-          </g>
-        ))}
+        {lines.map((line, i) => {
+          const isTrichionLine = i === 0;
+          const lineColor = isTrichionLine && isManual ? "rgba(74, 222, 128, 0.5)" : AMBER;
+          const lineSolid = isTrichionLine && isManual ? "rgba(74, 222, 128, 0.9)" : AMBER_SOLID;
+          return (
+            <g key={i}>
+              {/* Linha horizontal tracejada */}
+              <line
+                x1={xStart} y1={line.y}
+                x2={xEnd}   y2={line.y}
+                stroke={lineColor}
+                strokeWidth={strokeW}
+                strokeDasharray={dashArr}
+                filter="url(#amber-glow-thirds)"
+              />
+              {/* Linha sólida fina sobre a tracejada */}
+              <line
+                x1={xStart} y1={line.y}
+                x2={xEnd}   y2={line.y}
+                stroke={lineSolid}
+                strokeWidth={strokeW * 0.4}
+              />
+              {/* Tick markers nas pontas */}
+              <line x1={xStart} y1={line.y - tickLen} x2={xStart} y2={line.y + tickLen} stroke={lineSolid} strokeWidth={tickW} />
+              <line x1={xEnd}   y1={line.y - tickLen} x2={xEnd}   y2={line.y + tickLen} stroke={lineSolid} strokeWidth={tickW} />
+
+              {/* Drag handle na linha do Trichion */}
+              {isTrichionLine && showThirds && (
+                <>
+                  {/* Hit area invisível ampla para facilitar o clique */}
+                  <line
+                    x1={xStart} y1={line.y}
+                    x2={xEnd}   y2={line.y}
+                    stroke="transparent"
+                    strokeWidth={S * 20}
+                    style={{ cursor: "ns-resize", pointerEvents: "auto" }}
+                    onPointerDown={handleTrichionPointerDown}
+                    onPointerMove={handleTrichionPointerMove}
+                    onPointerUp={handleTrichionPointerUp}
+                  />
+                  {/* Drag grip visual (centro da linha) */}
+                  <g style={{ pointerEvents: "none" }}>
+                    <rect
+                      x={(xStart + xEnd) / 2 - S * 20}
+                      y={line.y - S * 8}
+                      width={S * 40}
+                      height={S * 16}
+                      rx={S * 3}
+                      fill={isManual ? "rgba(74, 222, 128, 0.15)" : "rgba(251, 191, 36, 0.15)"}
+                      stroke={isManual ? "rgba(74, 222, 128, 0.5)" : AMBER}
+                      strokeWidth={S * 0.8}
+                    />
+                    {/* Three grip lines */}
+                    {[-1, 0, 1].map(offset => (
+                      <line
+                        key={offset}
+                        x1={(xStart + xEnd) / 2 - S * 8}
+                        y1={line.y + offset * S * 3.5}
+                        x2={(xStart + xEnd) / 2 + S * 8}
+                        y2={line.y + offset * S * 3.5}
+                        stroke={isManual ? "rgba(74, 222, 128, 0.6)" : "rgba(251, 191, 36, 0.6)"}
+                        strokeWidth={S * 0.8}
+                        strokeLinecap="round"
+                      />
+                    ))}
+                  </g>
+                </>
+              )}
+            </g>
+          );
+        })}
 
         {/* Labels flutuantes por segmento */}
         {lines.slice(1).map((line, i) => {
@@ -518,6 +609,7 @@ export function LightTable({
             {/* Combined SVG Overlay */}
             {isLoaded && dimensions.width > 0 && (
               <svg
+                ref={svgRef}
                 viewBox={`0 0 ${dimensions.width} ${dimensions.height}`}
                 className="absolute inset-0 z-10 pointer-events-none"
                 style={{ width: "100%", height: "100%" }}

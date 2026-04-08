@@ -22,6 +22,11 @@ interface FaceStore {
   setShowFifths: (v: boolean) => void;
   toggleFifths: () => void;
 
+  // Ajuste manual do Trichion (normalizado 0–1, null = usar landmark 10)
+  trichionOverrideY: number | null;
+  setTrichionOverrideY: (y: number | null) => void;
+  resetTrichion: () => void;
+
   // Resultados calculados (ephemeral — zero storage)
   analysisResults: AnalysisResults;
   setAnalysisResults: (results: Partial<AnalysisResults>) => void;
@@ -39,7 +44,7 @@ export const useFaceStore = create<FaceStore>((set) => ({
   imageFile: null,
   setImageFile: (file) => set({ imageFile: file }),
   clearImageFile: () =>
-    set({ imageFile: null, analysisResults: defaultAnalysisResults }),
+    set({ imageFile: null, analysisResults: defaultAnalysisResults, trichionOverrideY: null }),
 
   showThirds: false,
   setShowThirds: (v) => set({ showThirds: v }),
@@ -48,6 +53,10 @@ export const useFaceStore = create<FaceStore>((set) => ({
   showFifths: false,
   setShowFifths: (v) => set({ showFifths: v }),
   toggleFifths: () => set((s) => ({ showFifths: !s.showFifths })),
+
+  trichionOverrideY: null,
+  setTrichionOverrideY: (y) => set({ trichionOverrideY: y }),
+  resetTrichion: () => set({ trichionOverrideY: null }),
 
   analysisResults: defaultAnalysisResults,
   setAnalysisResults: (results) =>
