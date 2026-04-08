@@ -111,10 +111,10 @@ export function pxToMm(px: number, pxPerMm: number): number {
  * Calcula os Terços Faciais (análise vertical).
  *
  * Referências anatômicas:
- * - Trichion:   índice 10
- * - Glabela:    índice 168
- * - Subnasale:  índice 4
- * - Menton:     índice 152
+ * - Trichion:   índice 10  (topo da testa — limite superior do mesh MediaPipe)
+ * - Glabela:    índice 168 (raiz nasal, entre as sobrancelhas)
+ * - Subnasale:  índice 2   (base da columela, junção nariz-lábio)
+ * - Menton:     índice 152 (ponto mais inferior do queixo)
  */
 export function calcThirds(
   landmarks: Landmark[],
@@ -123,7 +123,7 @@ export function calcThirds(
 ): ThirdsResult | null {
   const trichion = landmarks[10];
   const glabela = landmarks[168];
-  const subnasale = landmarks[4];
+  const subnasale = landmarks[2];
   const menton = landmarks[152];
 
   if (!trichion || !glabela || !subnasale || !menton) return null;

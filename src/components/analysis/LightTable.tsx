@@ -191,7 +191,7 @@ export function LightTable({
     );
   };
 
-  // ── Facial Thirds Layer (Análise Vertical) ─────────────────────────────────
+  // ── Facial Thirds Layer (Terços Faciais) ──────────────────────────────────
   const renderThirds = () => {
     if (!thirdsData || !landmarks || landmarks.length === 0 || !dimensions.width) return null;
 
@@ -199,10 +199,13 @@ export function LightTable({
     const H = dimensions.height;
     const lm = landmarks as Landmark[];
 
-    // Pontos âncora
+    // Scale factor: normalize all visual sizes to a 1000px reference image
+    const S = Math.max(W, H) / 1000;
+
+    // Pontos âncora (corrigido: subnasale = 2, não 4)
     const trichion  = lm[10];
     const glabela   = lm[168];
-    const subnasale = lm[4];
+    const subnasale = lm[2];
     const menton    = lm[152];
 
     if (!trichion || !glabela || !subnasale || !menton) return null;
@@ -213,12 +216,24 @@ export function LightTable({
     const y_subnasale = subnasale.y * H;
     const y_menton    = menton.y    * H;
 
-    // Estende as linhas 8% além da borda do rosto
-    const xStart = W * 0.02;
-    const xEnd   = W * 0.98;
+    // Extensão horizontal: cobre o rosto inteiro com margem generosa
+    const faceLeft  = Math.min(lm[234]?.x ?? 0.1, lm[454]?.x ?? 0.1) * W;
+    const faceRight = Math.max(lm[234]?.x ?? 0.9, lm[454]?.x ?? 0.9) * W;
+    const faceSpanX = faceRight - faceLeft;
+    const xStart = faceLeft  - faceSpanX * 0.15;
+    const xEnd   = faceRight + faceSpanX * 0.15;
 
-    // Posição X para label (lado direito)
-    const labelX = xEnd + 8;
+    const strokeW  = S * 2;
+    const dashArr  = `${S * 10},${S * 6}`;
+    const tickLen  = S * 8;
+    const tickW    = S * 2.5;
+    const glowStd  = S * 2;
+    const labelW   = S * 130;
+    const labelH   = S * 36;
+    const labelRx  = S * 5;
+    const fontName = S * 11;
+    const fontMm   = S * 10;
+    const padX     = S * 10;
 
     const lines = [
       { y: y_trichion,  label: null },
@@ -230,49 +245,58 @@ export function LightTable({
     return (
       <g className="thirds-layer">
         <defs>
-          <filter id="amber-glow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="1" result="blur" />
+          <filter id="amber-glow-thirds" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation={glowStd} result="blur" />
             <feComposite in="SourceGraphic" in2="blur" operator="over" />
           </filter>
         </defs>
+
         {lines.map((line, i) => (
           <g key={i}>
-            {/* Linha horizontal */}
+            {/* Linha horizontal tracejada */}
             <line
               x1={xStart} y1={line.y}
               x2={xEnd}   y2={line.y}
               stroke={AMBER}
-              strokeWidth="1"
-              strokeDasharray="6,4"
+              strokeWidth={strokeW}
+              strokeDasharray={dashArr}
+              filter="url(#amber-glow-thirds)"
             />
-            {/* Tick marker */}
-            <line x1={xStart} y1={line.y - 4} x2={xStart} y2={line.y + 4} stroke={AMBER_SOLID} strokeWidth="1.5" />
-            <line x1={xEnd}   y1={line.y - 4} x2={xEnd}   y2={line.y + 4} stroke={AMBER_SOLID} strokeWidth="1.5" />
+            {/* Linha sólida fina sobre a tracejada para reforço */}
+            <line
+              x1={xStart} y1={line.y}
+              x2={xEnd}   y2={line.y}
+              stroke={AMBER_SOLID}
+              strokeWidth={strokeW * 0.4}
+            />
+            {/* Tick markers nas pontas */}
+            <line x1={xStart} y1={line.y - tickLen} x2={xStart} y2={line.y + tickLen} stroke={AMBER_SOLID} strokeWidth={tickW} />
+            <line x1={xEnd}   y1={line.y - tickLen} x2={xEnd}   y2={line.y + tickLen} stroke={AMBER_SOLID} strokeWidth={tickW} />
           </g>
         ))}
 
-        {/* Labels flutuantes para cada segmento */}
+        {/* Labels flutuantes por segmento */}
         {lines.slice(1).map((line, i) => {
           if (!line.label) return null;
           const { name, mm, midY } = line.label;
+          const lx = xEnd + padX;
           return (
             <g key={`label-thirds-${i}`}>
-              {/* Background blur simulado via rect */}
               <rect
-                x={xStart + 6}
-                y={midY - 14}
-                width={130}
-                height={26}
-                rx={4}
+                x={lx}
+                y={midY - labelH / 2}
+                width={labelW}
+                height={labelH}
+                rx={labelRx}
                 fill={AMBER_LABEL_BG}
                 stroke={AMBER}
-                strokeWidth="0.5"
+                strokeWidth={S * 1}
               />
               <text
-                x={xStart + 14}
-                y={midY - 2}
+                x={lx + padX}
+                y={midY - fontMm * 0.2}
                 fill={AMBER_SOLID}
-                fontSize="8.5"
+                fontSize={fontName}
                 fontFamily="'SF Mono', 'Fira Code', monospace"
                 fontWeight="600"
                 letterSpacing="0.04em"
@@ -280,10 +304,10 @@ export function LightTable({
                 {name}
               </text>
               <text
-                x={xStart + 14}
-                y={midY + 9}
-                fill="rgba(251,191,36,0.65)"
-                fontSize="8"
+                x={lx + padX}
+                y={midY + fontMm * 1.2}
+                fill="rgba(251,191,36,0.7)"
+                fontSize={fontMm}
                 fontFamily="'SF Mono', 'Fira Code', monospace"
               >
                 {mm} mm
@@ -295,13 +319,16 @@ export function LightTable({
     );
   };
 
-  // ── Facial Fifths Layer (Análise Horizontal) ────────────────────────────────
+  // ── Facial Fifths Layer (Quintos Faciais) ───────────────────────────────────
   const renderFifths = () => {
     if (!fifthsData || !landmarks || landmarks.length === 0 || !dimensions.width) return null;
 
     const W = dimensions.width;
     const H = dimensions.height;
     const lm = landmarks as Landmark[];
+
+    // Scale factor
+    const S = Math.max(W, H) / 1000;
 
     // Pontos âncora
     const limiteR = lm[454];
@@ -311,7 +338,11 @@ export function LightTable({
     const exoL    = lm[263];
     const limiteL = lm[234];
 
-    if (!limiteR || !exoR || !endoR || !endoL || !exoL || !limiteL) return null;
+    // Pontos para extensão vertical (trichion → menton)
+    const trichion = lm[10];
+    const menton   = lm[152];
+
+    if (!limiteR || !exoR || !endoR || !endoL || !exoL || !limiteL || !trichion || !menton) return null;
 
     // Coordenadas X absolutas
     const x_limiteR = limiteR.x * W;
@@ -321,41 +352,50 @@ export function LightTable({
     const x_exoL    = exoL.x    * W;
     const x_limiteL = limiteL.x * W;
 
-    // Y para as linhas verticais (sobe e desce além do ponto)
-    const yCenter = Math.min(exoR.y, exoL.y) * H;
-    const yTop    = yCenter - H * 0.06;
-    const yBot    = yCenter + H * 0.06;
+    // Y: linhas verticais cobrem todo o rosto (trichion → menton) com margem
+    const yTop = trichion.y * H - H * 0.03;
+    const yBot = menton.y   * H + H * 0.03;
 
-    // Label Y position (acima das linhas)
-    const labelY = yTop - 16;
+    // Visual sizes
+    const strokeW  = S * 2;
+    const dashArr  = `${S * 10},${S * 6}`;
+    const tickLen  = S * 6;
+    const tickW    = S * 2.5;
+    const glowStd  = S * 2;
+    const labelW   = S * 100;
+    const labelH   = S * 36;
+    const labelRx  = S * 5;
+    const fontName = S * 10;
+    const fontMm   = S * 9;
+
+    // Label Y position (abaixo do menton)
+    const labelY   = yBot + S * 15;
 
     const verticals = [
-      { x: x_limiteR, label: null },
-      { x: x_exoR,    label: null },
-      { x: x_endoR,   label: null },
-      { x: x_endoL,   label: null },
-      { x: x_exoL,    label: null },
-      { x: x_limiteL, label: null },
+      { x: x_limiteR },
+      { x: x_exoR },
+      { x: x_endoR },
+      { x: x_endoL },
+      { x: x_exoL },
+      { x: x_limiteL },
     ];
 
     const segments = [
-      { x1: x_limiteR, x2: x_exoR,  data: fifthsData.outerRight },
-      { x1: x_exoR,    x2: x_endoR, data: fifthsData.rightEye },
-      { x1: x_endoR,   x2: x_endoL, data: fifthsData.interalar },
-      { x1: x_endoL,   x2: x_exoL,  data: fifthsData.leftEye },
-      { x1: x_exoL,    x2: x_limiteL,data: fifthsData.outerLeft },
+      { x1: x_limiteR, x2: x_exoR,   data: fifthsData.outerRight },
+      { x1: x_exoR,    x2: x_endoR,  data: fifthsData.rightEye },
+      { x1: x_endoR,   x2: x_endoL,  data: fifthsData.interalar },
+      { x1: x_endoL,   x2: x_exoL,   data: fifthsData.leftEye },
+      { x1: x_exoL,    x2: x_limiteL, data: fifthsData.outerLeft },
     ];
 
     return (
       <g className="fifths-layer">
-        {/* Linha horizontal base */}
-        <line
-          x1={x_limiteR} y1={yCenter}
-          x2={x_limiteL} y2={yCenter}
-          stroke={AMBER}
-          strokeWidth="1"
-          strokeDasharray="6,4"
-        />
+        <defs>
+          <filter id="amber-glow-fifths" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation={glowStd} result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
+        </defs>
 
         {/* Linhas verticais divisoras */}
         {verticals.map((v, i) => (
@@ -363,36 +403,44 @@ export function LightTable({
             <line
               x1={v.x} y1={yTop}
               x2={v.x} y2={yBot}
-              stroke={AMBER_SOLID}
-              strokeWidth="1"
+              stroke={AMBER}
+              strokeWidth={strokeW}
+              strokeDasharray={dashArr}
+              filter="url(#amber-glow-fifths)"
             />
-            {/* Tick horizontal no topo e base */}
-            <line x1={v.x - 3} y1={yTop} x2={v.x + 3} y2={yTop} stroke={AMBER_SOLID} strokeWidth="1.5" />
-            <line x1={v.x - 3} y1={yBot} x2={v.x + 3} y2={yBot} stroke={AMBER_SOLID} strokeWidth="1.5" />
+            {/* Linha sólida de reforço */}
+            <line
+              x1={v.x} y1={yTop}
+              x2={v.x} y2={yBot}
+              stroke={AMBER_SOLID}
+              strokeWidth={strokeW * 0.4}
+            />
+            {/* Tick markers topo e base */}
+            <line x1={v.x - tickLen} y1={yTop} x2={v.x + tickLen} y2={yTop} stroke={AMBER_SOLID} strokeWidth={tickW} />
+            <line x1={v.x - tickLen} y1={yBot} x2={v.x + tickLen} y2={yBot} stroke={AMBER_SOLID} strokeWidth={tickW} />
           </g>
         ))}
 
-        {/* Labels por segmento */}
+        {/* Labels abaixo de cada segmento */}
         {segments.map((seg, i) => {
           const midX = (seg.x1 + seg.x2) / 2;
-          const labelWidth = 90;
           return (
             <g key={`label-fifths-${i}`}>
               <rect
-                x={midX - labelWidth / 2}
-                y={labelY - 22}
-                width={labelWidth}
-                height={26}
-                rx={4}
+                x={midX - labelW / 2}
+                y={labelY}
+                width={labelW}
+                height={labelH}
+                rx={labelRx}
                 fill={AMBER_LABEL_BG}
                 stroke={AMBER}
-                strokeWidth="0.5"
+                strokeWidth={S * 1}
               />
               <text
                 x={midX}
-                y={labelY - 10}
+                y={labelY + fontName * 1.3}
                 fill={AMBER_SOLID}
-                fontSize="7.5"
+                fontSize={fontName}
                 fontFamily="'SF Mono', 'Fira Code', monospace"
                 fontWeight="600"
                 textAnchor="middle"
@@ -402,9 +450,9 @@ export function LightTable({
               </text>
               <text
                 x={midX}
-                y={labelY}
-                fill="rgba(251,191,36,0.65)"
-                fontSize="7.5"
+                y={labelY + fontName * 1.3 + fontMm * 1.4}
+                fill="rgba(251,191,36,0.7)"
+                fontSize={fontMm}
                 fontFamily="'SF Mono', 'Fira Code', monospace"
                 textAnchor="middle"
               >

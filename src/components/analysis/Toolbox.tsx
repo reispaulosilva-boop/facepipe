@@ -106,7 +106,7 @@ export function Toolbox({
               )}
             </div>
           }
-          label="Análise Vertical (Terços)"
+          label="Terços Faciais"
           active={showThirds}
           onClick={toggleThirds}
           colorScheme="amber"
@@ -125,7 +125,7 @@ export function Toolbox({
               )}
             </div>
           }
-          label="Análise Horizontal (Quintos)"
+          label="Quintos Faciais"
           active={showFifths}
           onClick={toggleFifths}
           colorScheme="amber"
