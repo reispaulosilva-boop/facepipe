@@ -24,29 +24,39 @@ export function ClinicalWorkspace() {
 
   const { isLoaded: landmarkerLoaded, detectFace } = useFaceLandmarker();
 
-  // Load image URL
-  React.useEffect(() => {
-    if (imageFile) {
-      const url = URL.createObjectURL(imageFile);
-      setImageUrl(url);
-      
-      // Auto-detect when image loads
-      const img = new Image();
-      img.onload = async () => {
-        if (landmarkerLoaded) {
-          setIsProcessing(true);
-          const result = await detectFace(img);
-          if (result && result.faceLandmarks) {
-            setLandmarks(result.faceLandmarks[0]);
-          }
-          setIsProcessing(false);
-        }
-      };
-      img.src = url;
+  // State to track if current image has been analyzed
+  const [lastAnalyzedFile, setLastAnalyzedFile] = useState<File | null>(null);
 
-      return () => URL.revokeObjectURL(url);
-    }
-  }, [imageFile, landmarkerLoaded, detectFace]);
+  // Load and analyze image
+  React.useEffect(() => {
+    if (!imageFile || !landmarkerLoaded) return;
+
+    // Avoid redundant processing
+    if (imageFile === lastAnalyzedFile) return;
+
+    const url = URL.createObjectURL(imageFile);
+    setImageUrl(url);
+    
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = async () => {
+      setIsProcessing(true);
+      try {
+        const result = await detectFace(img);
+        if (result && result.faceLandmarks && result.faceLandmarks.length > 0) {
+          setLandmarks(result.faceLandmarks[0]);
+          setLastAnalyzedFile(imageFile);
+        }
+      } catch (err) {
+        console.error("Clinical analysis failed:", err);
+      } finally {
+        setIsProcessing(false);
+      }
+    };
+    img.src = url;
+
+    return () => URL.revokeObjectURL(url);
+  }, [imageFile, landmarkerLoaded, detectFace, lastAnalyzedFile]);
 
   const handleExport = useCallback(async () => {
     if (!workspaceRef.current) return;

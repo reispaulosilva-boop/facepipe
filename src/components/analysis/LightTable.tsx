@@ -9,6 +9,7 @@ import {
 import * as d3 from "d3";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { FaceLandmarker } from "@mediapipe/tasks-vision";
 
 interface LightTableProps {
   imageUrl: string;
@@ -64,17 +65,58 @@ export function LightTable({
 
     if (!showLandmarks || landmarks.length === 0) return;
 
-    const COLOR_DOTS = "#00fbcc"; // Cold Cyan
+    const COLOR_MESH = "rgba(0, 251, 204, 0.12)"; // Very soft cyan mesh
+    const COLOR_CONTOURS = "rgba(0, 251, 204, 0.45)"; // Stronger cyan for key lines
+    const COLOR_DOTS = "#00fbcc"; // Solid Cold Cyan for points
     
-    ctx.globalAlpha = 0.45;
+    ctx.save();
+    
+    // 1. Draw Mesh Tesselation
+    ctx.lineWidth = 0.5;
+    ctx.strokeStyle = COLOR_MESH;
+    ctx.beginPath();
+    for (const connection of FaceLandmarker.FACE_LANDMARKS_TESSELATION) {
+      const from = landmarks[connection.start];
+      const to = landmarks[connection.end];
+      if (from && to) {
+        ctx.moveTo(from.x * dimensions.width, from.y * dimensions.height);
+        ctx.lineTo(to.x * dimensions.width, to.y * dimensions.height);
+      }
+    }
+    ctx.stroke();
+
+    // 2. Draw Anatomical Contours
+    ctx.lineWidth = 1.2;
+    ctx.strokeStyle = COLOR_CONTOURS;
+    const contours = [
+      FaceLandmarker.FACE_LANDMARKS_FACE_OVAL,
+      FaceLandmarker.FACE_LANDMARKS_LEFT_EYE,
+      FaceLandmarker.FACE_LANDMARKS_RIGHT_EYE,
+      FaceLandmarker.FACE_LANDMARKS_LIPS,
+    ];
+    for (const contour of contours) {
+      ctx.beginPath();
+      for (const connection of contour) {
+        const from = landmarks[connection.start];
+        const to = landmarks[connection.end];
+        if (from && to) {
+          ctx.moveTo(from.x * dimensions.width, from.y * dimensions.height);
+          ctx.lineTo(to.x * dimensions.width, to.y * dimensions.height);
+        }
+      }
+      ctx.stroke();
+    }
+
+    // 3. Draw High-Precision Points
+    ctx.globalAlpha = 0.6;
     ctx.fillStyle = COLOR_DOTS;
-    
     landmarks.forEach((pt: any) => {
       ctx.beginPath();
-      ctx.arc(pt.x * dimensions.width, pt.y * dimensions.height, 0.9, 0, 2 * Math.PI);
+      ctx.arc(pt.x * dimensions.width, pt.y * dimensions.height, 1, 0, 2 * Math.PI);
       ctx.fill();
     });
     
+    ctx.restore();
   }, [landmarks, showLandmarks, isLoaded, dimensions]);
 
   // ── Layer 2: Clinical Illustrations (Soft Gold) ───────────────────────────
