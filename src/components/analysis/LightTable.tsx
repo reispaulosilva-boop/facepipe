@@ -184,12 +184,6 @@ export function LightTable({
 
     return (
       <g className="biometric-mesh-layer">
-        <defs>
-          <filter id="cyan-glow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="1.5" result="blur" />
-            <feComposite in="SourceGraphic" in2="blur" operator="over" />
-          </filter>
-        </defs>
         <path 
            d={meshPath} 
            stroke={CYAN} 
@@ -202,7 +196,6 @@ export function LightTable({
            stroke={CYAN} 
            strokeWidth="2.5" 
            fill="none" 
-           filter="url(#cyan-glow)"
            style={{ opacity: 0.6 }}
         />
         {landmarks.map((pt, i) => (
@@ -212,7 +205,6 @@ export function LightTable({
             cy={pt.y * dimensions.height}
             r="2.5"
             fill={CYAN}
-            filter="url(#cyan-glow)"
             style={{ opacity: 0.7 }}
           />
         ))}
@@ -318,12 +310,6 @@ export function LightTable({
 
     return (
       <g className="thirds-layer">
-        <defs>
-          <filter id="amber-glow-thirds" x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur stdDeviation={glowStd} result="blur" />
-            <feComposite in="SourceGraphic" in2="blur" operator="over" />
-          </filter>
-        </defs>
 
         {lines.map((line, i) => {
           const isTrichionLine = i === 0;
@@ -338,7 +324,6 @@ export function LightTable({
                 stroke={lineColor}
                 strokeWidth={strokeW}
                 strokeDasharray={dashArr}
-                filter="url(#amber-glow-thirds)"
               />
               {/* Linha sólida fina sobre a tracejada */}
               <line
@@ -511,12 +496,6 @@ export function LightTable({
 
     return (
       <g className="fifths-layer">
-        <defs>
-          <filter id="amber-glow-fifths" x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur stdDeviation={glowStd} result="blur" />
-            <feComposite in="SourceGraphic" in2="blur" operator="over" />
-          </filter>
-        </defs>
 
         {/* Linhas verticais divisoras */}
         {verticals.map((v, i) => (
@@ -527,7 +506,6 @@ export function LightTable({
               stroke={AMBER}
               strokeWidth={strokeW}
               strokeDasharray={dashArr}
-              filter="url(#amber-glow-fifths)"
             />
             {/* Linha sólida de reforço */}
             <line
@@ -599,7 +577,8 @@ export function LightTable({
               stroke="rgba(6,182,212,0.15)"
               strokeWidth="1"
               strokeDasharray="4,4"
-              className="hover:fill-cyan-500/10 transition-colors pointer-events-auto"
+              className="pointer-events-auto transition-colors"
+              style={{ fill: "rgba(6,182,212,0.03)" }} /* Avoid Tailwind color utilities */
             />
           );
         })}
@@ -632,7 +611,10 @@ export function LightTable({
   return (
     <div ref={containerRef} className="flex-1 w-full h-full bg-[#000105] relative flex items-center justify-center overflow-hidden">
       {/* Cinematic ambient lighting */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(6,182,212,0.06)_0%,transparent_80%)] pointer-events-none" />
+      <div 
+        className="absolute inset-0 pointer-events-none" 
+        style={{ backgroundImage: 'radial-gradient(circle at 50% 40%, rgba(6,182,212,0.06) 0%, transparent 80%)' }}
+      />
       
       <TransformWrapper
         ref={transformRef}
@@ -751,7 +733,8 @@ export function LightTable({
                 initial={{ x: "-100%" }}
                 animate={{ x: "100%" }}
                 transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
-                className="absolute inset-0 bg-cyan-500/60 blur-[1px]"
+                className="absolute inset-0 blur-[1px]"
+                style={{ backgroundColor: "rgba(6, 182, 212, 0.6)" }}
               />
             </div>
             <span className="mt-6 text-[9px] font-bold text-white/30 tracking-[0.6em] uppercase">Securing Neural Gateway</span>
@@ -762,8 +745,8 @@ export function LightTable({
       {/* Telemetry HUD */}
       <div className="absolute bottom-10 right-10 pointer-events-none hidden lg:flex flex-col items-end gap-1.5 opacity-40">
         <div className="flex items-center gap-3">
-          <span className="text-[8px] font-mono text-cyan-400/60 uppercase">System Ready</span>
-          <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 shadow-[0_0_8px_cyan]" />
+          <span className="text-[8px] font-mono uppercase" style={{ color: "rgba(34, 211, 238, 0.6)" }}>System Ready</span>
+          <div className="w-1.5 h-1.5 rounded-full shadow-[0_0_8px_#06b6d4]" style={{ backgroundColor: "#06b6d4" }} />
         </div>
         <span className="text-[8px] font-mono text-white/40 uppercase">Mode: CLINICAL_MESH_V3</span>
         <span className="text-[8px] font-mono text-white/40 uppercase">Res: {dimensions.width}x{dimensions.height}</span>

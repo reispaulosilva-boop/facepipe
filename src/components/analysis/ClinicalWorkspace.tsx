@@ -6,7 +6,7 @@ import { LightTable } from "./LightTable";
 import { DiagnosticReport } from "./DiagnosticReport";
 import { useFaceLandmarker } from "@/hooks/useFaceLandmarker";
 import { useFaceStore } from "@/store/useFaceStore";
-import html2canvas from "html2canvas";
+import { toPng } from "html-to-image";
 import { motion } from "framer-motion";
 import { ReactZoomPanPinchRef } from "react-zoom-pan-pinch";
 
@@ -87,12 +87,10 @@ export function ClinicalWorkspace() {
         return;
       }
 
-      const canvas = await html2canvas(captureTarget, {
-        useCORS: true,
-        scale: 2,
-        backgroundColor: "#000105"
+      const dataUrl = await toPng(captureTarget, {
+        quality: 1.0,
+        pixelRatio: 2,
       });
-      const dataUrl = canvas.toDataURL("image/png");
       
       const link = document.createElement('a');
       link.download = `facepipe-analysis-${new Date().getTime()}.png`;
@@ -115,16 +113,19 @@ export function ClinicalWorkspace() {
     setIsGeneratingReport(true);
     setDiagnosticReport(null);
     try {
-      // 1. Capturar imagem com overlays usando html2canvas (mais robusto)
-      console.log("Capturing screen for AI with html2canvas...");
-      const canvas = await html2canvas(captureTarget, {
-        useCORS: true,
-        scale: 1.5,
-        backgroundColor: "#000105",
-        logging: false
+      // 1. Capturar imagem com overlays usando toPng (que suporta oklch)
+      console.log("Capturing screen for AI with toPng...");
+      
+      const dataUrl = await toPng(captureTarget, {
+        quality: 0.85,
+        pixelRatio: 1.5,
+        cacheBust: true,
       });
       
-      const dataUrl = canvas.toDataURL("image/png");
+      if (!dataUrl || !dataUrl.includes(",")) {
+        throw new Error("Falha ao capturar imagem da análise.");
+      }
+
       const base64Data = dataUrl.split(",")[1];
 
       // 2. Construir prompt especializado (AB Face)
