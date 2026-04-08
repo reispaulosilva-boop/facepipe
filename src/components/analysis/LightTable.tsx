@@ -88,31 +88,40 @@ export function LightTable({
 
     return (
       <g className="biometric-mesh-layer">
+        <defs>
+          <filter id="cyan-glow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="1.5" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
+        </defs>
+
         {/* Tesselation */}
         <path 
            d={meshPath} 
            stroke={CYAN} 
-           strokeWidth="0.5" 
+           strokeWidth="1" 
            fill="none" 
-           style={{ opacity: 0.15 }}
+           style={{ opacity: 0.12 }}
         />
         {/* Anatomical Contours */}
         <path 
            d={contoursPath} 
            stroke={CYAN} 
-           strokeWidth="1.2" 
+           strokeWidth="2.5" 
            fill="none" 
-           style={{ opacity: 0.5 }}
+           filter="url(#cyan-glow)"
+           style={{ opacity: 0.6 }}
         />
-        {/* Landmark Points (Sampled for performance or all) */}
+        {/* Landmark Points */}
         {landmarks.map((pt, i) => (
           <circle 
             key={i}
             cx={pt.x * dimensions.width}
             cy={pt.y * dimensions.height}
-            r="1"
+            r="2.5"
             fill={CYAN}
-            style={{ opacity: 0.6 }}
+            filter="url(#cyan-glow)"
+            style={{ opacity: 0.7 }}
           />
         ))}
       </g>
