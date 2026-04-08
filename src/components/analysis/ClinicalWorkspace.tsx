@@ -100,13 +100,8 @@ export function ClinicalWorkspace() {
   return (
     <div className="flex w-full h-screen bg-[#020617] overflow-hidden font-sans text-white">
       <Toolbox 
-        activeTool={activeTool}
-        setActiveTool={setActiveTool}
         showLandmarks={showLandmarks}
         setShowLandmarks={setShowLandmarks}
-        onExport={handleExport}
-        onClearIllustrations={() => {}} 
-        onReset={handleReset}
         zoomPercent={zoomPercent}
         setZoomPercent={handleZoomPercentChange}
       />
