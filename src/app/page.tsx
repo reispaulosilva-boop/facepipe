@@ -1,65 +1,158 @@
-import Image from "next/image";
+"use client";
+
+import { useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { ScanFace, Stethoscope, Download, User, Settings, Play, Sparkles } from "lucide-react";
+import { FileDropzone } from "@/components/FileDropzone";
+import { useFaceStore } from "@/store/useFaceStore";
 
 export default function Home() {
+  const router = useRouter();
+  const { imageFile, setImageFile } = useFaceStore();
+
+  const handleFileSelect = useCallback(
+    (file: File) => {
+      setImageFile(file);
+    },
+    [setImageFile]
+  );
+
+  const handleStartAnalysis = () => {
+    router.push("/analysis");
+  };
+
+  // Create preview URL from the stored file
+  const previewUrl = imageFile ? URL.createObjectURL(imageFile) : null;
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="flex-1 flex flex-col min-h-screen">
+      {/* Header */}
+      <header className="glass-panel sticky top-0 z-50 flex items-center justify-between px-6 py-4 border-b border-white/10">
+        <div className="flex items-center gap-3">
+          <div className="bg-primary/20 p-2 rounded-xl">
+            <ScanFace className="w-6 h-6 text-primary" />
+          </div>
+          <div>
+            <h1 className="font-semibold text-lg tracking-tight text-white/90">Facepipe</h1>
+            <p className="text-xs text-white/50 font-medium">Clinical Analysis Studio</p>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div className="flex items-center gap-4">
+          <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-sm font-medium transition-colors border border-white/5 text-white/80">
+            <Settings className="w-4 h-4" />
+            Configurações
+          </button>
+          <div className="w-9 h-9 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center">
+            <User className="w-4 h-4 text-primary" />
+          </div>
         </div>
-      </main>
-    </div>
+      </header>
+
+      {/* Main Workspace */}
+      <div className="flex-1 p-6 flex flex-col gap-6 lg:flex-row max-w-[1600px] w-full mx-auto overflow-hidden">
+
+        {/* Sidebar / Tools */}
+        <aside className="w-full lg:w-80 flex flex-col gap-4">
+          <div className="glass-panel p-5 rounded-2xl flex flex-col gap-4 flex-1">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="bg-white/10 p-1.5 rounded-lg">
+                <Stethoscope className="w-4 h-4 text-white/70" />
+              </div>
+              <h2 className="font-semibold text-white/90">Análise Facial</h2>
+            </div>
+
+            <p className="text-sm text-white/50 leading-relaxed mb-4">
+              Realize o upload de uma foto frontal do paciente para iniciar o processamento local (Zero-Storage).{" "}
+              Nenhuma imagem é salva na nuvem.
+            </p>
+
+            <FileDropzone onFileSelect={handleFileSelect} className="mt-auto" />
+
+            {imageFile && (
+              <div className="mt-4 p-3 rounded-xl bg-primary/10 border border-primary/20 animate-in fade-in slide-in-from-bottom-2">
+                <p className="text-[10px] text-primary uppercase font-bold tracking-widest mb-1">Arquivo Selecionado</p>
+                <p className="text-xs text-white/80 font-medium truncate">{imageFile.name}</p>
+                <p className="text-[10px] text-white/40">{(imageFile.size / 1024 / 1024).toFixed(2)} MB</p>
+              </div>
+            )}
+          </div>
+
+          <div className="glass-panel p-5 rounded-2xl flex flex-col gap-4">
+            <h3 className="text-sm font-medium text-white/70 uppercase tracking-wider">Ações do Laudo</h3>
+            <button
+              disabled={!imageFile}
+              className="w-full py-2.5 rounded-lg bg-white/5 text-white/40 text-sm font-medium border border-white/5 flex flex-row items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10 hover:text-white/80 transition-colors"
+            >
+              <Download className="w-4 h-4" />
+              Exportar Laudo PDF
+            </button>
+          </div>
+        </aside>
+
+        {/* Canvas / Preview Area */}
+        <section className="flex-1 glass-panel rounded-2xl flex items-center justify-center relative overflow-hidden min-h-[500px]">
+          <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
+
+          {/* Static image preview (no landmark processing here) */}
+          {previewUrl ? (
+            <div className="relative w-full h-full flex items-center justify-center">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={previewUrl}
+                alt="Patient photo preview"
+                className="max-w-full max-h-full object-contain rounded-xl"
+                style={{ maxHeight: "calc(100vh - 250px)" }}
+              />
+
+              {/* Floating Gradient Overlay at bottom */}
+              <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/70 to-transparent rounded-b-xl pointer-events-none" />
+
+              {/* Floating 'Iniciar Análise' CTA Button */}
+              <button
+                onClick={handleStartAnalysis}
+                className="absolute bottom-8 left-1/2 -translate-x-1/2 group flex items-center gap-3 px-7 py-4 rounded-2xl font-semibold text-base text-white transition-all duration-300 z-20"
+                style={{
+                  background: "linear-gradient(135deg, rgba(14,165,233,0.9) 0%, rgba(99,102,241,0.9) 100%)",
+                  boxShadow: "0 0 40px rgba(14,165,233,0.4), 0 8px 32px rgba(0,0,0,0.4)",
+                  backdropFilter: "blur(12px)",
+                  border: "1px solid rgba(255,255,255,0.2)",
+                }}
+              >
+                {/* Glow pulse ring */}
+                <span className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-pulse"
+                  style={{ background: "linear-gradient(135deg, rgba(14,165,233,0.3), rgba(99,102,241,0.3))", filter: "blur(8px)" }}
+                />
+                <span className="relative flex items-center gap-2.5">
+                  <Sparkles className="w-5 h-5 text-white/90 group-hover:scale-110 transition-transform duration-300" />
+                  Iniciar Análise
+                  <Play className="w-4 h-4 text-white/80 fill-white/80 ml-1 group-hover:translate-x-1 transition-transform duration-300" />
+                </span>
+              </button>
+
+              {/* Zero-storage badge */}
+              <div className="absolute top-4 left-4 glass-panel px-3 py-1.5 rounded-lg flex items-center gap-2 border border-white/10 z-20">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)]" />
+                <span className="text-[10px] font-bold text-white/60 uppercase tracking-widest">Zero-Storage</span>
+              </div>
+            </div>
+          ) : (
+            /* Empty state */
+            <div className="text-center z-20 flex flex-col items-center gap-4 animate-in fade-in zoom-in duration-700">
+              <div className="relative">
+                <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full" />
+                <ScanFace className="w-20 h-20 text-white/10 relative" strokeWidth={1} />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-xl font-medium text-white/80 tracking-tight">Espaço de Análise</h3>
+                <p className="text-white/30 text-sm max-w-[280px] leading-relaxed">
+                  Arraste ou selecione uma imagem para habilitar a análise clínica.
+                </p>
+              </div>
+            </div>
+          )}
+        </section>
+      </div>
+    </main>
   );
 }
