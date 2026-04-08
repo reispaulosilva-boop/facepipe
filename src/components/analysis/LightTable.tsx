@@ -362,14 +362,13 @@ export function LightTable({
     const tickLen  = S * 6;
     const tickW    = S * 2.5;
     const glowStd  = S * 2;
-    const labelW   = S * 100;
-    const labelH   = S * 36;
-    const labelRx  = S * 5;
-    const fontName = S * 10;
-    const fontMm   = S * 9;
+    const labelH   = S * 22;
+    const labelRx  = S * 3;
+    const fontSz   = S * 8;
 
-    // Label Y position (abaixo do menton)
-    const labelY   = yBot + S * 15;
+    // Label Y: two staggered rows to avoid overlap
+    const labelY1  = yBot + S * 12;
+    const labelY2  = yBot + S * 12 + labelH + S * 6;
 
     const verticals = [
       { x: x_limiteR },
@@ -421,42 +420,36 @@ export function LightTable({
           </g>
         ))}
 
-        {/* Labels abaixo de cada segmento */}
+        {/* Labels abaixo de cada segmento — staggered rows */}
         {segments.map((seg, i) => {
           const midX = (seg.x1 + seg.x2) / 2;
+          const segW = Math.abs(seg.x2 - seg.x1);
+          const lw = Math.min(segW * 0.92, S * 90);
+          const rowY = i % 2 === 0 ? labelY1 : labelY2;
+          const text = `${seg.data.label}: ${seg.data.mm}mm`;
           return (
             <g key={`label-fifths-${i}`}>
               <rect
-                x={midX - labelW / 2}
-                y={labelY}
-                width={labelW}
+                x={midX - lw / 2}
+                y={rowY}
+                width={lw}
                 height={labelH}
                 rx={labelRx}
                 fill={AMBER_LABEL_BG}
                 stroke={AMBER}
-                strokeWidth={S * 1}
+                strokeWidth={S * 0.8}
               />
               <text
                 x={midX}
-                y={labelY + fontName * 1.3}
+                y={rowY + labelH * 0.65}
                 fill={AMBER_SOLID}
-                fontSize={fontName}
+                fontSize={fontSz}
                 fontFamily="'SF Mono', 'Fira Code', monospace"
                 fontWeight="600"
                 textAnchor="middle"
-                letterSpacing="0.04em"
+                letterSpacing="0.02em"
               >
-                {seg.data.label}
-              </text>
-              <text
-                x={midX}
-                y={labelY + fontName * 1.3 + fontMm * 1.4}
-                fill="rgba(251,191,36,0.7)"
-                fontSize={fontMm}
-                fontFamily="'SF Mono', 'Fira Code', monospace"
-                textAnchor="middle"
-              >
-                {seg.data.mm} mm
+                {text}
               </text>
             </g>
           );
