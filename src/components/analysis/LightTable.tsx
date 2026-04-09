@@ -39,14 +39,16 @@ interface LightTableProps {
   showLandmarks: boolean;
   showThirds: boolean;
   showFifths: boolean;
-  activeTool: string;
   trichionOverrideY: number | null;
+  analysisResults: any;
+  onLandmarksDetected: (results: any) => void;
   onTrichionAdjust: (y: number) => void;
   onLandmarksLoad?: (count: number) => void;
   onZoomChange?: (zoom: number, baseScale: number) => void;
   showDistances: boolean;
   resetKey?: number;
   transformRef?: React.RefObject<ReactZoomPanPinchRef | null>;
+  activeTool?: string;
 }
 
 export function LightTable({
@@ -56,13 +58,15 @@ export function LightTable({
   showThirds,
   showFifths,
   showDistances,
-  activeTool,
   trichionOverrideY,
   onTrichionAdjust,
+  analysisResults,
+  onLandmarksDetected,
   onLandmarksLoad,
   onZoomChange,
   resetKey = 0,
-  transformRef
+  transformRef,
+  activeTool = "select"
 }: LightTableProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const photoRef = useRef<HTMLImageElement>(null);

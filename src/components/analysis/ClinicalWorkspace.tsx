@@ -312,6 +312,8 @@ export function ClinicalWorkspace() {
           showFifths={showFifths}
           showDistances={showDistances}
           trichionOverrideY={trichionOverrideY}
+          activeTool={activeTool}
+          onTrichionAdjust={setTrichionOverrideY}
           analysisResults={analysisResults}
           onLandmarksDetected={setAnalysisResults}
           resetKey={resetKey}
