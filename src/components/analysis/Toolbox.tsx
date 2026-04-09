@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useFaceStore } from "@/store/useFaceStore";
 
 interface ToolButtonProps {
   icon: React.ReactNode;
