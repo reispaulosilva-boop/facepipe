@@ -210,35 +210,12 @@ Onde 'x' e 'y' são as coordenadas sugeridas para o marcador AR (em porcentagem 
         body: JSON.stringify({
           prompt,
           imageParts: [{ inlineData: { mimeType: "image/jpeg", data: base64Data } }],
-          model: "gemini-1.5-flash" // Tentando o nome padrão
+          model: "gemini-2.5-flash"
         })
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        
-        // Se falhar com 404, tentando o alias '-latest'
-        if (response.status === 404) {
-          const retryResponse = await fetch("/api/gemini", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              prompt,
-              imageParts: [{ inlineData: { mimeType: "image/jpeg", data: base64Data } }],
-              model: "gemini-1.5-flash-latest"
-            })
-          });
-          
-          if (!retryResponse.ok) {
-            const retryError = await retryResponse.json().catch(() => ({}));
-            throw new Error(retryError.error || `Erro HTTP: ${retryResponse.status}`);
-          }
-          
-          const result = await retryResponse.json();
-          processResult(result);
-          return;
-        }
-        
         throw new Error(errorData.error || `Erro HTTP: ${response.status}`);
       }
       
