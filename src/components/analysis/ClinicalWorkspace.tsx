@@ -153,6 +153,22 @@ export function ClinicalWorkspace() {
     });
   };
 
+  const processResult = (result: any) => {
+    if (!result.text) {
+      throw new Error("Resposta da IA vazia");
+    }
+
+    // Procura o primeiro '{' e o último '}' para extrair o JSON puro
+    const jsonMatch = result.text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error("Não foi possível encontrar dados estruturados na resposta");
+    }
+    
+    const melasmaData = JSON.parse(jsonMatch[0]);
+    setAnalysisResults({ melasmaData });
+    toggleMelasmaOverlay();
+  };
+
   const analyzeMelasma = useCallback(async () => {
     if (isAnalyzingSkin || !imageFile) return;
     
@@ -194,31 +210,40 @@ Onde 'x' e 'y' são as coordenadas sugeridas para o marcador AR (em porcentagem 
         body: JSON.stringify({
           prompt,
           imageParts: [{ inlineData: { mimeType: "image/jpeg", data: base64Data } }],
-          model: "gemini-1.5-flash"
+          model: "gemini-1.5-flash" // Tentando o nome padrão
         })
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        
+        // Se falhar com 404, tentando o alias '-latest'
+        if (response.status === 404) {
+          const retryResponse = await fetch("/api/gemini", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              prompt,
+              imageParts: [{ inlineData: { mimeType: "image/jpeg", data: base64Data } }],
+              model: "gemini-1.5-flash-latest"
+            })
+          });
+          
+          if (!retryResponse.ok) {
+            const retryError = await retryResponse.json().catch(() => ({}));
+            throw new Error(retryError.error || `Erro HTTP: ${retryResponse.status}`);
+          }
+          
+          const result = await retryResponse.json();
+          processResult(result);
+          return;
+        }
+        
         throw new Error(errorData.error || `Erro HTTP: ${response.status}`);
       }
       
       const result = await response.json();
-      
-      if (!result.text) {
-        throw new Error("Resposta da IA vazia");
-      }
-
-      // Procura o primeiro '{' e o último '}' para extrair o JSON puro
-      const jsonMatch = result.text.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new Error("Não foi possível encontrar dados estruturados na resposta");
-      }
-      
-      const melasmaData = JSON.parse(jsonMatch[0]);
-
-      setAnalysisResults({ melasmaData });
-      toggleMelasmaOverlay();
+      processResult(result);
       
     } catch (err: any) {
       console.error("Melasma analysis failure:", err);
