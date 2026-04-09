@@ -795,16 +795,12 @@ export function LightTable({
               <circle cx={x1} cy={midY} r={S*4} fill={line.color} />
               <circle cx={x2} cy={midY} r={S*4} fill={line.color} />
               
-              <rect 
-                x={(x1+x2)/2 - S*65} y={midY - S*25} 
-                width={S*130} height={S*18} rx={S*4} 
-                fill="rgba(0,0,0,0.7)" stroke={line.color} strokeWidth={S*0.5} 
-              />
               <text 
-                x={(x1+x2)/2} y={midY - S*13} 
-                fill={line.color} fontSize={S*9} 
+                x={(x1+x2)/2} y={midY - S*10} 
+                fill={line.color} fontSize={S*10} 
                 textAnchor="middle" fontWeight="bold"
                 fontFamily="monospace"
+                style={{ textShadow: '0 0 4px rgba(0,0,0,0.8)' }}
               >
                 {line.data.label}: {line.data.mm}mm
               </text>
