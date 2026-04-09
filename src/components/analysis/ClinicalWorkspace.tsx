@@ -254,6 +254,7 @@ O laudo deve ser conciso, profissional e incluir uma seção de 'Diagnóstico' e
         setShowLandmarks={setShowLandmarks}
         showThirds={showThirds}
         toggleThirds={toggleThirds}
+        showFifths={showFifths}
         toggleFifths={toggleFifths}
         showAsymmetry={showAsymmetry}
         toggleAsymmetry={toggleAsymmetry}
