@@ -31,6 +31,8 @@ export function ClinicalWorkspace() {
     toggleAsymmetry,
     showStructural,
     toggleStructural,
+    showDistances,
+    toggleDistances,
   } = useFaceStore();
 
   const [activeTool, setActiveTool] = useState("select");
@@ -260,6 +262,8 @@ O laudo deve ser conciso, profissional e incluir uma seção de 'Diagnóstico' e
         toggleAsymmetry={toggleAsymmetry}
         showStructural={showStructural}
         toggleStructural={toggleStructural}
+        showDistances={showDistances}
+        toggleDistances={toggleDistances}
         trichionOverrideY={trichionOverrideY}
         resetTrichion={resetTrichion}
         zoomPercent={zoomPercent}
@@ -358,6 +362,7 @@ O laudo deve ser conciso, profissional e incluir uma seção de 'Diagnóstico' e
           showFifths={showFifths}
           showAsymmetry={showAsymmetry}
           showStructural={showStructural}
+          showDistances={showDistances}
           activeTool={activeTool}
           trichionOverrideY={trichionOverrideY}
           onTrichionAdjust={setTrichionOverrideY}

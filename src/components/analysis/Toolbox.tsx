@@ -11,7 +11,8 @@ import {
   RotateCcw,
   Sparkles,
   Scale,
-  Target
+  Target,
+  Ruler
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -61,6 +62,8 @@ interface ToolboxProps {
   toggleAsymmetry: () => void;
   showStructural: boolean;
   toggleStructural: () => void;
+  showDistances: boolean;
+  toggleDistances: () => void;
   trichionOverrideY: number | null;
   resetTrichion: () => void;
   zoomPercent: number;
@@ -80,6 +83,8 @@ export function Toolbox({
   toggleAsymmetry,
   showStructural,
   toggleStructural,
+  showDistances,
+  toggleDistances,
   trichionOverrideY,
   resetTrichion,
   zoomPercent,
@@ -186,6 +191,25 @@ export function Toolbox({
           label="Pontos AB Face"
           active={showStructural}
           onClick={toggleStructural}
+          colorScheme="amber"
+        />
+
+        {/* Distâncias Horizontais (Bizigomática / Bigonial) */}
+        <ToolButton
+          icon={
+            <div className="relative flex items-center justify-center w-4 h-4">
+              <Ruler className="w-4 h-4" />
+              {showDistances && (
+                <motion.div
+                  layoutId="distances-indicator"
+                  className="absolute -top-0.5 -right-0.5 w-1 h-1 rounded-full bg-red-400"
+                />
+              )}
+            </div>
+          }
+          label="Distâncias Faciais"
+          active={showDistances}
+          onClick={toggleDistances}
           colorScheme="amber"
         />
       </div>

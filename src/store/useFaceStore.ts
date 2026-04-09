@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { ThirdsResult, FifthsResult, LipRatioResult, TopographicRegion } from "@/utils/facialAnalysis";
+import { ThirdsResult, FifthsResult, LipRatioResult, TopographicRegion, DistanceMeasurement } from "@/utils/facialAnalysis";
 
 interface AnalysisResults {
   thirds: ThirdsResult | null;
@@ -11,6 +11,8 @@ interface AnalysisResults {
   pxPerMm: number | null;
   morphology: "Oval" | "Redondo" | "Coração" | "Angular" | null;
   asymmetryScore: number | null;
+  bizygomatic: DistanceMeasurement | null;
+  bigonial: DistanceMeasurement | null;
   structuralRatios: {
     noseToChin: number;
     eyeWidthToFaceWidth: number;
@@ -36,6 +38,9 @@ interface FaceStore {
 
   showStructural: boolean;
   toggleStructural: () => void;
+
+  showDistances: boolean;
+  toggleDistances: () => void;
 
   // Ajuste manual do Trichion (normalizado 0–1, null = usar landmark 10)
   trichionOverrideY: number | null;
@@ -69,6 +74,8 @@ const defaultAnalysisResults: AnalysisResults = {
   pxPerMm: null,
   morphology: null,
   asymmetryScore: null,
+  bizygomatic: null,
+  bigonial: null,
   structuralRatios: null,
 };
 
@@ -91,6 +98,9 @@ export const useFaceStore = create<FaceStore>((set) => ({
 
   showStructural: false,
   toggleStructural: () => set((s) => ({ showStructural: !s.showStructural })),
+
+  showDistances: false,
+  toggleDistances: () => set((s) => ({ showDistances: !s.showDistances })),
 
   trichionOverrideY: null,
   setTrichionOverrideY: (y) => set({ trichionOverrideY: y }),

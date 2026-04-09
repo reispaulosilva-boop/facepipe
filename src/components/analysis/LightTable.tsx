@@ -21,9 +21,11 @@ import {
   TopographicRegion,
   calcLipRatio,
   getTopographicRegions,
-  calcMorphology,
   calcStructuralRatios,
-  calcAsymmetry
+  calcAsymmetry,
+  calcBizygomatic,
+  calcBigonial,
+  DistanceMeasurement
 } from "@/utils/facialAnalysis";
 import { useFaceStore } from "@/store/useFaceStore";
 
@@ -45,6 +47,7 @@ interface LightTableProps {
   onZoomChange?: (zoom: number, baseScale: number) => void;
   showAsymmetry: boolean;
   showStructural: boolean;
+  showDistances: boolean;
   resetKey?: number;
   transformRef?: React.RefObject<ReactZoomPanPinchRef | null>;
 }
@@ -57,6 +60,7 @@ export function LightTable({
   showFifths,
   showAsymmetry,
   showStructural,
+  showDistances,
   activeTool,
   trichionOverrideY,
   onTrichionAdjust,
@@ -158,6 +162,16 @@ export function LightTable({
     return calcAsymmetry(landmarks as Landmark[], dimensions.width, thirdsData.pxPerMm);
   }, [landmarks, dimensions, thirdsData]);
 
+  const bizygomaticData = useMemo(() => {
+    if (!landmarks || landmarks.length === 0 || !dimensions.width || !thirdsData?.pxPerMm) return null;
+    return calcBizygomatic(landmarks as Landmark[], dimensions.width, thirdsData.pxPerMm);
+  }, [landmarks, dimensions, thirdsData]);
+
+  const bigonialData = useMemo(() => {
+    if (!landmarks || landmarks.length === 0 || !dimensions.width || !thirdsData?.pxPerMm) return null;
+    return calcBigonial(landmarks as Landmark[], dimensions.width, thirdsData.pxPerMm);
+  }, [landmarks, dimensions, thirdsData]);
+
   // Sync with store
   useEffect(() => {
     if (landmarks && landmarks.length > 0 && dimensions.width > 0) {
@@ -170,10 +184,12 @@ export function LightTable({
         pxPerMm: thirdsData?.pxPerMm || null,
         morphology,
         structuralRatios,
-        asymmetryScore
+        asymmetryScore,
+        bizygomatic: bizygomaticData,
+        bigonial: bigonialData,
       });
     }
-  }, [landmarks, dimensions, thirdsData, fifthsData, lipRatioData, topographicRegions, setAnalysisResults]);
+  }, [landmarks, dimensions, thirdsData, fifthsData, lipRatioData, topographicRegions, bizygomaticData, bigonialData, setAnalysisResults]);
 
   // ── Landmark Layer Logic (SVG Based) ───────────────────────────────────────
   const renderLandmarks = () => {
@@ -742,6 +758,62 @@ export function LightTable({
     );
   };
 
+  const renderDistances = () => {
+    if (!landmarks || landmarks.length === 0 || !dimensions.width) return null;
+    const S = Math.max(dimensions.width, dimensions.height) / 1000;
+    
+    const lines = [];
+    if (bizygomaticData) {
+      const p1 = landmarks[234];
+      const p2 = landmarks[454];
+      lines.push({ p1, p2, data: bizygomaticData, color: "#f87171" });
+    }
+    if (bigonialData) {
+      const p1 = landmarks[172];
+      const p2 = landmarks[397];
+      lines.push({ p1, p2, data: bigonialData, color: "#f87171" });
+    }
+
+    return (
+      <g className="distances-layer">
+        {lines.map((line, i) => {
+          const x1 = line.p1.x * dimensions.width;
+          const y1 = line.p1.y * dimensions.height;
+          const x2 = line.p2.x * dimensions.width;
+          const y2 = line.p2.y * dimensions.height;
+          const midY = (y1 + y2) / 2;
+
+          return (
+            <g key={i}>
+              <line 
+                x1={x1} y1={midY} x2={x2} y2={midY} 
+                stroke={line.color} strokeWidth={S*2.5} 
+                strokeDasharray={`${S*8},${S*5}`}
+                opacity="0.8"
+              />
+              <circle cx={x1} cy={midY} r={S*4} fill={line.color} />
+              <circle cx={x2} cy={midY} r={S*4} fill={line.color} />
+              
+              <rect 
+                x={(x1+x2)/2 - S*65} y={midY - S*25} 
+                width={S*130} height={S*18} rx={S*4} 
+                fill="rgba(0,0,0,0.7)" stroke={line.color} strokeWidth={S*0.5} 
+              />
+              <text 
+                x={(x1+x2)/2} y={midY - S*13} 
+                fill={line.color} fontSize={S*9} 
+                textAnchor="middle" fontWeight="bold"
+                fontFamily="monospace"
+              >
+                {line.data.label}: {line.data.mm}mm
+              </text>
+            </g>
+          );
+        })}
+      </g>
+    );
+  };
+
   return (
     <div ref={containerRef} className="flex-1 w-full h-full bg-[#000105] relative flex items-center justify-center overflow-hidden">
       {/* Cinematic ambient lighting */}
@@ -873,7 +945,6 @@ export function LightTable({
                     </motion.g>
                   )}
                 </AnimatePresence>
-
                 {/* Structural layer */}
                 <AnimatePresence mode="wait">
                   {showStructural && (
@@ -885,6 +956,21 @@ export function LightTable({
                       transition={{ duration: 0.4 }}
                     >
                       {renderStructuralMarkers()}
+                    </motion.g>
+                  )}
+                </AnimatePresence>
+
+                {/* Distances layer */}
+                <AnimatePresence mode="wait">
+                  {showDistances && (
+                    <motion.g
+                      key="distances"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.4 }}
+                    >
+                      {renderDistances()}
                     </motion.g>
                   )}
                 </AnimatePresence>

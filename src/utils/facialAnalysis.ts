@@ -52,6 +52,12 @@ export interface TopographicRegion {
   indices: number[];
 }
 
+export interface DistanceMeasurement {
+  label: string;
+  px: number;
+  mm: number;
+}
+
 /**
  * Calcula a distância euclidiana em pixels entre dois landmarks normalizados.
  * Os landmarks têm coordenadas [0, 1] relativas à dimensão da imagem.
@@ -338,6 +344,48 @@ export function calcStructuralRatios(
       (horizontalDistancePx(landmarks[33], landmarks[133], imageWidth) / 
        horizontalDistancePx(landmarks[234], landmarks[454], imageWidth)).toFixed(2)
     )
+  };
+}
+
+/**
+ * Calcula a distância Bizigomática (Largura Facial máxima).
+ * Pontos: 234 (Esquerdo) e 454 (Direito).
+ */
+export function calcBizygomatic(
+  landmarks: Landmark[],
+  imageWidth: number,
+  pxPerMm: number
+): DistanceMeasurement | null {
+  const left = landmarks[234];
+  const right = landmarks[454];
+  if (!left || !right) return null;
+
+  const px = horizontalDistancePx(left, right, imageWidth);
+  return {
+    label: "Distância Bizigomática",
+    px,
+    mm: pxToMm(px, pxPerMm),
+  };
+}
+
+/**
+ * Calcula a distância Bigonial (Largura da Mandíbula).
+ * Pontos: 172 (Esquerdo) e 397 (Direito).
+ */
+export function calcBigonial(
+  landmarks: Landmark[],
+  imageWidth: number,
+  pxPerMm: number
+): DistanceMeasurement | null {
+  const left = landmarks[172];
+  const right = landmarks[397];
+  if (!left || !right) return null;
+
+  const px = horizontalDistancePx(left, right, imageWidth);
+  return {
+    label: "Distância Bigonial",
+    px,
+    mm: pxToMm(px, pxPerMm),
   };
 }
 
