@@ -33,6 +33,10 @@ export function ClinicalWorkspace() {
     toggleStructural,
     showDistances,
     toggleDistances,
+    setIsAnalyzingSkin,
+    isAnalyzingSkin,
+    setAnalysisResults,
+    toggleMelasmaOverlay,
   } = useFaceStore();
 
   const [activeTool, setActiveTool] = useState("select");
@@ -107,6 +111,73 @@ export function ClinicalWorkspace() {
       console.error("Export failed", err);
     }
   }, []);
+
+  const analyzeMelasma = useCallback(async () => {
+    if (isAnalyzingSkin || !imageFile) return;
+    
+    setIsAnalyzingSkin(true);
+    try {
+      // 1. Converter imagem original para base64 para máxima precisão
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve) => {
+        reader.onload = () => resolve((reader.result as string).split(",")[1]);
+        reader.readAsDataURL(imageFile);
+      });
+      
+      const base64Data = await base64Promise;
+
+      // 2. Prompt especializado fornecido pelo usuário (com adição de coordenadas)
+      const prompt = `Você é um assistente dermatológico avançado, especialista em visão computacional e análise de condições de pele, especialmente melasma. Seu objetivo é realizar uma análise automatizada do score mMASI modificado e gerar dados para uma visualização AR sobreposta.
+
+Use a imagem de rosto frontal fornecida.
+
+Realize os seguintes cálculos mMASI (Modified Melasma Area and Severity Index) em quatro regiões faciais: Testa (F), Malar Direita (RMR), Malar Esquerda (LMR), Queixo (C).
+
+Para cada região, calcule:
+- Área (A): 0 (0%), 1 (<10%), 2 (10-29%), 3 (30-49%), 4 (50-69%), 5 (70-89%), 6 (90-100%).
+- Intensidade (D): 0-4 (0=ausente, 1=leve, 2=moderada, 3=acentuada, 4=máxima).
+- Homogeneidade (H): 0-4 (0=mínima, 4=máxima).
+
+Cálculo Final: mMASI = 0.3(A_F * (D_F + H_F)) + 0.3(A_RMR * (D_RMR + H_RMR)) + 0.3(A_LMR * (D_LMR + H_LMR)) + 0.1(A_C * (D_C + H_C)).
+
+IMPORTANTE: Você deve retornar APENAS um JSON válido seguindo exatamente esta estrutura:
+{
+  "score_total": 0.0,
+  "classificacao": "Leve/Moderado/Grave",
+  "scores_regionais": {
+    "testa": { "area": 0, "intensidade": 0, "homogeneidade": 0, "x": 50, "y": 25 },
+    "malar_direita": { "area": 0, "intensidade": 0, "homogeneidade": 0, "x": 35, "y": 55 },
+    "malar_esquerda": { "area": 0, "intensidade": 0, "homogeneidade": 0, "x": 65, "y": 55 },
+    "queixo": { "area": 0, "intensidade": 0, "homogeneidade": 0, "x": 50, "y": 80 }
+  }
+}
+Onde 'x' e 'y' são as coordenadas sugeridas para o marcador AR (em porcentagem de 0 a 100 da imagem).`;
+
+      const response = await fetch("/api/gemini", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt,
+          imageParts: [{ inlineData: { mimeType: imageFile.type, data: base64Data } }]
+        })
+      });
+
+      if (!response.ok) throw new Error("Erro na API Gemini");
+      
+      const result = await response.json();
+      const cleanJson = result.text.replace(/```json|```/g, "").trim();
+      const melasmaData = JSON.parse(cleanJson);
+
+      setAnalysisResults({ melasmaData });
+      toggleMelasmaOverlay();
+      
+    } catch (err) {
+      console.error("Melasma analysis error:", err);
+      alert("Erro ao realizar análise de melasma. Tente novamente.");
+    } finally {
+      setIsAnalyzingSkin(false);
+    }
+  }, [imageFile, isAnalyzingSkin, setIsAnalyzingSkin, setAnalysisResults, toggleMelasmaOverlay]);
 
   const generateDiagnosticReport = useCallback(async () => {
     if (isGeneratingReport) return;
@@ -270,6 +341,9 @@ O laudo deve ser conciso, profissional e incluir uma seção de 'Diagnóstico' e
         setZoomPercent={handleZoomPercentChange}
         onGenerateReport={generateDiagnosticReport}
         isGenerating={isGeneratingReport}
+        onAnalyzeSkin={(type) => {
+          if (type === "Melasma") analyzeMelasma();
+        }}
       />
       
       <main className="flex-1 flex flex-col h-full overflow-hidden">

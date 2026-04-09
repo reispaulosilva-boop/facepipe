@@ -9,6 +9,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { FaceLandmarker } from "@mediapipe/tasks-vision";
+import { MelasmaMarkers, MelasmaUI } from "./MelasmaOverlay";
 import {
   calcThirds,
   calcFifths,
@@ -973,6 +974,10 @@ export function LightTable({
                 </AnimatePresence>
               </svg>
             )}
+
+            {/* Melasma AR Markers — Inside relative container to move with zoom/pan */}
+            <MelasmaMarkers />
+
             {/* Capture Area Ref */}
             <div id="clinical-capture-area" className="sr-only" />
           </div>
@@ -999,6 +1004,10 @@ export function LightTable({
             <span className="mt-6 text-[9px] font-bold text-white/30 tracking-[0.6em] uppercase">Securing Neural Gateway</span>
           </motion.div>
         )}
+      </AnimatePresence>
+      
+      <AnimatePresence>
+        <MelasmaUI />
       </AnimatePresence>
       
       {/* Telemetry HUD */}

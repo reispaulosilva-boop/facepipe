@@ -78,6 +78,7 @@ interface ToolboxProps {
   setZoomPercent: (percent: number) => void;
   onGenerateReport: () => void;
   isGenerating?: boolean;
+  onAnalyzeSkin: (type: string) => void;
 }
 
 export function Toolbox(props: ToolboxProps) {
@@ -99,13 +100,14 @@ export function Toolbox(props: ToolboxProps) {
     zoomPercent,
     setZoomPercent,
     onGenerateReport,
-    isGenerating
+    isGenerating,
+    onAnalyzeSkin
   } = props;
 
-  const {
     showSkinAnalysisSubmenu,
     toggleSkinAnalysisSubmenu,
     setActiveSkinAnalysis,
+    isAnalyzingSkin
   } = useFaceStore();
 
   const skinParams = [
@@ -119,7 +121,11 @@ export function Toolbox(props: ToolboxProps) {
   ];
 
   const handleSkinParamClick = (label: string) => {
-    alert(`Avaliação de ${label}: Função em desenvolvimento. O Gemini processará esta região em breve.`);
+    if (label === "Melasma") {
+      onAnalyzeSkin("Melasma");
+    } else {
+      alert(`Avaliação de ${label}: Função em desenvolvimento.`);
+    }
     setActiveSkinAnalysis(label);
   };
 
@@ -254,9 +260,9 @@ export function Toolbox(props: ToolboxProps) {
         </span>
         
         <ToolButton
-          icon={<Sparkles className="w-4 h-4" />}
-          label="Qualidade da Pele"
-          active={showSkinAnalysisSubmenu}
+          icon={isAnalyzingSkin ? <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }}><Sparkles className="w-4 h-4 text-primary" /></motion.div> : <Sparkles className="w-4 h-4" />}
+          label={isAnalyzingSkin ? "Analisando Pele..." : "Qualidade da Pele"}
+          active={showSkinAnalysisSubmenu || isAnalyzingSkin}
           onClick={toggleSkinAnalysisSubmenu}
           colorScheme="cyan"
         />

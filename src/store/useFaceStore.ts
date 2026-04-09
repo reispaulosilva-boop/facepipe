@@ -1,6 +1,25 @@
 import { create } from "zustand";
 import { ThirdsResult, FifthsResult, LipRatioResult, TopographicRegion, DistanceMeasurement } from "@/utils/facialAnalysis";
 
+export interface MelasmaRegionalScore {
+  area: number;
+  intensidade: number;
+  homogeneidade: number;
+  x?: number; // percentual 0-100 para o marcador
+  y?: number; // percentual 0-100 para o marcador
+}
+
+export interface MelasmaAnalysis {
+  score_total: number;
+  classificacao: string;
+  scores_regionais: {
+    testa: MelasmaRegionalScore;
+    malar_direita: MelasmaRegionalScore;
+    malar_esquerda: MelasmaRegionalScore;
+    queixo: MelasmaRegionalScore;
+  };
+}
+
 interface AnalysisResults {
   thirds: ThirdsResult | null;
   fifths: FifthsResult | null;
@@ -17,6 +36,7 @@ interface AnalysisResults {
     noseToChin: number;
     eyeWidthToFaceWidth: number;
   } | null;
+  melasmaData: MelasmaAnalysis | null;
 }
 
 interface FaceStore {
@@ -69,6 +89,12 @@ interface FaceStore {
   showSkinAnalysisSubmenu: boolean;
   setShowSkinAnalysisSubmenu: (v: boolean) => void;
   toggleSkinAnalysisSubmenu: () => void;
+  
+  isAnalyzingSkin: boolean;
+  setIsAnalyzingSkin: (v: boolean) => void;
+  showMelasmaOverlay: boolean;
+  setShowMelasmaOverlay: (v: boolean) => void;
+  toggleMelasmaOverlay: () => void;
 }
 
 const defaultAnalysisResults: AnalysisResults = {
@@ -84,6 +110,7 @@ const defaultAnalysisResults: AnalysisResults = {
   bizygomatic: null,
   bigonial: null,
   structuralRatios: null,
+  melasmaData: null,
 };
 
 export const useFaceStore = create<FaceStore>((set) => ({
@@ -139,4 +166,10 @@ export const useFaceStore = create<FaceStore>((set) => ({
   showSkinAnalysisSubmenu: false,
   setShowSkinAnalysisSubmenu: (v) => set({ showSkinAnalysisSubmenu: v }),
   toggleSkinAnalysisSubmenu: () => set((s) => ({ showSkinAnalysisSubmenu: !s.showSkinAnalysisSubmenu })),
+
+  isAnalyzingSkin: false,
+  setIsAnalyzingSkin: (v) => set({ isAnalyzingSkin: v }),
+  showMelasmaOverlay: false,
+  setShowMelasmaOverlay: (v) => set({ showMelasmaOverlay: v }),
+  toggleMelasmaOverlay: () => set((s) => ({ showMelasmaOverlay: !s.showMelasmaOverlay })),
 }));
