@@ -9,7 +9,6 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { FaceLandmarker } from "@mediapipe/tasks-vision";
-import { FaceLandmarker } from "@mediapipe/tasks-vision";
 import {
   calcThirds,
   calcFifths,

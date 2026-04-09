@@ -17,8 +17,6 @@ export interface AnalysisResults {
     noseToChin: number;
     eyeWidthToFaceWidth: number;
   } | null;
-    eyeWidthToFaceWidth: number;
-  } | null;
 }
 
 interface FaceStore {
@@ -74,8 +72,6 @@ interface FaceStore {
   
   isAnalyzingSkin: boolean;
   setIsAnalyzingSkin: (v: boolean) => void;
-  isAnalyzingSkin: boolean;
-  setIsAnalyzingSkin: (v: boolean) => void;
 }
 
 const defaultAnalysisResults: AnalysisResults = {
@@ -89,8 +85,6 @@ const defaultAnalysisResults: AnalysisResults = {
   morphology: null,
   asymmetryScore: null,
   bizygomatic: null,
-  bigonial: null,
-  structuralRatios: null,
   bigonial: null,
   structuralRatios: null,
 };
