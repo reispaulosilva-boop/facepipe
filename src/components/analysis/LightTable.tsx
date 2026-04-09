@@ -20,7 +20,10 @@ import {
   LipRatioResult,
   TopographicRegion,
   calcLipRatio,
-  getTopographicRegions
+  getTopographicRegions,
+  calcMorphology,
+  calcStructuralRatios,
+  calcAsymmetry
 } from "@/utils/facialAnalysis";
 import { useFaceStore } from "@/store/useFaceStore";
 
@@ -40,6 +43,8 @@ interface LightTableProps {
   onTrichionAdjust: (y: number) => void;
   onLandmarksLoad?: (count: number) => void;
   onZoomChange?: (zoom: number, baseScale: number) => void;
+  showAsymmetry: boolean;
+  showStructural: boolean;
   resetKey?: number;
   transformRef?: React.RefObject<ReactZoomPanPinchRef | null>;
 }
@@ -50,6 +55,8 @@ export function LightTable({
   showLandmarks,
   showThirds,
   showFifths,
+  showAsymmetry,
+  showStructural,
   activeTool,
   trichionOverrideY,
   onTrichionAdjust,
@@ -131,10 +138,25 @@ export function LightTable({
     return calcLipRatio(landmarks as Landmark[], dimensions.height, pxPerMm);
   }, [landmarks, dimensions]);
 
-  const topographicRegions = useMemo<TopographicRegion[] | null>(() => {
-    if (!landmarks || landmarks.length === 0) return null;
+  const topographicRegions = useMemo(() => {
+    if (!landmarks || landmarks.length === 0) return [];
     return getTopographicRegions(landmarks as Landmark[]);
   }, [landmarks]);
+
+  const morphology = useMemo(() => {
+    if (!landmarks || landmarks.length === 0 || !dimensions.width) return null;
+    return calcMorphology(landmarks as Landmark[], dimensions.width);
+  }, [landmarks, dimensions]);
+
+  const structuralRatios = useMemo(() => {
+    if (!landmarks || landmarks.length === 0 || !dimensions.width) return null;
+    return calcStructuralRatios(landmarks as Landmark[], dimensions.width);
+  }, [landmarks, dimensions]);
+
+  const asymmetryScore = useMemo(() => {
+    if (!landmarks || landmarks.length === 0 || !dimensions.width || !thirdsData?.pxPerMm) return null;
+    return calcAsymmetry(landmarks as Landmark[], dimensions.width, thirdsData.pxPerMm);
+  }, [landmarks, dimensions, thirdsData]);
 
   // Sync with store
   useEffect(() => {
@@ -145,7 +167,10 @@ export function LightTable({
         lipRatio: lipRatioData,
         landmarks: landmarks,
         topographicRegions: topographicRegions,
-        pxPerMm: thirdsData?.pxPerMm || null
+        pxPerMm: thirdsData?.pxPerMm || null,
+        morphology,
+        structuralRatios,
+        asymmetryScore
       });
     }
   }, [landmarks, dimensions, thirdsData, fifthsData, lipRatioData, topographicRegions, setAnalysisResults]);
@@ -608,6 +633,115 @@ export function LightTable({
     );
   };
 
+  const renderAsymmetry = () => {
+    if (!landmarks || landmarks.length === 0 || !dimensions.width || !thirdsData?.pxPerMm) return null;
+    const S = Math.max(dimensions.width, dimensions.height) / 1000;
+    const midlineX = landmarks[168].x * dimensions.width;
+    
+    // Pontos para comparar
+    const pairs = [
+      { l: 33, r: 263, label: "Exo" },
+      { l: 133, r: 362, label: "Endo" },
+      { l: 61, r: 291, label: "Boca" },
+      { l: 172, r: 397, label: "Mand" }
+    ];
+
+    return (
+      <g className="asymmetry-layer">
+        {/* Eixo Central */}
+        <line 
+          x1={midlineX} y1={0} x2={midlineX} y2={dimensions.height} 
+          stroke="rgba(251, 191, 36, 0.3)" strokeWidth={S*0.5} strokeDasharray="5,5" 
+        />
+        
+        {pairs.map((p, i) => {
+          const lp = landmarks[p.l];
+          const rp = landmarks[p.r];
+          const lx = lp.x * dimensions.width;
+          const rx = rp.x * dimensions.width;
+          const y = (lp.y + rp.y) / 2 * dimensions.height;
+          
+          const dL = Math.abs(lx - midlineX);
+          const dR = Math.abs(rx - midlineX);
+          const diffMm = Math.abs(dL - dR) / (thirdsData.pxPerMm || 1);
+          
+          // Color based on delta
+          const color = diffMm < 1.0 ? "#4ade80" : diffMm < 2.0 ? "#fbbf24" : "#f87171";
+
+          return (
+            <g key={i}>
+              <line x1={lx} y1={y} x2={rx} y2={y} stroke={color} strokeWidth={S*0.8} opacity="0.4" />
+              <circle cx={lx} cy={y} r={S*2} fill={color} />
+              <circle cx={rx} cy={y} r={S*2} fill={color} />
+              
+              {diffMm > 0.1 && (
+                <text 
+                  x={(lx + rx) / 2} y={y - S*5} 
+                  fill={color} fontSize={S*8} 
+                  textAnchor="middle" fontWeight="bold"
+                  fontFamily="monospace"
+                >
+                  Δ {diffMm.toFixed(1)}mm
+                </text>
+              )}
+            </g>
+          );
+        })}
+      </g>
+    );
+  };
+
+  const renderStructuralMarkers = () => {
+    if (!landmarks || landmarks.length === 0 || !dimensions.width) return null;
+    const S = Math.max(dimensions.width, dimensions.height) / 1000;
+    
+    // Pontos AB Face Simplificados
+    const structuralPoints = [
+      { idx: 234, label: "CK1", side: "L" },
+      { idx: 454, label: "CK1", side: "R" },
+      { idx: 172, label: "JW1", side: "L" },
+      { idx: 397, label: "JW1", side: "R" },
+      { idx: 152, label: "C1" },
+    ];
+
+    return (
+      <g className="structural-layer">
+        {structuralPoints.map((p, i) => {
+          const pt = landmarks[p.idx];
+          const x = pt.x * dimensions.width;
+          const y = pt.y * dimensions.height;
+          
+          return (
+            <g key={i}>
+              <circle cx={x} cy={y} r={S*4} fill="none" stroke="#10b981" strokeWidth={S*1} />
+              <circle cx={x} cy={y} r={S*1.5} fill="#10b981" />
+              <text 
+                x={x + S*6} y={y + S*3} 
+                fill="#10b981" fontSize={S*9} 
+                fontWeight="bold"
+              >
+                {p.label}
+              </text>
+
+              {/* Support Vectors (Arrows) for CK1/JW1 */}
+              {(p.label === "CK1" || p.label === "JW1") && (
+                <line 
+                  x1={x} y1={y} 
+                  x2={x + (p.side === "L" ? -S*30 : S*30)} 
+                  y2={y - S*25} 
+                  stroke="#10b981" 
+                  strokeWidth={S*1.5} 
+                  markerEnd="url(#arrowhead)" 
+                  opacity="0.6"
+                />
+              )}
+            </g>
+          );
+        })}
+      </g>
+    );
+  };
+
   return (
     <div ref={containerRef} className="flex-1 w-full h-full bg-[#000105] relative flex items-center justify-center overflow-hidden">
       {/* Cinematic ambient lighting */}
@@ -678,6 +812,18 @@ export function LightTable({
                 className="absolute inset-0 z-10 pointer-events-none"
                 style={{ width: "100%", height: "100%" }}
               >
+                <defs>
+                  <marker
+                    id="arrowhead"
+                    markerWidth="10"
+                    markerHeight="7"
+                    refX="0"
+                    refY="3.5"
+                    orient="auto"
+                  >
+                    <polygon points="0 0, 10 3.5, 0 7" fill="#10b981" />
+                  </marker>
+                </defs>
                 {renderLandmarks()}
                 {renderClinicalFacilitators()}
                 {renderTopographicRegions()}
@@ -709,6 +855,36 @@ export function LightTable({
                       transition={{ duration: 0.4, ease: "easeInOut" }}
                     >
                       {renderFifths()}
+                    </motion.g>
+                  )}
+                </AnimatePresence>
+
+                {/* Asymmetry layer */}
+                <AnimatePresence mode="wait">
+                  {showAsymmetry && (
+                    <motion.g
+                      key="asymmetry"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.4 }}
+                    >
+                      {renderAsymmetry()}
+                    </motion.g>
+                  )}
+                </AnimatePresence>
+
+                {/* Structural layer */}
+                <AnimatePresence mode="wait">
+                  {showStructural && (
+                    <motion.g
+                      key="structural"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.4 }}
+                    >
+                      {renderStructuralMarkers()}
                     </motion.g>
                   )}
                 </AnimatePresence>

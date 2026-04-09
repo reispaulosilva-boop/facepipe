@@ -9,6 +9,7 @@ import { useFaceStore } from "@/store/useFaceStore";
 import { toPng } from "html-to-image";
 import { motion } from "framer-motion";
 import { ReactZoomPanPinchRef } from "react-zoom-pan-pinch";
+import { cn } from "@/lib/utils";
 
 export function ClinicalWorkspace() {
   const { 
@@ -26,6 +27,10 @@ export function ClinicalWorkspace() {
     isGeneratingReport,
     patientGender,
     patientAge,
+    showAsymmetry,
+    toggleAsymmetry,
+    showStructural,
+    toggleStructural,
   } = useFaceStore();
 
   const [activeTool, setActiveTool] = useState("select");
@@ -143,6 +148,9 @@ Analise a imagem e os seguintes dados métricos faciais:
 - Idade Estimada: ${patientAge || "Não informada"}
 
 Regiões Topográficas Detectadas: ${topographicRegions?.map(r => r.name).join(", ")}
+Identifique o formato do rosto: ${analysisResults.morphology}. 
+Assimetria Detectada: ${analysisResults.asymmetryScore}%.
+Relação Base Nasal/Mento: ${analysisResults.structuralRatios?.noseToChin}.
 
 Com base nestes dados, identifique desproporções faciais nos terços, quintos e lábios. Sugira intervenções de harmonização facial (ex: preenchimento com ácido hialurônico, bioestimuladores) alinhadas com a técnica AB Face, focando em suporte estrutural, projeção e contorno. 
 
@@ -246,8 +254,11 @@ O laudo deve ser conciso, profissional e incluir uma seção de 'Diagnóstico' e
         setShowLandmarks={setShowLandmarks}
         showThirds={showThirds}
         toggleThirds={toggleThirds}
-        showFifths={showFifths}
         toggleFifths={toggleFifths}
+        showAsymmetry={showAsymmetry}
+        toggleAsymmetry={toggleAsymmetry}
+        showStructural={showStructural}
+        toggleStructural={toggleStructural}
         trichionOverrideY={trichionOverrideY}
         resetTrichion={resetTrichion}
         zoomPercent={zoomPercent}
@@ -259,10 +270,15 @@ O laudo deve ser conciso, profissional e incluir uma seção de 'Diagnóstico' e
       <main className="flex-1 flex flex-col h-full overflow-hidden">
         {/* Header Branding */}
         <header className="h-16 flex items-center justify-between px-10 border-b border-white/5 bg-[#000105]/40 backdrop-blur-md z-30">
-          <div className="flex items-center gap-2">
-            <span className="text-cyan-500 font-bold tracking-tighter text-xl">FACEPIPE</span>
-            <div className="h-4 w-px bg-white/20 mx-2" />
-            <span className="text-white/40 text-[10px] uppercase tracking-widest font-medium">Smart Clinical Workspace</span>
+          <div className="flex flex-col">
+            <h2 className="text-white/90 font-semibold tracking-tight leading-none mb-1">Análise de Proporções</h2>
+            <div className="flex items-center gap-2">
+              <span className="flex items-center gap-1.5 text-[10px] font-medium px-2 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/20">
+                <div className="w-1 h-1 rounded-full bg-primary animate-pulse" />
+                {isProcessing ? "Processando Geometria..." : "Diagnóstico Pronto"}
+              </span>
+              <span className="text-[10px] text-white/30 font-medium">Ref: 480 Pontos Mapeados</span>
+            </div>
           </div>
           
           <div className="flex items-center gap-6">
@@ -298,12 +314,36 @@ O laudo deve ser conciso, profissional e incluir uma seção de 'Diagnóstico' e
                   Trichion Ajustado
                 </motion.span>
               )}
+              {analysisResults.morphology && (
+                <motion.span
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="text-[8px] font-bold px-2 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 uppercase tracking-widest flex items-center gap-1.5"
+                >
+                  <div className="w-1 h-1 rounded-full bg-cyan-400" />
+                  Face {analysisResults.morphology}
+                </motion.span>
+              )}
+              {analysisResults.asymmetryScore !== null && (
+                <motion.span
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className={cn(
+                    "text-[8px] font-bold px-2 py-1 rounded-full uppercase tracking-widest",
+                    analysisResults.asymmetryScore < 15 ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" :
+                    analysisResults.asymmetryScore < 30 ? "bg-amber-500/10 border-amber-500/30 text-amber-400" :
+                    "bg-red-500/10 border-red-500/30 text-red-400"
+                  )}
+                >
+                  Assimetria: {analysisResults.asymmetryScore}%
+                </motion.span>
+              )}
             </div>
 
             <div className="flex flex-col items-end">
               <span className="text-[10px] text-white/40 uppercase font-bold tracking-widest">Status</span>
               <span className={isProcessing ? "text-amber-500 text-xs font-medium" : "text-emerald-500 text-xs font-medium"}>
-                {isProcessing ? "ANALYZING TISSUES..." : "DIAGNOSTIC READY"}
+                {isProcessing ? "ANALISANDO TECIDOS..." : "DIAGNÓSTICO PRONTO"}
               </span>
             </div>
           </div>
@@ -315,6 +355,8 @@ O laudo deve ser conciso, profissional e incluir uma seção de 'Diagnóstico' e
           showLandmarks={showLandmarks}
           showThirds={showThirds}
           showFifths={showFifths}
+          showAsymmetry={showAsymmetry}
+          showStructural={showStructural}
           activeTool={activeTool}
           trichionOverrideY={trichionOverrideY}
           onTrichionAdjust={setTrichionOverrideY}

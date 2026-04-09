@@ -298,6 +298,80 @@ export function getTopographicRegions(landmarks: Landmark[]): TopographicRegion[
 }
 
 /**
+ * Detecta o formato do rosto (Morfologia) com base em razões de largura.
+ */
+export function calcMorphology(
+  landmarks: Landmark[],
+  imageWidth: number
+): "Oval" | "Redondo" | "Coração" | "Angular" {
+  const forehead = horizontalDistancePx(landmarks[21], landmarks[251], imageWidth);
+  const cheekbones = horizontalDistancePx(landmarks[234], landmarks[454], imageWidth);
+  const jaw = horizontalDistancePx(landmarks[172], landmarks[397], imageWidth);
+  const height = verticalDistancePx(landmarks[10], landmarks[152], imageWidth); // approximate height
+
+  // Ratios
+  const fwToCb = forehead / cheekbones;
+  const jToCb = jaw / cheekbones;
+  const hToW = height / cheekbones;
+
+  if (hToW < 1.3 && fwToCb < 0.9 && jToCb < 0.8) return "Coração";
+  if (hToW < 1.25 && fwToCb > 0.9 && jToCb > 0.9) return "Redondo";
+  if (jToCb > 0.92) return "Angular";
+  return "Oval"; // Default common shape
+}
+
+/**
+ * Calcula razões estruturais (Ex: Largura Base Nasal vs Largura Mento).
+ */
+export function calcStructuralRatios(
+  landmarks: Landmark[],
+  imageWidth: number
+) {
+  // Base nasal approximate width (Alare points)
+  const noseWidth = horizontalDistancePx(landmarks[102], landmarks[331], imageWidth);
+  // Chin width (approximate)
+  const chinWidth = horizontalDistancePx(landmarks[148], landmarks[377], imageWidth);
+
+  return {
+    noseToChin: parseFloat((noseWidth / chinWidth).toFixed(2)),
+    eyeWidthToFaceWidth: parseFloat(
+      (horizontalDistancePx(landmarks[33], landmarks[133], imageWidth) / 
+       horizontalDistancePx(landmarks[234], landmarks[454], imageWidth)).toFixed(2)
+    )
+  };
+}
+
+/**
+ * Calcula a pontuação de assimetria global (0-100, onde 0 é simétrico perfeito).
+ * Compara distâncias de pontos bilaterais ao eixo central (Nose bridge).
+ */
+export function calcAsymmetry(
+  landmarks: Landmark[],
+  imageWidth: number,
+  pxPerMm: number
+): number {
+  const midlineX = landmarks[168].x; // Glabela X as reference midline
+  
+  const bilateralPoints = [
+    [33, 263],   // Exocanthion
+    [133, 362],  // Endocanthion
+    [234, 454],  // Zygomatic
+    [61, 291],   // Mouth corners
+    [172, 397],  // Jaw angles
+  ];
+
+  let totalDiffMm = 0;
+  bilateralPoints.forEach(([lIdx, rIdx]) => {
+    const leftDist = Math.abs(landmarks[lIdx].x - midlineX) * imageWidth;
+    const rightDist = Math.abs(landmarks[rIdx].x - midlineX) * imageWidth;
+    totalDiffMm += Math.abs(pxToMm(leftDist - rightDist, pxPerMm));
+  });
+
+  // Score normalized (example: 0 to 10 scale normalized to 0-100)
+  return Math.min(Math.round(totalDiffMm * 5), 100);
+}
+
+/**
  * Retorna as coordenadas absolutas (em pixels) de um landmark normalizado.
  */
 export function landmarkToPixel(

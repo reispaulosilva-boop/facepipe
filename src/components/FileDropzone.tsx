@@ -55,7 +55,7 @@ export function FileDropzone({ onFileSelect, className }: FileDropzoneProps) {
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       className={cn(
-        "glass-panel hover:bg-white/5 transition-all duration-300 border-dashed border-2 rounded-2xl p-8 flex flex-col items-center justify-center gap-4 group cursor-pointer relative overflow-hidden",
+        "glass-panel hover:bg-white/5 transition-all duration-300 border-dashed border-2 rounded-2xl p-6 flex flex-col items-center justify-center gap-3 group cursor-pointer relative overflow-hidden",
         isDragging ? "border-primary bg-primary/10" : "border-white/20",
         className
       )}
@@ -68,13 +68,13 @@ export function FileDropzone({ onFileSelect, className }: FileDropzoneProps) {
       />
       
       <div className={cn(
-        "bg-primary/20 p-4 rounded-full transition-all duration-500",
-        isDragging ? "scale-110 bg-primary/40" : "group-hover:bg-primary/30"
+        "bg-primary/20 p-3 rounded-full transition-all duration-500",
+        isDragging ? "scale-105 bg-primary/40" : "group-hover:scale-105 group-hover:bg-primary/30"
       )}>
         {isDragging ? (
-          <FileImage className="w-8 h-8 text-primary animate-pulse" />
+          <FileImage className="w-6 h-6 text-primary animate-pulse" />
         ) : (
-          <UploadCloud className="w-8 h-8 text-primary" />
+          <UploadCloud className="w-6 h-6 text-primary" />
         )}
       </div>
 

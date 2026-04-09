@@ -29,23 +29,23 @@ export default function Home() {
       {/* Header */}
       <header className="glass-panel sticky top-0 z-50 flex items-center justify-between px-6 py-4 border-b border-white/10">
         <div className="flex items-center gap-3">
-          <div className="bg-primary/20 p-2 rounded-xl">
+          <div className="bg-primary/20 p-2 rounded-lg">
             <ScanFace className="w-6 h-6 text-primary" />
           </div>
           <div>
             <h1 className="font-semibold text-lg tracking-tight text-white/90">Facepipe</h1>
-            <p className="text-xs text-white/50 font-medium">Clinical Analysis Studio</p>
+            <p className="text-xs text-white/40 font-medium">Estúdio de Análise Clínica</p>
           </div>
         </div>
 
         <div className="flex items-center gap-4">
-          <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-sm font-medium transition-colors border border-white/5 text-white/80">
+          <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-sm font-medium transition-all border border-white/5 hover:border-white/20 text-white/70 hover:text-white/90">
             <Settings className="w-4 h-4" />
             Configurações
           </button>
-          <div className="w-9 h-9 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center">
-            <User className="w-4 h-4 text-primary" />
-          </div>
+          <button className="w-9 h-9 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center cursor-pointer hover:bg-primary/30 hover:border-primary/50 transition-all duration-200">
+            <User className="w-5 h-5 text-primary" />
+          </button>
         </div>
       </header>
 
@@ -53,11 +53,11 @@ export default function Home() {
       <div className="flex-1 p-6 flex flex-col gap-6 lg:flex-row max-w-[1600px] w-full mx-auto overflow-hidden">
 
         {/* Sidebar / Tools */}
-        <aside className="w-full lg:w-80 flex flex-col gap-4">
+        <aside className="w-full lg:w-80 flex flex-col gap-4 lg:overflow-y-auto lg:max-h-[calc(100vh-8rem)] pr-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
           <div className="glass-panel p-5 rounded-2xl flex flex-col gap-4 flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="bg-white/10 p-1.5 rounded-lg">
-                <Stethoscope className="w-4 h-4 text-white/70" />
+            <div className="flex items-center gap-3 mb-2">
+              <div className="bg-white/10 p-2 rounded-lg">
+                <Stethoscope className="w-5 h-5 text-white/70" />
               </div>
               <h2 className="font-semibold text-white/90">Análise Facial</h2>
             </div>
@@ -79,10 +79,11 @@ export default function Home() {
           </div>
 
           <div className="glass-panel p-5 rounded-2xl flex flex-col gap-4">
-            <h3 className="text-sm font-medium text-white/70 uppercase tracking-wider">Ações do Laudo</h3>
+            <h3 className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Ações do Laudo</h3>
             <button
               disabled={!imageFile}
-              className="w-full py-2.5 rounded-lg bg-white/5 text-white/40 text-sm font-medium border border-white/5 flex flex-row items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10 hover:text-white/80 transition-colors"
+              title={!imageFile ? "Faça upload de uma foto para habilitar o laudo." : "Exportar análise atual"}
+              className="w-full py-2.5 rounded-lg bg-white/5 text-white/30 text-sm font-medium border border-white/5 flex flex-row items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-white/10 hover:text-white/80 transition-all active:scale-[0.98]"
             >
               <Download className="w-4 h-4" />
               Exportar Laudo PDF
@@ -138,15 +139,15 @@ export default function Home() {
             </div>
           ) : (
             /* Empty state */
-            <div className="text-center z-20 flex flex-col items-center gap-4 animate-in fade-in zoom-in duration-700">
+            <div className="text-center z-20 flex flex-col items-center gap-5 animate-in fade-in zoom-in duration-700">
               <div className="relative">
-                <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full" />
-                <ScanFace className="w-20 h-20 text-white/10 relative" strokeWidth={1} />
+                <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full" />
+                <ScanFace className="w-24 h-24 text-white/15 relative" strokeWidth={1.2} />
               </div>
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 <h3 className="text-xl font-medium text-white/80 tracking-tight">Espaço de Análise</h3>
                 <p className="text-white/30 text-sm max-w-[280px] leading-relaxed">
-                  Arraste ou selecione uma imagem para habilitar a análise clínica.
+                  Arraste ou selecione uma imagem para habilitar a análise clínica detalhada.
                 </p>
               </div>
             </div>

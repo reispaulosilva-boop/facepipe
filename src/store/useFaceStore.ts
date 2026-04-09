@@ -7,8 +7,14 @@ interface AnalysisResults {
   lipRatio: LipRatioResult | null;
   landmarks: any[] | null;
   topographicRegions: TopographicRegion[] | null;
-  calibrationMm: number | null; // diâmetro da íris em mm (constante 11.7)
+  calibrationMm: number | null; 
   pxPerMm: number | null;
+  morphology: "Oval" | "Redondo" | "Coração" | "Angular" | null;
+  asymmetryScore: number | null;
+  structuralRatios: {
+    noseToChin: number;
+    eyeWidthToFaceWidth: number;
+  } | null;
 }
 
 interface FaceStore {
@@ -24,6 +30,12 @@ interface FaceStore {
   showFifths: boolean;
   setShowFifths: (v: boolean) => void;
   toggleFifths: () => void;
+
+  showAsymmetry: boolean;
+  toggleAsymmetry: () => void;
+
+  showStructural: boolean;
+  toggleStructural: () => void;
 
   // Ajuste manual do Trichion (normalizado 0–1, null = usar landmark 10)
   trichionOverrideY: number | null;
@@ -55,6 +67,9 @@ const defaultAnalysisResults: AnalysisResults = {
   topographicRegions: null,
   calibrationMm: null,
   pxPerMm: null,
+  morphology: null,
+  asymmetryScore: null,
+  structuralRatios: null,
 };
 
 export const useFaceStore = create<FaceStore>((set) => ({
@@ -70,6 +85,12 @@ export const useFaceStore = create<FaceStore>((set) => ({
   showFifths: false,
   setShowFifths: (v) => set({ showFifths: v }),
   toggleFifths: () => set((s) => ({ showFifths: !s.showFifths })),
+
+  showAsymmetry: false,
+  toggleAsymmetry: () => set((s) => ({ showAsymmetry: !s.showAsymmetry })),
+
+  showStructural: false,
+  toggleStructural: () => set((s) => ({ showStructural: !s.showStructural })),
 
   trichionOverrideY: null,
   setTrichionOverrideY: (y) => set({ trichionOverrideY: y }),

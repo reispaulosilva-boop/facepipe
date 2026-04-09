@@ -10,6 +10,8 @@ import {
   AlignHorizontalDistributeCenter,
   RotateCcw,
   Sparkles,
+  Scale,
+  Target
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -24,7 +26,7 @@ interface ToolButtonProps {
 
 function ToolButton({ icon, label, active, onClick, colorScheme = "cyan" }: ToolButtonProps) {
   const activeStyles = {
-    cyan:  "bg-cyan-500/20 border-cyan-500/50 text-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.15)]",
+    cyan:  "bg-primary/20 border-primary/50 text-sky-400 shadow-[0_0_20px_rgba(14,165,233,0.15)]",
     amber: "bg-amber-500/20 border-amber-500/50 text-amber-400 shadow-[0_0_20px_rgba(251,191,36,0.15)]",
   };
 
@@ -55,6 +57,10 @@ interface ToolboxProps {
   toggleThirds: () => void;
   showFifths: boolean;
   toggleFifths: () => void;
+  showAsymmetry: boolean;
+  toggleAsymmetry: () => void;
+  showStructural: boolean;
+  toggleStructural: () => void;
   trichionOverrideY: number | null;
   resetTrichion: () => void;
   zoomPercent: number;
@@ -70,6 +76,10 @@ export function Toolbox({
   toggleThirds,
   showFifths,
   toggleFifths,
+  showAsymmetry,
+  toggleAsymmetry,
+  showStructural,
+  toggleStructural,
   trichionOverrideY,
   resetTrichion,
   zoomPercent,
@@ -99,8 +109,8 @@ export function Toolbox({
       {/* Analysis toggles */}
       <div className="flex flex-col gap-2">
         {/* Section label */}
-        <span className="text-[7px] font-bold text-white/20 uppercase tracking-[0.15em] text-center select-none">
-          Análise
+        <span className="text-[9px] font-bold text-white/30 uppercase tracking-[0.2em] text-center select-none">
+          Camadas
         </span>
 
         {/* Terços — Análise Vertical */}
@@ -138,6 +148,44 @@ export function Toolbox({
           label="Quintos Faciais"
           active={showFifths}
           onClick={toggleFifths}
+          colorScheme="amber"
+        />
+
+        {/* Assimetria */}
+        <ToolButton
+          icon={
+            <div className="relative flex items-center justify-center w-5 h-5">
+              <Scale className="w-5 h-5" />
+              {showAsymmetry && (
+                <motion.div
+                  layoutId="asymmetry-indicator"
+                  className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-amber-400"
+                />
+              )}
+            </div>
+          }
+          label="Assimetria Global"
+          active={showAsymmetry}
+          onClick={toggleAsymmetry}
+          colorScheme="amber"
+        />
+
+        {/* Pontos Estruturais */}
+        <ToolButton
+          icon={
+            <div className="relative flex items-center justify-center w-5 h-5">
+              <Target className="w-5 h-5" />
+              {showStructural && (
+                <motion.div
+                  layoutId="structural-indicator"
+                  className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-amber-400"
+                />
+              )}
+            </div>
+          }
+          label="Pontos AB Face"
+          active={showStructural}
+          onClick={toggleStructural}
           colorScheme="amber"
         />
 
@@ -187,16 +235,16 @@ export function Toolbox({
       <div className="flex flex-col items-center gap-3 py-2 px-1 rounded-xl bg-white/5 border border-white/5">
         <button 
           onClick={() => setZoomPercent(zoomPercent + 25)}
-          className="p-1 hover:text-cyan-400 text-white/40 transition-colors"
+          className="p-2 hover:text-primary text-white/40 transition-all hover:scale-110 active:scale-90"
           title="Aumentar"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-5 h-5" />
         </button>
         
         <div className="relative h-40 w-1.5 bg-white/10 rounded-full overflow-hidden flex flex-col justify-end">
           <motion.div 
             animate={{ height: `${Math.min(zoomPercent / 5, 100)}%` }}
-            className="w-full bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]" 
+            className="w-full bg-primary shadow-[0_0_15px_rgba(14,165,233,0.4)]" 
           />
           <input 
             type="range"
@@ -211,10 +259,10 @@ export function Toolbox({
 
         <button 
            onClick={() => setZoomPercent(zoomPercent - 25)}
-           className="p-1 hover:text-cyan-400 text-white/40 transition-colors"
+           className="p-2 hover:text-primary text-white/40 transition-all hover:scale-110 active:scale-90"
            title="Diminuir"
         >
-          <Minus className="w-4 h-4" />
+          <Minus className="w-5 h-5" />
         </button>
 
         <div className="flex flex-col gap-1 mt-1">
@@ -223,10 +271,10 @@ export function Toolbox({
               key={p}
               onClick={() => setZoomPercent(p)}
               className={cn(
-                "text-[7px] font-bold px-1 py-0.5 rounded transition-all",
+                "text-[10px] font-bold px-2 py-1 rounded transition-all",
                 zoomPercent >= p - 5 && zoomPercent <= p + 5 
-                  ? "bg-cyan-500 text-black" 
-                  : "text-white/30 hover:text-white"
+                  ? "bg-primary text-black" 
+                  : "text-white/30 hover:text-white/70 hover:bg-white/5"
               )}
             >
               {p}%
