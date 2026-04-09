@@ -21,6 +21,7 @@ import {
   TopographicRegion,
   calcLipRatio,
   getTopographicRegions,
+  calcMorphology,
   calcStructuralRatios,
   calcAsymmetry,
   calcBizygomatic,
