@@ -12,10 +12,6 @@ export interface AnalysisResults {
   morphology: "Oval" | "Redondo" | "Coração" | "Angular" | null;
   bizygomatic: DistanceMeasurement | null;
   bigonial: DistanceMeasurement | null;
-  structuralRatios: {
-    noseToChin: number;
-    eyeWidthToFaceWidth: number;
-  } | null;
 }
 
 interface FaceStore {
@@ -79,7 +75,6 @@ const defaultAnalysisResults: AnalysisResults = {
   morphology: null,
   bizygomatic: null,
   bigonial: null,
-  structuralRatios: null,
 };
 
 export const useFaceStore = create<FaceStore>((set) => ({

@@ -31,10 +31,8 @@ export function buildDiagnosticReportPrompt(p: ReportPromptParams): string {
 - Lábio inferior: ${lipRatio?.inferiorMm ?? "N/D"} mm
 - Razão superior:inferior = 1:${lipRatio?.ratio ?? "N/D"} (ideal: 1:1.6)
 
-**Morfologia e Estrutura:**
+**Morfologia:**
 - Formato facial: ${analysisResults.morphology}
-- Assimetria: ${analysisResults.asymmetryScore}%
-- Razão nariz/mento: ${analysisResults.structuralRatios?.noseToChin ?? "N/D"}
 
 **Regiões Topográficas:** ${topographicRegions?.map(r => r.name).join(", ") ?? "N/D"}
 
@@ -43,18 +41,15 @@ export function buildDiagnosticReportPrompt(p: ReportPromptParams): string {
 Analise os dados acima em conjunto com a imagem facial fornecida. Gere um laudo clínico estruturado em Markdown, usando exatamente esta hierarquia:
 
 ### 1. Análise Morfológica
-Descreva o formato facial e como ele se relaciona com os parâmetros da técnica AB Face. Identifique o tipo facial predominante e suas implicações estéticas.
+Descreva o formato facial e suas implicações estéticas e clínicas.
 
 ### 2. Análise de Proporções
 Avalie os terços verticais (equilíbrio, desvios) e a proporção labial. Sinalize desvios clinicamente relevantes (>10% de diferença entre terços; razão labial <1:1.3 ou >1:2).
 
-### 3. Assimetria e Estrutura
-Interprete o score de assimetria (${analysisResults.asymmetryScore}%). Classifique como fisiológica (<5%), leve (5–10%), moderada (10–20%) ou acentuada (>20%). Correlacione com achados estruturais.
-
-### 4. Diagnóstico Estético
+### 3. Diagnóstico Estético
 Síntese em 3–5 pontos clínicos objetivos: desvios prioritários, regiões de maior impacto visual e classificação de envelhecimento facial predominante (volumétrico, gravitacional, dinâmico ou misto).
 
-### 5. Plano de Tratamento Sugerido
+### 4. Plano de Tratamento Sugerido
 Liste até 4 intervenções priorizadas por impacto, com justificativa clínica baseada nas métricas. Especifique região anatômica e objetivo funcional de cada intervenção. Não mencione marcas ou produtos específicos.
 
 ## REGRAS
