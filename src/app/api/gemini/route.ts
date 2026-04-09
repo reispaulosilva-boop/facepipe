@@ -22,11 +22,12 @@ export async function POST(request: NextRequest) {
     // Adaptando para a estrutura do novo SDK (@google/genai)
     const contents = [
       {
+        role: "user",
         parts: [
           { text: prompt },
           ...(imageParts || []).map((part: any) => ({
-            inline_data: {
-              mime_type: part.inlineData.mimeType,
+            inlineData: {
+              mimeType: part.inlineData.mimeType,
               data: part.inlineData.data
             }
           }))
