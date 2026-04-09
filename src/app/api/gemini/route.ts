@@ -12,14 +12,13 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { prompt, imageParts, model = "gemini-2.0-flash" } = body;
+  const { prompt, imageParts, model = "gemini-2.5-flash", responseFormat } = body;
 
   if (!prompt) {
     return NextResponse.json({ error: "prompt is required" }, { status: 400 });
   }
 
   try {
-    // Adaptando para a estrutura do novo SDK (@google/genai)
     const contents = [
       {
         role: "user",
@@ -35,9 +34,14 @@ export async function POST(request: NextRequest) {
       }
     ];
 
+    const config = responseFormat === "json"
+      ? { responseMimeType: "application/json", temperature: 0.2 }
+      : undefined;
+
     const response = await client.models.generateContent({
       model,
-      contents
+      contents,
+      ...(config && { config })
     });
 
     return NextResponse.json({ text: response.text });

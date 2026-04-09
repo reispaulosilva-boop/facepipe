@@ -7,6 +7,8 @@ import { DiagnosticReport } from "./DiagnosticReport";
 import { useFaceLandmarker } from "@/hooks/useFaceLandmarker";
 import { useFaceStore } from "@/store/useFaceStore";
 import { toPng } from "html-to-image";
+import { buildMelasmaPrompt } from "@/lib/prompts/melasma";
+import { buildDiagnosticReportPrompt } from "@/lib/prompts/diagnosticReport";
 import { motion } from "framer-motion";
 import { ReactZoomPanPinchRef } from "react-zoom-pan-pinch";
 import { cn } from "@/lib/utils";
@@ -158,13 +160,7 @@ export function ClinicalWorkspace() {
       throw new Error("Resposta da IA vazia");
     }
 
-    // Procura o primeiro '{' e o último '}' para extrair o JSON puro
-    const jsonMatch = result.text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error("Não foi possível encontrar dados estruturados na resposta");
-    }
-    
-    const melasmaData = JSON.parse(jsonMatch[0]);
+    const melasmaData = JSON.parse(result.text);
     setAnalysisResults({ melasmaData });
     toggleMelasmaOverlay();
   };
@@ -177,32 +173,8 @@ export function ClinicalWorkspace() {
       // 1. Comprimir e redimensionar imagem para evitar HTTP 413 do Vercel (Payload Too Large)
       const base64Data = await compressImage(imageFile);
 
-      // 2. Prompt especializado fornecido pelo usuário (com adição de coordenadas)
-      const prompt = `Você é um assistente dermatológico avançado, especialista em visão computacional e análise de condições de pele, especialmente melasma. Seu objetivo é realizar uma análise automatizada do score mMASI modificado e gerar dados para uma visualização AR sobreposta.
-
-Use a imagem de rosto frontal fornecida.
-
-Realize os seguintes cálculos mMASI (Modified Melasma Area and Severity Index) em quatro regiões faciais: Testa (F), Malar Direita (RMR), Malar Esquerda (LMR), Queixo (C).
-
-Para cada região, calcule:
-- Área (A): 0 (0%), 1 (<10%), 2 (10-29%), 3 (30-49%), 4 (50-69%), 5 (70-89%), 6 (90-100%).
-- Intensidade (D): 0-4 (0=ausente, 1=leve, 2=moderada, 3=acentuada, 4=máxima).
-- Homogeneidade (H): 0-4 (0=mínima, 4=máxima).
-
-Cálculo Final: mMASI = 0.3(A_F * (D_F + H_F)) + 0.3(A_RMR * (D_RMR + H_RMR)) + 0.3(A_LMR * (D_LMR + H_LMR)) + 0.1(A_C * (D_C + H_C)).
-
-IMPORTANTE: Você deve retornar APENAS um JSON válido seguindo exatamente esta estrutura:
-{
-  "score_total": 0.0,
-  "classificacao": "Leve/Moderado/Grave",
-  "scores_regionais": {
-    "testa": { "area": 0, "intensidade": 0, "homogeneidade": 0, "x": 50, "y": 25 },
-    "malar_direita": { "area": 0, "intensidade": 0, "homogeneidade": 0, "x": 35, "y": 55 },
-    "malar_esquerda": { "area": 0, "intensidade": 0, "homogeneidade": 0, "x": 65, "y": 55 },
-    "queixo": { "area": 0, "intensidade": 0, "homogeneidade": 0, "x": 50, "y": 80 }
-  }
-}
-Onde 'x' e 'y' são as coordenadas sugeridas para o marcador AR (em porcentagem de 0 a 100 da imagem).`;
+      // 2. Prompt clínico mMASI
+      const prompt = buildMelasmaPrompt();
 
       const response = await fetch("/api/gemini", {
         method: "POST",
@@ -210,7 +182,8 @@ Onde 'x' e 'y' são as coordenadas sugeridas para o marcador AR (em porcentagem 
         body: JSON.stringify({
           prompt,
           imageParts: [{ inlineData: { mimeType: "image/jpeg", data: base64Data } }],
-          model: "gemini-2.5-flash"
+          model: "gemini-2.5-flash",
+          responseFormat: "json"
         })
       });
 
@@ -258,27 +231,16 @@ Onde 'x' e 'y' são as coordenadas sugeridas para o marcador AR (em porcentagem 
       const base64Data = dataUrl.split(",")[1];
 
       // 2. Construir prompt especializado (AB Face)
-      const { thirds, lipRatio, landmarks, topographicRegions } = analysisResults;
-      
-      const prompt = `Você é um dermatologista especialista em harmonização facial, com profundo conhecimento da técnica AB Face do Dr. André Braz. Sua análise deve ser ética, científica e focada em proporções e suporte estrutural.
-      
-Analise a imagem e os seguintes dados métricos faciais:
-- Terço Superior: ${thirds.upperThird.mm} mm
-- Terço Médio: ${thirds.middleThird.mm} mm
-- Terço Inferior: ${thirds.lowerThird.mm} mm
-- Lábio Superior: ${lipRatio?.superiorMm} mm
-- Lábio Inferior: ${lipRatio?.inferiorMm} mm (Proporção 1:${lipRatio?.ratio})
-- Gênero do Paciente: ${patientGender}
-- Idade Estimada: ${patientAge || "Não informada"}
+      const { thirds, lipRatio, topographicRegions } = analysisResults;
 
-Regiões Topográficas Detectadas: ${topographicRegions?.map(r => r.name).join(", ")}
-Identifique o formato do rosto: ${analysisResults.morphology}. 
-Assimetria Detectada: ${analysisResults.asymmetryScore}%.
-Relação Base Nasal/Mento: ${analysisResults.structuralRatios?.noseToChin}.
-
-Com base nestes dados, identifique desproporções faciais nos terços, quintos e lábios. Sugira intervenções de harmonização facial (ex: preenchimento com ácido hialurônico, bioestimuladores) alinhadas com a técnica AB Face, focando em suporte estrutural, projeção e contorno. 
-
-O laudo deve ser conciso, profissional e incluir uma seção de 'Diagnóstico' e 'Plano de Tratamento Sugerido' em Markdown.`;
+      const prompt = buildDiagnosticReportPrompt({
+        thirds: thirds!,
+        lipRatio,
+        topographicRegions: topographicRegions ?? [],
+        analysisResults,
+        patientGender,
+        patientAge,
+      });
 
       // 3. Chamar API Proxy do Gemini
       console.log("Sending request to Gemini API...");
@@ -287,32 +249,8 @@ O laudo deve ser conciso, profissional e incluir uma seção de 'Diagnóstico' e
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           prompt,
-          imageParts: [
-            {
-              inlineData: {
-                mimeType: "image/png",
-                data: base64Data
-              }
-            }
-          ],
-          facialMetrics: {
-            thirds: {
-              superior: thirds.upperThird.mm,
-              medio: thirds.middleThird.mm,
-              inferior: thirds.lowerThird.mm
-            },
-            lipRatio: {
-              superior: lipRatio?.superiorMm,
-              inferior: lipRatio?.inferiorMm,
-              ratio: lipRatio?.ratio
-            },
-            landmarks: JSON.stringify(landmarks),
-            topographicRegions: JSON.stringify(topographicRegions?.map(r => ({ name: r.name, points: r.points })))
-          },
-          patientInfo: {
-            gender: patientGender,
-            age: patientAge
-          }
+          imageParts: [{ inlineData: { mimeType: "image/png", data: base64Data } }],
+          model: "gemini-2.5-flash",
         })
       });
 

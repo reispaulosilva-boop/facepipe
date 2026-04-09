@@ -5,6 +5,7 @@ export interface MelasmaRegionalScore {
   area: number;
   intensidade: number;
   homogeneidade: number;
+  subtotal?: number;
   x?: number; // percentual 0-100 para o marcador
   y?: number; // percentual 0-100 para o marcador
 }
@@ -12,15 +13,17 @@ export interface MelasmaRegionalScore {
 export interface MelasmaAnalysis {
   score_total: number;
   classificacao: string;
+  confianca?: "alta" | "media" | "baixa";
   scores_regionais: {
     testa: MelasmaRegionalScore;
     malar_direita: MelasmaRegionalScore;
     malar_esquerda: MelasmaRegionalScore;
     queixo: MelasmaRegionalScore;
   };
+  observacoes_clinicas?: string;
 }
 
-interface AnalysisResults {
+export interface AnalysisResults {
   thirds: ThirdsResult | null;
   fifths: FifthsResult | null;
   lipRatio: LipRatioResult | null;
