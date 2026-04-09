@@ -141,7 +141,8 @@ export function Toolbox({
           colorScheme="amber"
         />
 
-        {/* AI Report Button */}
+        {/* AI Report Button - Removido por hora */}
+        {/*
         <ToolButton
           icon={
             <div className="relative flex items-center justify-center w-5 h-5">
@@ -153,6 +154,7 @@ export function Toolbox({
           colorScheme="cyan"
           active={isGenerating}
         />
+        */}
       </div>
 
       {/* Trichion Reset — only visible when manually adjusted */}

@@ -333,7 +333,8 @@ O laudo deve ser conciso, profissional e incluir uma seção de 'Diagnóstico' e
           />
         )}
 
-        <DiagnosticReport />
+        {/* DiagnosticReport removido por hora */}
+        {/* <DiagnosticReport /> */}
       </main>
     </div>
   );
