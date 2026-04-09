@@ -1,8 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { NextRequest, NextResponse } from "next/server";
 
-// O SDK v2 usa a variável de ambiente GEMINI_API_KEY automaticamente se não for passada
-const client = new GoogleGenAI();
+const client = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 export async function POST(request: NextRequest) {
   if (!process.env.GEMINI_API_KEY) {
