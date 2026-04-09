@@ -104,6 +104,7 @@ export function Toolbox(props: ToolboxProps) {
     onAnalyzeSkin
   } = props;
 
+  const {
     showSkinAnalysisSubmenu,
     toggleSkinAnalysisSubmenu,
     setActiveSkinAnalysis,
