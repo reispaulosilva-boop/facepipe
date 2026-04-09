@@ -72,41 +72,64 @@ export function MelasmaMarkers() {
   return (
     <div className="absolute inset-0 pointer-events-none z-20">
       {/* 1. Camada de Malha Topográfica (Wireframe Fino) */}
-      <svg className="absolute inset-0 w-full h-full opacity-[0.15]">
+      <svg 
+        className="absolute inset-0 w-full h-full opacity-[0.2]" 
+        viewBox="0 0 100 100" 
+        preserveAspectRatio="none"
+      >
         {landmarks && landmarks.length > 0 && (
           <path
             d={landmarks.reduce((acc: string, pt: any, i: number) => {
               // Desenha apenas algumas conexões para um efeito "fine wireframe"
-              if (i % 4 === 0 && landmarks[i+1]) {
-                return acc + `M ${pt.x * 100}% ${pt.y * 100}% L ${landmarks[i+1].x * 100}% ${landmarks[i+1].y * 100}% `;
+              if (i % 6 === 0 && landmarks[i+1]) {
+                const x1 = pt.x * 100;
+                const y1 = pt.y * 100;
+                const x2 = landmarks[i+1].x * 100;
+                const y2 = landmarks[i+1].y * 100;
+                return acc + `M ${x1} ${y1} L ${x2} ${y2} `;
               }
               return acc;
             }, "")}
             stroke="white"
-            strokeWidth="0.5"
+            strokeWidth="0.1"
             fill="none"
           />
         )}
       </svg>
 
       {/* 2. Clusters de Esferas e Callouts */}
-      {Object.entries(data.scores_regionais).map(([key, score]: [string, any]) => {
+      {data.scores_regionais && Object.entries(data.scores_regionais).map(([key, score]: [string, any]) => {
+        // Fallback para coordenadas se o AI falhar (posições aproximadas)
+        let x = score.x;
+        let y = score.y;
+        
+        if (x === undefined || y === undefined) {
+          if (key === "testa") { x = 50; y = 25; }
+          else if (key === "malar_direita") { x = 35; y = 55; }
+          else if (key === "malar_esquerda") { x = 65; y = 55; }
+          else if (key === "queixo") { x = 50; y = 80; }
+          else { return null; }
+        }
+
         const colorKey = determineDominantColor(score);
         const color = COLORS[colorKey];
         // Quantidade de esferas proporcional à área (1 a 12)
         const sphereCount = Math.max(1, Math.round((score.area / 6) * 12));
         const offsets = getClusterOffsets(sphereCount, key);
         
-        // Coordenadas para a linha do callout
-        const isLeft = score.x > 50;
-        const lineEndX = isLeft ? 15 : -15;
-        const lineEndY = -30;
+        const isLeft = x > 50;
+        const lineEndX = isLeft ? 20 : -20;
+        const lineEndY = -40;
 
         return (
           <div
             key={key}
             className="absolute"
-            style={{ left: `${score.x}%`, top: `${score.y}%` }}
+            style={{ 
+              left: `${x}%`, 
+              top: `${y}%`,
+              transform: "translate(-50%, -50%)" 
+            }}
           >
             {/* Linha Conectora Callout */}
             <svg className="absolute overflow-visible pointer-events-none" style={{ left: 0, top: 0 }}>
@@ -114,7 +137,7 @@ export function MelasmaMarkers() {
                  initial={{ pathLength: 0, opacity: 0 }}
                  animate={{ pathLength: 1, opacity: 0.3 }}
                  x1="0" y1="0" x2={lineEndX} y2={lineEndY}
-                 stroke="white" strokeWidth="0.5"
+                 stroke="white" strokeWidth="0.8"
                />
             </svg>
 
@@ -126,7 +149,7 @@ export function MelasmaMarkers() {
                   initial={{ scale: 0, opacity: 0 }}
                   animate={{ scale: off.scale, opacity: 1 }}
                   transition={{ delay: off.delay, type: "spring", stiffness: 200 }}
-                  className="absolute w-3 h-3 rounded-full shadow-lg"
+                  className="absolute w-2.5 h-2.5 rounded-full shadow-lg"
                   style={{
                     background: color.main,
                     left: off.x,
@@ -138,22 +161,22 @@ export function MelasmaMarkers() {
               ))}
             </div>
 
-            {/* Callout Regional (Glassmorphism) */}
+            {/* Callout Regional */}
             <motion.div
-              initial={{ opacity: 0, x: isLeft ? 20 : -20 }}
-              animate={{ opacity: 1, x: lineEndX }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
               className={cn(
-                "absolute top-[-50px] whitespace-nowrap px-3 py-1.5 rounded-lg border border-white/10 backdrop-blur-md shadow-2xl flex items-center gap-2",
-                isLeft ? "left-0" : "right-0"
+                "absolute top-[-65px] whitespace-nowrap px-3 py-1.5 rounded-lg border border-white/10 backdrop-blur-xl shadow-2xl flex items-center gap-2",
+                isLeft ? "left-5" : "right-5"
               )}
-              style={{ backgroundColor: "rgba(3, 7, 18, 0.6)" }}
+              style={{ backgroundColor: "rgba(3, 7, 18, 0.7)" }}
             >
               <div className="flex flex-col">
-                <span className="text-[7px] font-black text-white/30 uppercase tracking-widest leading-none mb-0.5">
+                <span className="text-[7px] font-black text-white/40 uppercase tracking-widest leading-none mb-0.5">
                   {key.replace("_", " ")}
                 </span>
-                <span className="text-[10px] font-bold text-white/90 leading-none">
-                  Score: <span className="text-primary">{((score.area * (score.intensidade + score.homogeneidade)) / 1).toFixed(3)}</span>
+                <span className="text-[10px] font-bold text-white leading-none">
+                  Score: <span className="text-primary font-black">{( (score.area * (score.intensidade + score.homogeneidade))/1 ).toFixed(2)}</span>
                 </span>
               </div>
             </motion.div>
