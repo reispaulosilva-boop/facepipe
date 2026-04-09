@@ -7,7 +7,6 @@ import { DiagnosticReport } from "./DiagnosticReport";
 import { useFaceLandmarker } from "@/hooks/useFaceLandmarker";
 import { useFaceStore } from "@/store/useFaceStore";
 import { toPng } from "html-to-image";
-import { buildMelasmaPrompt } from "@/lib/prompts/melasma";
 import { buildDiagnosticReportPrompt } from "@/lib/prompts/diagnosticReport";
 import { motion } from "framer-motion";
 import { ReactZoomPanPinchRef } from "react-zoom-pan-pinch";
@@ -38,7 +37,6 @@ export function ClinicalWorkspace() {
     setIsAnalyzingSkin,
     isAnalyzingSkin,
     setAnalysisResults,
-    toggleMelasmaOverlay,
   } = useFaceStore();
 
   const [activeTool, setActiveTool] = useState("select");
@@ -155,53 +153,6 @@ export function ClinicalWorkspace() {
     });
   };
 
-  const processResult = (result: any) => {
-    if (!result.text) {
-      throw new Error("Resposta da IA vazia");
-    }
-
-    const melasmaData = JSON.parse(result.text);
-    setAnalysisResults({ melasmaData });
-    toggleMelasmaOverlay();
-  };
-
-  const analyzeMelasma = useCallback(async () => {
-    if (isAnalyzingSkin || !imageFile) return;
-    
-    setIsAnalyzingSkin(true);
-    try {
-      // 1. Comprimir e redimensionar imagem para evitar HTTP 413 do Vercel (Payload Too Large)
-      const base64Data = await compressImage(imageFile);
-
-      // 2. Prompt clínico mMASI
-      const prompt = buildMelasmaPrompt();
-
-      const response = await fetch("/api/gemini", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt,
-          imageParts: [{ inlineData: { mimeType: "image/jpeg", data: base64Data } }],
-          model: "gemini-2.5-flash",
-          responseFormat: "json"
-        })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `Erro HTTP: ${response.status}`);
-      }
-      
-      const result = await response.json();
-      processResult(result);
-      
-    } catch (err: any) {
-      console.error("Melasma analysis failure:", err);
-      alert(`Análise falhou: ${err.message || "Erro desconhecido"}`);
-    } finally {
-      setIsAnalyzingSkin(false);
-    }
-  }, [imageFile, isAnalyzingSkin, setIsAnalyzingSkin, setAnalysisResults, toggleMelasmaOverlay]);
 
   const generateDiagnosticReport = useCallback(async () => {
     if (isGeneratingReport) return;
@@ -331,7 +282,9 @@ export function ClinicalWorkspace() {
         onGenerateReport={generateDiagnosticReport}
         isGenerating={isGeneratingReport}
         onAnalyzeSkin={(type) => {
-          if (type === "Melasma") analyzeMelasma();
+          if (type === "Melasma") {
+            alert("Melasma: Em desenvolvimento / Aguardando implementação");
+          }
         }}
       />
       

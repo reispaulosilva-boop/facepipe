@@ -1,28 +1,6 @@
 import { create } from "zustand";
 import { ThirdsResult, FifthsResult, LipRatioResult, TopographicRegion, DistanceMeasurement } from "@/utils/facialAnalysis";
 
-export interface MelasmaRegionalScore {
-  area: number;
-  intensidade: number;
-  homogeneidade: number;
-  subtotal?: number;
-  x?: number; // percentual 0-100 para o marcador
-  y?: number; // percentual 0-100 para o marcador
-}
-
-export interface MelasmaAnalysis {
-  score_total: number;
-  classificacao: string;
-  confianca?: "alta" | "media" | "baixa";
-  scores_regionais: {
-    testa: MelasmaRegionalScore;
-    malar_direita: MelasmaRegionalScore;
-    malar_esquerda: MelasmaRegionalScore;
-    queixo: MelasmaRegionalScore;
-  };
-  observacoes_clinicas?: string;
-}
-
 export interface AnalysisResults {
   thirds: ThirdsResult | null;
   fifths: FifthsResult | null;
@@ -39,7 +17,8 @@ export interface AnalysisResults {
     noseToChin: number;
     eyeWidthToFaceWidth: number;
   } | null;
-  melasmaData: MelasmaAnalysis | null;
+    eyeWidthToFaceWidth: number;
+  } | null;
 }
 
 interface FaceStore {
@@ -95,9 +74,8 @@ interface FaceStore {
   
   isAnalyzingSkin: boolean;
   setIsAnalyzingSkin: (v: boolean) => void;
-  showMelasmaOverlay: boolean;
-  setShowMelasmaOverlay: (v: boolean) => void;
-  toggleMelasmaOverlay: () => void;
+  isAnalyzingSkin: boolean;
+  setIsAnalyzingSkin: (v: boolean) => void;
 }
 
 const defaultAnalysisResults: AnalysisResults = {
@@ -113,7 +91,8 @@ const defaultAnalysisResults: AnalysisResults = {
   bizygomatic: null,
   bigonial: null,
   structuralRatios: null,
-  melasmaData: null,
+  bigonial: null,
+  structuralRatios: null,
 };
 
 export const useFaceStore = create<FaceStore>((set) => ({
@@ -172,7 +151,4 @@ export const useFaceStore = create<FaceStore>((set) => ({
 
   isAnalyzingSkin: false,
   setIsAnalyzingSkin: (v) => set({ isAnalyzingSkin: v }),
-  showMelasmaOverlay: false,
-  setShowMelasmaOverlay: (v) => set({ showMelasmaOverlay: v }),
-  toggleMelasmaOverlay: () => set((s) => ({ showMelasmaOverlay: !s.showMelasmaOverlay })),
 }));

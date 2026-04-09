@@ -9,7 +9,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { FaceLandmarker } from "@mediapipe/tasks-vision";
-import { MelasmaMarkers, MelasmaUI } from "./MelasmaOverlay";
+import { FaceLandmarker } from "@mediapipe/tasks-vision";
 import {
   calcThirds,
   calcFifths,
@@ -975,8 +975,6 @@ export function LightTable({
               </svg>
             )}
 
-            {/* Melasma AR Markers — Inside relative container to move with zoom/pan */}
-            <MelasmaMarkers />
 
             {/* Capture Area Ref */}
             <div id="clinical-capture-area" className="sr-only" />
@@ -1006,9 +1004,6 @@ export function LightTable({
         )}
       </AnimatePresence>
       
-      <AnimatePresence>
-        <MelasmaUI />
-      </AnimatePresence>
       
       {/* Telemetry HUD */}
       <div className="absolute bottom-10 right-10 pointer-events-none hidden lg:flex flex-col items-end gap-1.5 opacity-40">
