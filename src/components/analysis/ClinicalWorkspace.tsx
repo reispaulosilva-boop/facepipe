@@ -112,19 +112,54 @@ export function ClinicalWorkspace() {
     }
   }, []);
 
+  const compressImage = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          let width = img.width;
+          let height = img.height;
+          
+          // Redimensionar se for maior que 1600px para economizar banda e evitar HTTP 413
+          const MAX_SIZE = 1600;
+          if (width > height) {
+            if (width > MAX_SIZE) {
+              height *= MAX_SIZE / width;
+              width = MAX_SIZE;
+            }
+          } else {
+            if (height > MAX_SIZE) {
+              width *= MAX_SIZE / height;
+              height = MAX_SIZE;
+            }
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx?.drawImage(img, 0, 0, width, height);
+          
+          // Exportar como JPEG com 80% de qualidade
+          const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
+          resolve(dataUrl.split(",")[1]);
+        };
+        img.onerror = reject;
+      };
+      reader.onerror = reject;
+    });
+  };
+
   const analyzeMelasma = useCallback(async () => {
     if (isAnalyzingSkin || !imageFile) return;
     
     setIsAnalyzingSkin(true);
     try {
-      // 1. Converter imagem original para base64 para máxima precisão
-      const reader = new FileReader();
-      const base64Promise = new Promise<string>((resolve) => {
-        reader.onload = () => resolve((reader.result as string).split(",")[1]);
-        reader.readAsDataURL(imageFile);
-      });
-      
-      const base64Data = await base64Promise;
+      // 1. Comprimir e redimensionar imagem para evitar HTTP 413 do Vercel (Payload Too Large)
+      const base64Data = await compressImage(imageFile);
 
       // 2. Prompt especializado fornecido pelo usuário (com adição de coordenadas)
       const prompt = `Você é um assistente dermatológico avançado, especialista em visão computacional e análise de condições de pele, especialmente melasma. Seu objetivo é realizar uma análise automatizada do score mMASI modificado e gerar dados para uma visualização AR sobreposta.
@@ -158,7 +193,7 @@ Onde 'x' e 'y' são as coordenadas sugeridas para o marcador AR (em porcentagem 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           prompt,
-          imageParts: [{ inlineData: { mimeType: imageFile.type, data: base64Data } }],
+          imageParts: [{ inlineData: { mimeType: "image/jpeg", data: base64Data } }],
           model: "gemini-1.5-flash"
         })
       });
