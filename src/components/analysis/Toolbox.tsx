@@ -12,9 +12,16 @@ import {
   Sparkles,
   Scale,
   Target,
-  Ruler
+  Ruler,
+  Sun,
+  Grid,
+  Sparkle,
+  Thermometer,
+  Zap,
+  Activity,
+  ArrowDownCircle
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface ToolButtonProps {
@@ -72,26 +79,49 @@ interface ToolboxProps {
   isGenerating?: boolean;
 }
 
-export function Toolbox({
-  showLandmarks,
-  setShowLandmarks,
-  showThirds,
-  toggleThirds,
-  showFifths,
-  toggleFifths,
-  showAsymmetry,
-  toggleAsymmetry,
-  showStructural,
-  toggleStructural,
-  showDistances,
-  toggleDistances,
-  trichionOverrideY,
-  resetTrichion,
-  zoomPercent,
-  setZoomPercent,
-  onGenerateReport,
-  isGenerating
-}: ToolboxProps) {
+export function Toolbox(props: ToolboxProps) {
+  const {
+    showLandmarks,
+    setShowLandmarks,
+    showThirds,
+    toggleThirds,
+    showFifths,
+    toggleFifths,
+    showAsymmetry,
+    toggleAsymmetry,
+    showStructural,
+    toggleStructural,
+    showDistances,
+    toggleDistances,
+    trichionOverrideY,
+    resetTrichion,
+    zoomPercent,
+    setZoomPercent,
+    onGenerateReport,
+    isGenerating
+  } = props;
+
+  const {
+    showSkinAnalysisSubmenu,
+    toggleSkinAnalysisSubmenu,
+    setActiveSkinAnalysis,
+  } = useFaceStore();
+
+  const skinParams = [
+    { id: "melasma", label: "Melasma", icon: <Sun className="w-3.5 h-3.5" /> },
+    { id: "poros", label: "Poros Dilatados", icon: <Grid className="w-3.5 h-3.5" /> },
+    { id: "brilho", label: "Brilho", icon: <Sparkle className="w-3.5 h-3.5" /> },
+    { id: "vermelhidao", label: "Vermelhidão", icon: <Thermometer className="w-3.5 h-3.5" /> },
+    { id: "cravos", label: "Cravos e Espinhas", icon: <Zap className="w-3.5 h-3.5" /> },
+    { id: "rugas", label: "Rugas e Linhas Finas", icon: <Activity className="w-3.5 h-3.5" /> },
+    { id: "flacidez", label: "Flacidez", icon: <ArrowDownCircle className="w-3.5 h-3.5" /> },
+  ];
+
+  const handleSkinParamClick = (label: string) => {
+    alert(`Avaliação de ${label}: Função em desenvolvimento. O Gemini processará esta região em breve.`);
+    setActiveSkinAnalysis(label);
+  };
+
   return (
     <motion.aside 
       initial={{ x: -20, opacity: 0 }}
@@ -213,6 +243,57 @@ export function Toolbox({
           colorScheme="amber"
         />
       </div>
+
+      <div className="h-px bg-white/5 mx-1" />
+
+      {/* Skin Quality Section — NEW */}
+      <div className="flex flex-col gap-1.5 relative">
+        <span className="text-[8px] font-bold text-white/20 uppercase tracking-[0.2em] text-center select-none mb-0.5">
+          Pele
+        </span>
+        
+        <ToolButton
+          icon={<Sparkles className="w-4 h-4" />}
+          label="Qualidade da Pele"
+          active={showSkinAnalysisSubmenu}
+          onClick={toggleSkinAnalysisSubmenu}
+          colorScheme="cyan"
+        />
+
+        {/* Floating Submenu */}
+        <AnimatePresence>
+          {showSkinAnalysisSubmenu && (
+            <motion.div
+              initial={{ opacity: 0, x: -10, scale: 0.95 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, x: -10, scale: 0.95 }}
+              className="absolute left-14 top-0 min-w-[180px] p-2 rounded-xl bg-[#030712]/90 backdrop-blur-2xl border border-white/10 shadow-2xl flex flex-col gap-1 z-[60]"
+            >
+              <div className="px-2 py-1.5 border-b border-white/5 mb-1">
+                <span className="text-[9px] font-bold text-primary uppercase tracking-widest flex items-center gap-2">
+                  <div className="w-1 h-1 rounded-full bg-primary" />
+                  AVALIAÇÃO GEMINI
+                </span>
+              </div>
+              
+              {skinParams.map((param) => (
+                <button
+                  key={param.id}
+                  onClick={() => handleSkinParamClick(param.label)}
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5 text-white/60 hover:text-white transition-all text-xs group"
+                >
+                  <div className="text-primary group-hover:scale-110 transition-transform">
+                    {param.icon}
+                  </div>
+                  <span className="font-medium">{param.label}</span>
+                </button>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      <div className="h-px bg-white/5 mx-1" />
 
       {/* Trichion Reset — only visible when manually adjusted */}
       {trichionOverrideY != null && (

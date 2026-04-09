@@ -62,6 +62,13 @@ interface FaceStore {
   patientGender: string;
   patientAge: string;
   setPatientInfo: (info: { gender?: string; age?: string }) => void;
+
+  // Skin Quality Analysis State
+  activeSkinAnalysis: string | null;
+  setActiveSkinAnalysis: (v: string | null) => void;
+  showSkinAnalysisSubmenu: boolean;
+  setShowSkinAnalysisSubmenu: (v: boolean) => void;
+  toggleSkinAnalysisSubmenu: () => void;
 }
 
 const defaultAnalysisResults: AnalysisResults = {
@@ -125,4 +132,11 @@ export const useFaceStore = create<FaceStore>((set) => ({
     patientGender: info.gender ?? s.patientGender, 
     patientAge: info.age ?? s.patientAge 
   })),
+
+  // Skin Quality Analysis State
+  activeSkinAnalysis: null,
+  setActiveSkinAnalysis: (v) => set({ activeSkinAnalysis: v }),
+  showSkinAnalysisSubmenu: false,
+  setShowSkinAnalysisSubmenu: (v) => set({ showSkinAnalysisSubmenu: v }),
+  toggleSkinAnalysisSubmenu: () => set((s) => ({ showSkinAnalysisSubmenu: !s.showSkinAnalysisSubmenu })),
 }));
