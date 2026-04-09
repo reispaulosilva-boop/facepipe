@@ -66,10 +66,6 @@ interface ToolboxProps {
   toggleThirds: () => void;
   showFifths: boolean;
   toggleFifths: () => void;
-  showAsymmetry: boolean;
-  toggleAsymmetry: () => void;
-  showStructural: boolean;
-  toggleStructural: () => void;
   showDistances: boolean;
   toggleDistances: () => void;
   trichionOverrideY: number | null;
@@ -89,10 +85,6 @@ export function Toolbox(props: ToolboxProps) {
     toggleThirds,
     showFifths,
     toggleFifths,
-    showAsymmetry,
-    toggleAsymmetry,
-    showStructural,
-    toggleStructural,
     showDistances,
     toggleDistances,
     trichionOverrideY,
@@ -194,43 +186,6 @@ export function Toolbox(props: ToolboxProps) {
           colorScheme="amber"
         />
 
-        {/* Assimetria */}
-        <ToolButton
-          icon={
-            <div className="relative flex items-center justify-center w-4 h-4">
-              <Scale className="w-4 h-4" />
-              {showAsymmetry && (
-                <motion.div
-                  layoutId="asymmetry-indicator"
-                  className="absolute -top-0.5 -right-0.5 w-1 h-1 rounded-full bg-amber-400"
-                />
-              )}
-            </div>
-          }
-          label="Assimetria Global"
-          active={showAsymmetry}
-          onClick={toggleAsymmetry}
-          colorScheme="amber"
-        />
-
-        {/* Pontos Estruturais */}
-        <ToolButton
-          icon={
-            <div className="relative flex items-center justify-center w-4 h-4">
-              <Target className="w-4 h-4" />
-              {showStructural && (
-                <motion.div
-                  layoutId="structural-indicator"
-                  className="absolute -top-0.5 -right-0.5 w-1 h-1 rounded-full bg-amber-400"
-                />
-              )}
-            </div>
-          }
-          label="Pontos AB Face"
-          active={showStructural}
-          onClick={toggleStructural}
-          colorScheme="amber"
-        />
 
         {/* Distâncias Horizontais (Bizigomática / Bigonial) */}
         <ToolButton

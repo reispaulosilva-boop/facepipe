@@ -326,26 +326,6 @@ export function calcMorphology(
   return "Oval"; // Default common shape
 }
 
-/**
- * Calcula razões estruturais (Ex: Largura Base Nasal vs Largura Mento).
- */
-export function calcStructuralRatios(
-  landmarks: Landmark[],
-  imageWidth: number
-) {
-  // Base nasal approximate width (Alare points)
-  const noseWidth = horizontalDistancePx(landmarks[102], landmarks[331], imageWidth);
-  // Chin width (approximate)
-  const chinWidth = horizontalDistancePx(landmarks[148], landmarks[377], imageWidth);
-
-  return {
-    noseToChin: parseFloat((noseWidth / chinWidth).toFixed(2)),
-    eyeWidthToFaceWidth: parseFloat(
-      (horizontalDistancePx(landmarks[33], landmarks[133], imageWidth) / 
-       horizontalDistancePx(landmarks[234], landmarks[454], imageWidth)).toFixed(2)
-    )
-  };
-}
 
 /**
  * Calcula a distância Bizigomática (Largura Facial máxima).
@@ -389,35 +369,6 @@ export function calcBigonial(
   };
 }
 
-/**
- * Calcula a pontuação de assimetria global (0-100, onde 0 é simétrico perfeito).
- * Compara distâncias de pontos bilaterais ao eixo central (Nose bridge).
- */
-export function calcAsymmetry(
-  landmarks: Landmark[],
-  imageWidth: number,
-  pxPerMm: number
-): number {
-  const midlineX = landmarks[168].x; // Glabela X as reference midline
-  
-  const bilateralPoints = [
-    [33, 263],   // Exocanthion
-    [133, 362],  // Endocanthion
-    [234, 454],  // Zygomatic
-    [61, 291],   // Mouth corners
-    [172, 397],  // Jaw angles
-  ];
-
-  let totalDiffMm = 0;
-  bilateralPoints.forEach(([lIdx, rIdx]) => {
-    const leftDist = Math.abs(landmarks[lIdx].x - midlineX) * imageWidth;
-    const rightDist = Math.abs(landmarks[rIdx].x - midlineX) * imageWidth;
-    totalDiffMm += Math.abs(pxToMm(leftDist - rightDist, pxPerMm));
-  });
-
-  // Score normalized (example: 0 to 10 scale normalized to 0-100)
-  return Math.min(Math.round(totalDiffMm * 5), 100);
-}
 
 /**
  * Retorna as coordenadas absolutas (em pixels) de um landmark normalizado.

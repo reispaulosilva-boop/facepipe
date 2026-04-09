@@ -10,7 +10,6 @@ export interface AnalysisResults {
   calibrationMm: number | null; 
   pxPerMm: number | null;
   morphology: "Oval" | "Redondo" | "Coração" | "Angular" | null;
-  asymmetryScore: number | null;
   bizygomatic: DistanceMeasurement | null;
   bigonial: DistanceMeasurement | null;
   structuralRatios: {
@@ -33,11 +32,6 @@ interface FaceStore {
   setShowFifths: (v: boolean) => void;
   toggleFifths: () => void;
 
-  showAsymmetry: boolean;
-  toggleAsymmetry: () => void;
-
-  showStructural: boolean;
-  toggleStructural: () => void;
 
   showDistances: boolean;
   toggleDistances: () => void;
@@ -83,7 +77,6 @@ const defaultAnalysisResults: AnalysisResults = {
   calibrationMm: null,
   pxPerMm: null,
   morphology: null,
-  asymmetryScore: null,
   bizygomatic: null,
   bigonial: null,
   structuralRatios: null,
@@ -103,11 +96,6 @@ export const useFaceStore = create<FaceStore>((set) => ({
   setShowFifths: (v) => set({ showFifths: v }),
   toggleFifths: () => set((s) => ({ showFifths: !s.showFifths })),
 
-  showAsymmetry: false,
-  toggleAsymmetry: () => set((s) => ({ showAsymmetry: !s.showAsymmetry })),
-
-  showStructural: false,
-  toggleStructural: () => set((s) => ({ showStructural: !s.showStructural })),
 
   showDistances: false,
   toggleDistances: () => set((s) => ({ showDistances: !s.showDistances })),

@@ -28,10 +28,6 @@ export function ClinicalWorkspace() {
     isGeneratingReport,
     patientGender,
     patientAge,
-    showAsymmetry,
-    toggleAsymmetry,
-    showStructural,
-    toggleStructural,
     showDistances,
     toggleDistances,
     setIsAnalyzingSkin,
@@ -269,10 +265,6 @@ export function ClinicalWorkspace() {
         toggleThirds={toggleThirds}
         showFifths={showFifths}
         toggleFifths={toggleFifths}
-        showAsymmetry={showAsymmetry}
-        toggleAsymmetry={toggleAsymmetry}
-        showStructural={showStructural}
-        toggleStructural={toggleStructural}
         showDistances={showDistances}
         toggleDistances={toggleDistances}
         trichionOverrideY={trichionOverrideY}
@@ -303,64 +295,6 @@ export function ClinicalWorkspace() {
           </div>
           
           <div className="flex items-center gap-6">
-            {/* Analysis badges */}
-            <div className="flex items-center gap-2">
-              {showThirds && (
-                <motion.span
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  className="text-[8px] font-bold px-2 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 uppercase tracking-widest"
-                >
-                  Terços ativos
-                </motion.span>
-              )}
-              {showFifths && (
-                <motion.span
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  className="text-[8px] font-bold px-2 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 uppercase tracking-widest"
-                >
-                  Quintos ativos
-                </motion.span>
-              )}
-              {trichionOverrideY != null && (
-                <motion.span
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  className="text-[8px] font-bold px-2 py-1 rounded-full bg-green-500/10 border border-green-500/30 text-green-400 uppercase tracking-widest"
-                >
-                  Trichion Ajustado
-                </motion.span>
-              )}
-              {analysisResults.morphology && (
-                <motion.span
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="text-[8px] font-bold px-2 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 uppercase tracking-widest flex items-center gap-1.5"
-                >
-                  <div className="w-1 h-1 rounded-full bg-cyan-400" />
-                  Face {analysisResults.morphology}
-                </motion.span>
-              )}
-              {analysisResults.asymmetryScore !== null && (
-                <motion.span
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className={cn(
-                    "text-[8px] font-bold px-2 py-1 rounded-full uppercase tracking-widest",
-                    analysisResults.asymmetryScore < 15 ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" :
-                    analysisResults.asymmetryScore < 30 ? "bg-amber-500/10 border-amber-500/30 text-amber-400" :
-                    "bg-red-500/10 border-red-500/30 text-red-400"
-                  )}
-                >
-                  Assimetria: {analysisResults.asymmetryScore}%
-                </motion.span>
-              )}
-            </div>
-
             <div className="flex flex-col items-end">
               <span className="text-[10px] text-white/40 uppercase font-bold tracking-widest">Status</span>
               <span className={isProcessing ? "text-amber-500 text-xs font-medium" : "text-emerald-500 text-xs font-medium"}>
@@ -376,12 +310,10 @@ export function ClinicalWorkspace() {
           showLandmarks={showLandmarks}
           showThirds={showThirds}
           showFifths={showFifths}
-          showAsymmetry={showAsymmetry}
-          showStructural={showStructural}
           showDistances={showDistances}
-          activeTool={activeTool}
           trichionOverrideY={trichionOverrideY}
-          onTrichionAdjust={setTrichionOverrideY}
+          analysisResults={analysisResults}
+          onLandmarksDetected={setAnalysisResults}
           resetKey={resetKey}
           transformRef={transformRef}
           onZoomChange={handleZoomChange}
