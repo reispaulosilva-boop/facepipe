@@ -158,22 +158,36 @@ Onde 'x' e 'y' são as coordenadas sugeridas para o marcador AR (em porcentagem 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           prompt,
-          imageParts: [{ inlineData: { mimeType: imageFile.type, data: base64Data } }]
+          imageParts: [{ inlineData: { mimeType: imageFile.type, data: base64Data } }],
+          model: "gemini-1.5-flash"
         })
       });
 
-      if (!response.ok) throw new Error("Erro na API Gemini");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Erro HTTP: ${response.status}`);
+      }
       
       const result = await response.json();
-      const cleanJson = result.text.replace(/```json|```/g, "").trim();
-      const melasmaData = JSON.parse(cleanJson);
+      
+      if (!result.text) {
+        throw new Error("Resposta da IA vazia");
+      }
+
+      // Procura o primeiro '{' e o último '}' para extrair o JSON puro
+      const jsonMatch = result.text.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error("Não foi possível encontrar dados estruturados na resposta");
+      }
+      
+      const melasmaData = JSON.parse(jsonMatch[0]);
 
       setAnalysisResults({ melasmaData });
       toggleMelasmaOverlay();
       
-    } catch (err) {
-      console.error("Melasma analysis error:", err);
-      alert("Erro ao realizar análise de melasma. Tente novamente.");
+    } catch (err: any) {
+      console.error("Melasma analysis failure:", err);
+      alert(`Análise falhou: ${err.message || "Erro desconhecido"}`);
     } finally {
       setIsAnalyzingSkin(false);
     }
