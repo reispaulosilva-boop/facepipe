@@ -390,6 +390,27 @@ export function calcBitemporal(
   };
 }
 
+/**
+ * Calcula a distância Mentoniana (Largura do Queixo).
+ * Pontos: 148 (Esquerdo) e 377 (Direito).
+ */
+export function calcMentonian(
+  landmarks: Landmark[],
+  imageWidth: number,
+  pxPerMm: number
+): DistanceMeasurement | null {
+  const left = landmarks[148];
+  const right = landmarks[377];
+  if (!left || !right) return null;
+
+  const px = horizontalDistancePx(left, right, imageWidth);
+  return {
+    label: "Distância Mentoniana",
+    px,
+    mm: pxToMm(px, pxPerMm),
+  };
+}
+
 
 /**
  * Retorna as coordenadas absolutas (em pixels) de um landmark normalizado.

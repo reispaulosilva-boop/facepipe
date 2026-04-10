@@ -13,6 +13,7 @@ export interface AnalysisResults {
   bizygomatic: DistanceMeasurement | null;
   bigonial: DistanceMeasurement | null;
   bitemporal: DistanceMeasurement | null;
+  mentonian: DistanceMeasurement | null;
 }
 
 interface FaceStore {
@@ -42,6 +43,8 @@ interface FaceStore {
   toggleBizygomatic: () => void;
   showBigonial: boolean;
   toggleBigonial: () => void;
+  showMentonian: boolean;
+  toggleMentonian: () => void;
 
   showRegions: boolean;
   toggleRegions: () => void;
@@ -90,6 +93,7 @@ const defaultAnalysisResults: AnalysisResults = {
   bizygomatic: null,
   bigonial: null,
   bitemporal: null,
+  mentonian: null,
 };
 
 export const useFaceStore = create<FaceStore>((set) => ({
@@ -120,6 +124,8 @@ export const useFaceStore = create<FaceStore>((set) => ({
   toggleBizygomatic: () => set((s) => ({ showBizygomatic: !s.showBizygomatic })),
   showBigonial: false,
   toggleBigonial: () => set((s) => ({ showBigonial: !s.showBigonial })),
+  showMentonian: false,
+  toggleMentonian: () => set((s) => ({ showMentonian: !s.showMentonian })),
 
   showRegions: false,
   toggleRegions: () => set((s) => ({ showRegions: !s.showRegions })),

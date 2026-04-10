@@ -38,6 +38,8 @@ export function ClinicalWorkspace() {
     toggleBizygomatic,
     showBigonial,
     toggleBigonial,
+    showMentonian,
+    toggleMentonian,
     showRegions,
     toggleRegions,
     setIsAnalyzingSkin,
@@ -285,6 +287,8 @@ export function ClinicalWorkspace() {
         toggleBizygomatic={toggleBizygomatic}
         showBigonial={showBigonial}
         toggleBigonial={toggleBigonial}
+        showMentonian={showMentonian}
+        toggleMentonian={toggleMentonian}
         showRegions={showRegions}
         toggleRegions={toggleRegions}
         trichionOverrideY={trichionOverrideY}
@@ -334,6 +338,7 @@ export function ClinicalWorkspace() {
           showBitemporal={showBitemporal}
           showBizygomatic={showBizygomatic}
           showBigonial={showBigonial}
+          showMentonian={showMentonian}
           showRegions={showRegions}
           trichionOverrideY={trichionOverrideY}
           activeTool={activeTool}

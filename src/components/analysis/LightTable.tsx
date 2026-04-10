@@ -25,6 +25,7 @@ import {
   calcBizygomatic,
   calcBigonial,
   calcBitemporal,
+  calcMentonian,
   DistanceMeasurement
 } from "@/utils/facialAnalysis";
 import { useFaceStore } from "@/store/useFaceStore";
@@ -50,6 +51,7 @@ interface LightTableProps {
   showBitemporal?: boolean;
   showBizygomatic?: boolean;
   showBigonial?: boolean;
+  showMentonian?: boolean;
   resetKey?: number;
   transformRef?: React.RefObject<ReactZoomPanPinchRef | null>;
   activeTool?: string;
@@ -66,6 +68,7 @@ export function LightTable({
   showBitemporal = false,
   showBizygomatic = false,
   showBigonial = false,
+  showMentonian = false,
   trichionOverrideY,
   onTrichionAdjust,
   analysisResults,
@@ -175,6 +178,11 @@ export function LightTable({
     return calcBitemporal(landmarks as Landmark[], dimensions.width, thirdsData.pxPerMm);
   }, [landmarks, dimensions, thirdsData]);
 
+  const mentonianData = useMemo(() => {
+    if (!landmarks || landmarks.length === 0 || !dimensions.width || !thirdsData?.pxPerMm) return null;
+    return calcMentonian(landmarks as Landmark[], dimensions.width, thirdsData.pxPerMm);
+  }, [landmarks, dimensions, thirdsData]);
+
   // Sync with store
   useEffect(() => {
     if (landmarks && landmarks.length > 0 && dimensions.width > 0) {
@@ -189,9 +197,10 @@ export function LightTable({
         bizygomatic: bizygomaticData,
         bigonial: bigonialData,
         bitemporal: bitemporalData,
+        mentonian: mentonianData,
       });
     }
-  }, [landmarks, dimensions, thirdsData, fifthsData, lipRatioData, topographicRegions, bizygomaticData, bigonialData, bitemporalData, setAnalysisResults]);
+  }, [landmarks, dimensions, thirdsData, fifthsData, lipRatioData, topographicRegions, bizygomaticData, bigonialData, bitemporalData, mentonianData, setAnalysisResults]);
 
   // ── Landmark Layer Logic (SVG Based) ───────────────────────────────────────
   const renderLandmarks = () => {
@@ -677,6 +686,11 @@ export function LightTable({
       const p2 = landmarks[397];
       lines.push({ p1, p2, data: bigonialData, color: "#f87171" });
     }
+    if (showMentonian && mentonianData) {
+      const p1 = landmarks[148];
+      const p2 = landmarks[377];
+      lines.push({ p1, p2, data: mentonianData, color: "#f87171" });
+    }
 
     return (
       <g className="distances-layer">
@@ -836,7 +850,7 @@ export function LightTable({
 
                 {/* Distances layer */}
                 <AnimatePresence mode="wait">
-                  {(showBitemporal || showBizygomatic || showBigonial) && (
+                  {(showBitemporal || showBizygomatic || showBigonial || showMentonian) && (
                     <motion.g
                       key="distances"
                       initial={{ opacity: 0 }}

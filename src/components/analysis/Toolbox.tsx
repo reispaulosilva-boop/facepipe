@@ -76,6 +76,8 @@ interface ToolboxProps {
   toggleBizygomatic: () => void;
   showBigonial: boolean;
   toggleBigonial: () => void;
+  showMentonian: boolean;
+  toggleMentonian: () => void;
   showRegions: boolean;
   toggleRegions: () => void;
   trichionOverrideY: number | null;
@@ -105,6 +107,8 @@ export function Toolbox(props: ToolboxProps) {
     toggleBizygomatic,
     showBigonial,
     toggleBigonial,
+    showMentonian,
+    toggleMentonian,
     showRegions,
     toggleRegions,
     trichionOverrideY,
@@ -213,7 +217,7 @@ export function Toolbox(props: ToolboxProps) {
             icon={
               <div className="relative flex items-center justify-center w-4 h-4">
                 <Ruler className="w-4 h-4" />
-                {(showBitemporal || showBizygomatic || showBigonial) && (
+                {(showBitemporal || showBizygomatic || showBigonial || showMentonian) && (
                   <motion.div
                     layoutId="distances-indicator"
                     className="absolute -top-0.5 -right-0.5 w-1 h-1 rounded-full bg-red-400"
@@ -222,7 +226,7 @@ export function Toolbox(props: ToolboxProps) {
               </div>
             }
             label="Distâncias Faciais"
-            active={showDistancesSubmenu || showBitemporal || showBizygomatic || showBigonial}
+            active={showDistancesSubmenu || showBitemporal || showBizygomatic || showBigonial || showMentonian}
             onClick={toggleDistancesSubmenu}
             colorScheme="amber"
           />
@@ -247,6 +251,7 @@ export function Toolbox(props: ToolboxProps) {
                   { id: "bitemporal", label: "Distância Bitemporal", active: showBitemporal, toggle: toggleBitemporal },
                   { id: "bizygomatic", label: "Distância Bizigomática", active: showBizygomatic, toggle: toggleBizygomatic },
                   { id: "bigonial", label: "Distância Bigonial", active: showBigonial, toggle: toggleBigonial },
+                  { id: "mentonian", label: "Distância Mentoniana", active: showMentonian, toggle: toggleMentonian },
                 ].map((dist) => (
                   <button
                     key={dist.id}
