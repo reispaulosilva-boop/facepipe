@@ -49,6 +49,7 @@ interface LightTableProps {
   resetKey?: number;
   transformRef?: React.RefObject<ReactZoomPanPinchRef | null>;
   activeTool?: string;
+  showRegions?: boolean;
 }
 
 export function LightTable({
@@ -66,7 +67,8 @@ export function LightTable({
   onZoomChange,
   resetKey = 0,
   transformRef,
-  activeTool = "select"
+  activeTool = "select",
+  showRegions = false
 }: LightTableProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const photoRef = useRef<HTMLImageElement>(null);
@@ -591,7 +593,13 @@ export function LightTable({
     if (!topographicRegions || !dimensions.width) return null;
 
     return (
-      <g className="topographic-regions-layer">
+      <motion.g 
+        className="topographic-regions-layer"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.4 }}
+      >
         {topographicRegions.map((region, i) => {
           const pathD = region.points
             .map((p, idx) => `${idx === 0 ? "M" : "L"} ${p.x * dimensions.width} ${p.y * dimensions.height}`)
@@ -610,7 +618,7 @@ export function LightTable({
             />
           );
         })}
-      </g>
+      </motion.g>
     );
   };
 
@@ -772,7 +780,9 @@ export function LightTable({
                 </defs>
                 {renderLandmarks()}
                 {renderClinicalFacilitators()}
-                {renderTopographicRegions()}
+                <AnimatePresence mode="wait">
+                  {showRegions && renderTopographicRegions()}
+                </AnimatePresence>
 
                 {/* Thirds layer — animated with framer-motion via SVG foreignObject trick: use AnimatePresence wrapper at SVG level */}
                 <AnimatePresence mode="wait">

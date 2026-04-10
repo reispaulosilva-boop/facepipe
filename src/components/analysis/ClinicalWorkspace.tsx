@@ -30,6 +30,8 @@ export function ClinicalWorkspace() {
     patientAge,
     showDistances,
     toggleDistances,
+    showRegions,
+    toggleRegions,
     setIsAnalyzingSkin,
     isAnalyzingSkin,
     setAnalysisResults,
@@ -267,6 +269,8 @@ export function ClinicalWorkspace() {
         toggleFifths={toggleFifths}
         showDistances={showDistances}
         toggleDistances={toggleDistances}
+        showRegions={showRegions}
+        toggleRegions={toggleRegions}
         trichionOverrideY={trichionOverrideY}
         resetTrichion={resetTrichion}
         zoomPercent={zoomPercent}
@@ -311,6 +315,7 @@ export function ClinicalWorkspace() {
           showThirds={showThirds}
           showFifths={showFifths}
           showDistances={showDistances}
+          showRegions={showRegions}
           trichionOverrideY={trichionOverrideY}
           activeTool={activeTool}
           onTrichionAdjust={setTrichionOverrideY}

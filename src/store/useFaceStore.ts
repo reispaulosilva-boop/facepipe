@@ -32,6 +32,9 @@ interface FaceStore {
   showDistances: boolean;
   toggleDistances: () => void;
 
+  showRegions: boolean;
+  toggleRegions: () => void;
+
   // Ajuste manual do Trichion (normalizado 0–1, null = usar landmark 10)
   trichionOverrideY: number | null;
   setTrichionOverrideY: (y: number | null) => void;
@@ -94,6 +97,9 @@ export const useFaceStore = create<FaceStore>((set) => ({
 
   showDistances: false,
   toggleDistances: () => set((s) => ({ showDistances: !s.showDistances })),
+
+  showRegions: false,
+  toggleRegions: () => set((s) => ({ showRegions: !s.showRegions })),
 
   trichionOverrideY: null,
   setTrichionOverrideY: (y) => set({ trichionOverrideY: y }),

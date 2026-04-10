@@ -68,6 +68,8 @@ interface ToolboxProps {
   toggleFifths: () => void;
   showDistances: boolean;
   toggleDistances: () => void;
+  showRegions: boolean;
+  toggleRegions: () => void;
   trichionOverrideY: number | null;
   resetTrichion: () => void;
   zoomPercent: number;
@@ -87,6 +89,8 @@ export function Toolbox(props: ToolboxProps) {
     toggleFifths,
     showDistances,
     toggleDistances,
+    showRegions,
+    toggleRegions,
     trichionOverrideY,
     resetTrichion,
     zoomPercent,
@@ -203,6 +207,25 @@ export function Toolbox(props: ToolboxProps) {
           label="Distâncias Faciais"
           active={showDistances}
           onClick={toggleDistances}
+          colorScheme="amber"
+        />
+        
+        {/* Regiões Anatômicas (Topográficas) */}
+        <ToolButton
+          icon={
+            <div className="relative flex items-center justify-center w-4 h-4">
+              <Target className="w-4 h-4" />
+              {showRegions && (
+                <motion.div
+                  layoutId="regions-indicator"
+                  className="absolute -top-0.5 -right-0.5 w-1 h-1 rounded-full bg-amber-400"
+                />
+              )}
+            </div>
+          }
+          label="Regiões Anatômicas"
+          active={showRegions}
+          onClick={toggleRegions}
           colorScheme="amber"
         />
       </div>
