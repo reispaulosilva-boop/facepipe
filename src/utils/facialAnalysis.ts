@@ -371,15 +371,15 @@ export function calcBigonial(
 
 /**
  * Calcula a distância Bitemporal (Largura da Testa).
- * Pontos: 103 (Esquerdo) e 332 (Direito).
+ * Pontos: 162 (Esquerdo) e 389 (Direito).
  */
 export function calcBitemporal(
   landmarks: Landmark[],
   imageWidth: number,
   pxPerMm: number
 ): DistanceMeasurement | null {
-  const left = landmarks[103];
-  const right = landmarks[332];
+  const left = landmarks[162];
+  const right = landmarks[389];
   if (!left || !right) return null;
 
   const px = horizontalDistancePx(left, right, imageWidth);
