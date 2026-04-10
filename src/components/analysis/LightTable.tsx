@@ -672,8 +672,8 @@ export function LightTable({
     
     const lines = [];
     if (showBitemporal && bitemporalData) {
-      const p1 = landmarks[21];
-      const p2 = landmarks[251];
+      const p1 = landmarks[54];
+      const p2 = landmarks[284];
       lines.push({ p1, p2, data: bitemporalData, color: "#f87171" });
     }
     if (showBizygomatic && bizygomaticData) {
