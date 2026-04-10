@@ -12,6 +12,7 @@ export interface AnalysisResults {
   morphology: "Oval" | "Redondo" | "Coração" | "Angular" | null;
   bizygomatic: DistanceMeasurement | null;
   bigonial: DistanceMeasurement | null;
+  bitemporal: DistanceMeasurement | null;
 }
 
 interface FaceStore {
@@ -31,6 +32,16 @@ interface FaceStore {
 
   showDistances: boolean;
   toggleDistances: () => void;
+  showDistancesSubmenu: boolean;
+  setShowDistancesSubmenu: (v: boolean) => void;
+  toggleDistancesSubmenu: () => void;
+
+  showBitemporal: boolean;
+  toggleBitemporal: () => void;
+  showBizygomatic: boolean;
+  toggleBizygomatic: () => void;
+  showBigonial: boolean;
+  toggleBigonial: () => void;
 
   showRegions: boolean;
   toggleRegions: () => void;
@@ -78,6 +89,7 @@ const defaultAnalysisResults: AnalysisResults = {
   morphology: null,
   bizygomatic: null,
   bigonial: null,
+  bitemporal: null,
 };
 
 export const useFaceStore = create<FaceStore>((set) => ({
@@ -97,6 +109,17 @@ export const useFaceStore = create<FaceStore>((set) => ({
 
   showDistances: false,
   toggleDistances: () => set((s) => ({ showDistances: !s.showDistances })),
+
+  showDistancesSubmenu: false,
+  setShowDistancesSubmenu: (v) => set({ showDistancesSubmenu: v }),
+  toggleDistancesSubmenu: () => set((s) => ({ showDistancesSubmenu: !s.showDistancesSubmenu })),
+
+  showBitemporal: false,
+  toggleBitemporal: () => set((s) => ({ showBitemporal: !s.showBitemporal })),
+  showBizygomatic: false,
+  toggleBizygomatic: () => set((s) => ({ showBizygomatic: !s.showBizygomatic })),
+  showBigonial: false,
+  toggleBigonial: () => set((s) => ({ showBigonial: !s.showBigonial })),
 
   showRegions: false,
   toggleRegions: () => set((s) => ({ showRegions: !s.showRegions })),

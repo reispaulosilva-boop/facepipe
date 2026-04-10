@@ -24,6 +24,7 @@ import {
   calcMorphology,
   calcBizygomatic,
   calcBigonial,
+  calcBitemporal,
   DistanceMeasurement
 } from "@/utils/facialAnalysis";
 import { useFaceStore } from "@/store/useFaceStore";
@@ -46,6 +47,9 @@ interface LightTableProps {
   onLandmarksLoad?: (count: number) => void;
   onZoomChange?: (zoom: number, baseScale: number) => void;
   showDistances: boolean;
+  showBitemporal?: boolean;
+  showBizygomatic?: boolean;
+  showBigonial?: boolean;
   resetKey?: number;
   transformRef?: React.RefObject<ReactZoomPanPinchRef | null>;
   activeTool?: string;
@@ -59,6 +63,9 @@ export function LightTable({
   showThirds,
   showFifths,
   showDistances,
+  showBitemporal = false,
+  showBizygomatic = false,
+  showBigonial = false,
   trichionOverrideY,
   onTrichionAdjust,
   analysisResults,
@@ -163,6 +170,11 @@ export function LightTable({
     return calcBigonial(landmarks as Landmark[], dimensions.width, thirdsData.pxPerMm);
   }, [landmarks, dimensions, thirdsData]);
 
+  const bitemporalData = useMemo(() => {
+    if (!landmarks || landmarks.length === 0 || !dimensions.width || !thirdsData?.pxPerMm) return null;
+    return calcBitemporal(landmarks as Landmark[], dimensions.width, thirdsData.pxPerMm);
+  }, [landmarks, dimensions, thirdsData]);
+
   // Sync with store
   useEffect(() => {
     if (landmarks && landmarks.length > 0 && dimensions.width > 0) {
@@ -176,9 +188,10 @@ export function LightTable({
         morphology,
         bizygomatic: bizygomaticData,
         bigonial: bigonialData,
+        bitemporal: bitemporalData,
       });
     }
-  }, [landmarks, dimensions, thirdsData, fifthsData, lipRatioData, topographicRegions, bizygomaticData, bigonialData, setAnalysisResults]);
+  }, [landmarks, dimensions, thirdsData, fifthsData, lipRatioData, topographicRegions, bizygomaticData, bigonialData, bitemporalData, setAnalysisResults]);
 
   // ── Landmark Layer Logic (SVG Based) ───────────────────────────────────────
   const renderLandmarks = () => {
@@ -649,12 +662,17 @@ export function LightTable({
     const S = Math.max(dimensions.width, dimensions.height) / 1000;
     
     const lines = [];
-    if (bizygomaticData) {
+    if (showBitemporal && bitemporalData) {
+      const p1 = landmarks[103];
+      const p2 = landmarks[332];
+      lines.push({ p1, p2, data: bitemporalData, color: "#f87171" });
+    }
+    if (showBizygomatic && bizygomaticData) {
       const p1 = landmarks[234];
       const p2 = landmarks[454];
       lines.push({ p1, p2, data: bizygomaticData, color: "#f87171" });
     }
-    if (bigonialData) {
+    if (showBigonial && bigonialData) {
       const p1 = landmarks[172];
       const p2 = landmarks[397];
       lines.push({ p1, p2, data: bigonialData, color: "#f87171" });
@@ -818,7 +836,7 @@ export function LightTable({
 
                 {/* Distances layer */}
                 <AnimatePresence mode="wait">
-                  {showDistances && (
+                  {(showBitemporal || showBizygomatic || showBigonial) && (
                     <motion.g
                       key="distances"
                       initial={{ opacity: 0 }}

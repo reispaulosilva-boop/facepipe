@@ -369,6 +369,27 @@ export function calcBigonial(
   };
 }
 
+/**
+ * Calcula a distância Bitemporal (Largura da Testa).
+ * Pontos: 103 (Esquerdo) e 332 (Direito).
+ */
+export function calcBitemporal(
+  landmarks: Landmark[],
+  imageWidth: number,
+  pxPerMm: number
+): DistanceMeasurement | null {
+  const left = landmarks[103];
+  const right = landmarks[332];
+  if (!left || !right) return null;
+
+  const px = horizontalDistancePx(left, right, imageWidth);
+  return {
+    label: "Distância Bitemporal",
+    px,
+    mm: pxToMm(px, pxPerMm),
+  };
+}
+
 
 /**
  * Retorna as coordenadas absolutas (em pixels) de um landmark normalizado.

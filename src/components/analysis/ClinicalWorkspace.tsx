@@ -30,6 +30,14 @@ export function ClinicalWorkspace() {
     patientAge,
     showDistances,
     toggleDistances,
+    showDistancesSubmenu,
+    toggleDistancesSubmenu,
+    showBitemporal,
+    toggleBitemporal,
+    showBizygomatic,
+    toggleBizygomatic,
+    showBigonial,
+    toggleBigonial,
     showRegions,
     toggleRegions,
     setIsAnalyzingSkin,
@@ -269,6 +277,14 @@ export function ClinicalWorkspace() {
         toggleFifths={toggleFifths}
         showDistances={showDistances}
         toggleDistances={toggleDistances}
+        showDistancesSubmenu={showDistancesSubmenu}
+        toggleDistancesSubmenu={toggleDistancesSubmenu}
+        showBitemporal={showBitemporal}
+        toggleBitemporal={toggleBitemporal}
+        showBizygomatic={showBizygomatic}
+        toggleBizygomatic={toggleBizygomatic}
+        showBigonial={showBigonial}
+        toggleBigonial={toggleBigonial}
         showRegions={showRegions}
         toggleRegions={toggleRegions}
         trichionOverrideY={trichionOverrideY}
@@ -315,6 +331,9 @@ export function ClinicalWorkspace() {
           showThirds={showThirds}
           showFifths={showFifths}
           showDistances={showDistances}
+          showBitemporal={showBitemporal}
+          showBizygomatic={showBizygomatic}
+          showBigonial={showBigonial}
           showRegions={showRegions}
           trichionOverrideY={trichionOverrideY}
           activeTool={activeTool}

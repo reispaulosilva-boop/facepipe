@@ -68,6 +68,14 @@ interface ToolboxProps {
   toggleFifths: () => void;
   showDistances: boolean;
   toggleDistances: () => void;
+  showDistancesSubmenu: boolean;
+  toggleDistancesSubmenu: () => void;
+  showBitemporal: boolean;
+  toggleBitemporal: () => void;
+  showBizygomatic: boolean;
+  toggleBizygomatic: () => void;
+  showBigonial: boolean;
+  toggleBigonial: () => void;
   showRegions: boolean;
   toggleRegions: () => void;
   trichionOverrideY: number | null;
@@ -89,6 +97,14 @@ export function Toolbox(props: ToolboxProps) {
     toggleFifths,
     showDistances,
     toggleDistances,
+    showDistancesSubmenu,
+    toggleDistancesSubmenu,
+    showBitemporal,
+    toggleBitemporal,
+    showBizygomatic,
+    toggleBizygomatic,
+    showBigonial,
+    toggleBigonial,
     showRegions,
     toggleRegions,
     trichionOverrideY,
@@ -191,24 +207,63 @@ export function Toolbox(props: ToolboxProps) {
         />
 
 
-        {/* Distâncias Horizontais (Bizigomática / Bigonial) */}
-        <ToolButton
-          icon={
-            <div className="relative flex items-center justify-center w-4 h-4">
-              <Ruler className="w-4 h-4" />
-              {showDistances && (
-                <motion.div
-                  layoutId="distances-indicator"
-                  className="absolute -top-0.5 -right-0.5 w-1 h-1 rounded-full bg-red-400"
-                />
-              )}
-            </div>
-          }
-          label="Distâncias Faciais"
-          active={showDistances}
-          onClick={toggleDistances}
-          colorScheme="amber"
-        />
+        {/* Distâncias Horizontais (Bitemporal / Bizigomática / Bigonial) */}
+        <div className="flex flex-col gap-1.5 relative">
+          <ToolButton
+            icon={
+              <div className="relative flex items-center justify-center w-4 h-4">
+                <Ruler className="w-4 h-4" />
+                {(showBitemporal || showBizygomatic || showBigonial) && (
+                  <motion.div
+                    layoutId="distances-indicator"
+                    className="absolute -top-0.5 -right-0.5 w-1 h-1 rounded-full bg-red-400"
+                  />
+                )}
+              </div>
+            }
+            label="Distâncias Faciais"
+            active={showDistancesSubmenu || showBitemporal || showBizygomatic || showBigonial}
+            onClick={toggleDistancesSubmenu}
+            colorScheme="amber"
+          />
+
+          {/* Floating Submenu for Distances */}
+          <AnimatePresence>
+            {showDistancesSubmenu && (
+              <motion.div
+                initial={{ opacity: 0, x: -10, scale: 0.95 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                exit={{ opacity: 0, x: -10, scale: 0.95 }}
+                className="absolute left-14 top-0 min-w-[180px] p-2 rounded-xl bg-[#030712]/90 backdrop-blur-2xl border border-white/10 shadow-2xl flex flex-col gap-1 z-[60]"
+              >
+                <div className="px-2 py-1.5 border-b border-white/5 mb-1">
+                  <span className="text-[9px] font-bold text-amber-500 uppercase tracking-widest flex items-center gap-2">
+                    <div className="w-1 h-1 rounded-full bg-amber-500" />
+                    DISTÂNCIAS HORIZONTAIS
+                  </span>
+                </div>
+                
+                {[
+                  { id: "bitemporal", label: "Distância Bitemporal", active: showBitemporal, toggle: toggleBitemporal },
+                  { id: "bizygomatic", label: "Distância Bizigomática", active: showBizygomatic, toggle: toggleBizygomatic },
+                  { id: "bigonial", label: "Distância Bigonial", active: showBigonial, toggle: toggleBigonial },
+                ].map((dist) => (
+                  <button
+                    key={dist.id}
+                    onClick={dist.toggle}
+                    className={cn(
+                      "w-full flex items-center justify-between px-3 py-2 rounded-lg transition-all text-xs group",
+                      dist.active ? "bg-white/10 text-white" : "hover:bg-white/5 text-white/60 hover:text-white"
+                    )}
+                  >
+                    <span className="font-medium">{dist.label}</span>
+                    {dist.active && <div className="w-1 h-1 rounded-full bg-red-400 shadow-[0_0_8px_rgba(248,113,113,0.6)]" />}
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
         
         {/* Regiões Anatômicas (Topográficas) */}
         <ToolButton
