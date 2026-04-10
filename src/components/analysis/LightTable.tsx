@@ -689,7 +689,7 @@ export function LightTable({
     if (showMentonian && mentonianData) {
       const p1 = landmarks[148];
       const p2 = landmarks[377];
-      lines.push({ p1, p2, data: mentonianData, color: "#f87171" });
+      lines.push({ p1, p2, data: mentonianData, color: "#A3E635" });
     }
 
     return (
