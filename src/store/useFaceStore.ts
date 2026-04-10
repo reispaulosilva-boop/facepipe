@@ -45,6 +45,8 @@ interface FaceStore {
   toggleBigonial: () => void;
   showMentonian: boolean;
   toggleMentonian: () => void;
+  showFacialShape: boolean;
+  toggleFacialShape: () => void;
 
   showRegions: boolean;
   toggleRegions: () => void;
@@ -126,6 +128,8 @@ export const useFaceStore = create<FaceStore>((set) => ({
   toggleBigonial: () => set((s) => ({ showBigonial: !s.showBigonial })),
   showMentonian: false,
   toggleMentonian: () => set((s) => ({ showMentonian: !s.showMentonian })),
+  showFacialShape: false,
+  toggleFacialShape: () => set((s) => ({ showFacialShape: !s.showFacialShape })),
 
   showRegions: false,
   toggleRegions: () => set((s) => ({ showRegions: !s.showRegions })),

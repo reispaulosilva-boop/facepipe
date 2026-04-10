@@ -40,6 +40,8 @@ export function ClinicalWorkspace() {
     toggleBigonial,
     showMentonian,
     toggleMentonian,
+    showFacialShape,
+    toggleFacialShape,
     showRegions,
     toggleRegions,
     setIsAnalyzingSkin,
@@ -289,6 +291,8 @@ export function ClinicalWorkspace() {
         toggleBigonial={toggleBigonial}
         showMentonian={showMentonian}
         toggleMentonian={toggleMentonian}
+        showFacialShape={showFacialShape}
+        toggleFacialShape={toggleFacialShape}
         showRegions={showRegions}
         toggleRegions={toggleRegions}
         trichionOverrideY={trichionOverrideY}
@@ -339,6 +343,7 @@ export function ClinicalWorkspace() {
           showBizygomatic={showBizygomatic}
           showBigonial={showBigonial}
           showMentonian={showMentonian}
+          showFacialShape={showFacialShape}
           showRegions={showRegions}
           trichionOverrideY={trichionOverrideY}
           activeTool={activeTool}

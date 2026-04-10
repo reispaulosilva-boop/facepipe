@@ -78,6 +78,8 @@ interface ToolboxProps {
   toggleBigonial: () => void;
   showMentonian: boolean;
   toggleMentonian: () => void;
+  showFacialShape: boolean;
+  toggleFacialShape: () => void;
   showRegions: boolean;
   toggleRegions: () => void;
   trichionOverrideY: number | null;
@@ -109,6 +111,8 @@ export function Toolbox(props: ToolboxProps) {
     toggleBigonial,
     showMentonian,
     toggleMentonian,
+    showFacialShape,
+    toggleFacialShape,
     showRegions,
     toggleRegions,
     trichionOverrideY,
@@ -217,7 +221,7 @@ export function Toolbox(props: ToolboxProps) {
             icon={
               <div className="relative flex items-center justify-center w-4 h-4">
                 <Ruler className="w-4 h-4" />
-                {(showBitemporal || showBizygomatic || showBigonial || showMentonian) && (
+                {(showBitemporal || showBizygomatic || showBigonial || showMentonian || showFacialShape) && (
                   <motion.div
                     layoutId="distances-indicator"
                     className="absolute -top-0.5 -right-0.5 w-1 h-1 rounded-full bg-red-400"
@@ -226,7 +230,7 @@ export function Toolbox(props: ToolboxProps) {
               </div>
             }
             label="Distâncias Faciais"
-            active={showDistancesSubmenu || showBitemporal || showBizygomatic || showBigonial || showMentonian}
+            active={showDistancesSubmenu || showBitemporal || showBizygomatic || showBigonial || showMentonian || showFacialShape}
             onClick={toggleDistancesSubmenu}
             colorScheme="amber"
           />
@@ -262,9 +266,34 @@ export function Toolbox(props: ToolboxProps) {
                     )}
                   >
                     <span className="font-medium">{dist.label}</span>
-                    {dist.active && <div className="w-1 h-1 rounded-full bg-red-400 shadow-[0_0_8px_rgba(248,113,113,0.6)]" />}
+                    {dist.active && <div className="w-1 h-1 rounded-full bg-[#A3E635] shadow-[0_0_8px_rgba(163,230,53,0.6)]" />}
                   </button>
                 ))}
+
+                {/* Facial Shape - Conditional Button */}
+                <div className="pt-1 mt-1 border-t border-white/5">
+                  <button
+                    disabled={!(showBitemporal && showBizygomatic && showBigonial && showMentonian)}
+                    onClick={toggleFacialShape}
+                    className={cn(
+                      "w-full flex items-center justify-between px-3 py-2 rounded-lg transition-all text-xs group relative overflow-hidden",
+                      showFacialShape 
+                        ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30" 
+                        : "hover:bg-white/5 text-white/40 disabled:opacity-30 disabled:cursor-not-allowed hover:text-white"
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className={cn(
+                        "w-1.5 h-1.5 rounded-full",
+                        showFacialShape ? "bg-cyan-400" : "bg-white/20"
+                      )} />
+                      <span className="font-bold underline decoration-cyan-500/30 underline-offset-4">FORMA FACIAL</span>
+                    </div>
+                    {!(showBitemporal && showBizygomatic && showBigonial && showMentonian) && (
+                      <Lock className="w-3 h-3 text-white/20" />
+                    )}
+                  </button>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>

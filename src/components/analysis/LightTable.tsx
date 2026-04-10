@@ -52,6 +52,7 @@ interface LightTableProps {
   showBizygomatic?: boolean;
   showBigonial?: boolean;
   showMentonian?: boolean;
+  showFacialShape?: boolean;
   resetKey?: number;
   transformRef?: React.RefObject<ReactZoomPanPinchRef | null>;
   activeTool?: string;
@@ -69,6 +70,7 @@ export function LightTable({
   showBizygomatic = false,
   showBigonial = false,
   showMentonian = false,
+  showFacialShape = false,
   trichionOverrideY,
   onTrichionAdjust,
   analysisResults,
@@ -728,6 +730,59 @@ export function LightTable({
     );
   };
 
+  const renderFacialShape = () => {
+    if (!landmarks || landmarks.length === 0 || !dimensions.width) return null;
+    const S = Math.max(dimensions.width, dimensions.height) / 1000;
+
+    // Outer endpoints from previous measurements
+    // Bitemporal: 54/284
+    // Bizygomatic: 234/454
+    // Bigonial: 172/397
+    // Mentonian: 148/377
+
+    const points = [
+      landmarks[54],  // L Bitemporal
+      landmarks[234], // L Bizygomatic
+      landmarks[172], // L Bigonial
+      landmarks[148], // L Mentonian
+      landmarks[377], // R Mentonian
+      landmarks[397], // R Bigonial
+      landmarks[454], // R Bizygomatic
+      landmarks[284], // R Bitemporal
+    ];
+
+    const d = points
+      .map((p, i) => {
+        const x = p.x * dimensions.width;
+        const y = p.y * dimensions.height;
+        return `${i === 0 ? "M" : "L"} ${x} ${y}`;
+      })
+      .join(" ") + " Z";
+
+    return (
+      <g className="facial-shape-layer">
+        <path
+          d={d}
+          fill="rgba(0, 255, 255, 0.05)"
+          stroke="#00FFFF"
+          strokeWidth={S * 3.5}
+          strokeLinejoin="round"
+          strokeLinecap="round"
+          style={{ filter: "drop-shadow(0 0 10px rgba(0, 255, 255, 0.4))" }}
+        />
+        {points.map((p, i) => (
+          <circle 
+            key={i} 
+            cx={p.x * dimensions.width} 
+            cy={p.y * dimensions.height} 
+            r={S * 4.5} 
+            fill="#00FFFF" 
+          />
+        ))}
+      </g>
+    );
+  };
+
   return (
     <div ref={containerRef} className="flex-1 w-full h-full bg-[#000105] relative flex items-center justify-center overflow-hidden">
       {/* Cinematic ambient lighting */}
@@ -850,7 +905,7 @@ export function LightTable({
 
                 {/* Distances layer */}
                 <AnimatePresence mode="wait">
-                  {(showBitemporal || showBizygomatic || showBigonial || showMentonian) && (
+                  {(showBitemporal || showBizygomatic || showBigonial || showMentonian || showFacialShape) && (
                     <motion.g
                       key="distances"
                       initial={{ opacity: 0 }}
@@ -859,6 +914,7 @@ export function LightTable({
                       transition={{ duration: 0.4 }}
                     >
                       {renderDistances()}
+                      {showFacialShape && renderFacialShape()}
                     </motion.g>
                   )}
                 </AnimatePresence>
