@@ -674,17 +674,17 @@ export function LightTable({
     if (showBitemporal && bitemporalData) {
       const p1 = landmarks[54];
       const p2 = landmarks[284];
-      lines.push({ p1, p2, data: bitemporalData, color: "#f87171" });
+      lines.push({ p1, p2, data: bitemporalData, color: "#A3E635" });
     }
     if (showBizygomatic && bizygomaticData) {
       const p1 = landmarks[234];
       const p2 = landmarks[454];
-      lines.push({ p1, p2, data: bizygomaticData, color: "#f87171" });
+      lines.push({ p1, p2, data: bizygomaticData, color: "#A3E635" });
     }
     if (showBigonial && bigonialData) {
       const p1 = landmarks[172];
       const p2 = landmarks[397];
-      lines.push({ p1, p2, data: bigonialData, color: "#f87171" });
+      lines.push({ p1, p2, data: bigonialData, color: "#A3E635" });
     }
     if (showMentonian && mentonianData) {
       const p1 = landmarks[148];
@@ -714,7 +714,7 @@ export function LightTable({
               
               <text 
                 x={(x1+x2)/2} y={midY - S*10} 
-                fill={line.color} fontSize={S*10} 
+                fill="#FFFFFF" fontSize={S*10} 
                 textAnchor="middle" fontWeight="bold"
                 fontFamily="monospace"
                 style={{ textShadow: '0 0 4px rgba(0,0,0,0.8)' }}
