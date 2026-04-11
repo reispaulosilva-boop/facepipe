@@ -243,44 +243,26 @@ export function LightTable({
         <path 
            d={meshPath} 
            stroke={CYAN} 
-           strokeWidth="1" 
+           strokeWidth="2.5" 
            fill="none" 
            style={{ opacity: 0.12 }}
         />
         <path 
            d={contoursPath} 
            stroke={CYAN} 
-           strokeWidth="2.5" 
+           strokeWidth="6.25" 
            fill="none" 
            style={{ opacity: 0.6 }}
         />
         {landmarks.map((pt, i) => (
-          <g key={i}>
-            <circle 
-              cx={pt.x * dimensions.width}
-              cy={pt.y * dimensions.height}
-              r="1.8"
-              fill={CYAN}
-              style={{ opacity: 0.8 }}
-            />
-            <text
-              x={pt.x * dimensions.width + 3.5}
-              y={pt.y * dimensions.height + 3.5}
-              fill={CYAN}
-              fontSize="16px"
-              fontWeight="bold"
-              className="pointer-events-none select-none"
-              style={{ 
-                opacity: 0.9, 
-                textShadow: "0 0 3px rgba(0,0,0,0.9)",
-                paintOrder: "stroke",
-                stroke: "rgba(0,0,0,0.6)",
-                strokeWidth: "0.3px"
-              }}
-            >
-              {i}
-            </text>
-          </g>
+          <circle 
+            key={i}
+            cx={pt.x * dimensions.width}
+            cy={pt.y * dimensions.height}
+            r="4.5"
+            fill={CYAN}
+            style={{ opacity: 0.8 }}
+          />
         ))}
       </g>
     );

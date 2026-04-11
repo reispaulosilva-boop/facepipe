@@ -76,7 +76,7 @@ export function ClinicalCanvas({ imageFile }: ClinicalCanvasProps) {
     ctx.save();
     
     // Tesselation (The 3D Mesh)
-    ctx.lineWidth = 0.5;
+    ctx.lineWidth = 1.25;
     ctx.strokeStyle = COLOR_TESSELATION;
     
     // MediaPipe connections for tesselation
@@ -93,7 +93,7 @@ export function ClinicalCanvas({ imageFile }: ClinicalCanvasProps) {
     ctx.stroke();
 
     // Specific Contours (Eyes, Lips, Face Oval) for clinical precision
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 2.5;
     ctx.strokeStyle = COLOR_CONTOURS;
     
     const contours = [
@@ -119,7 +119,7 @@ export function ClinicalCanvas({ imageFile }: ClinicalCanvasProps) {
     ctx.fillStyle = COLOR_POINTS;
     for (const landmark of landmarks) {
       ctx.beginPath();
-      ctx.arc(offsetX + landmark.x * drawW, offsetY + landmark.y * drawH, 0.8, 0, 2 * Math.PI);
+      ctx.arc(offsetX + landmark.x * drawW, offsetY + landmark.y * drawH, 2.0, 0, 2 * Math.PI);
       ctx.fill();
     }
 

@@ -101,30 +101,6 @@ export function ClinicalWorkspace() {
     return () => URL.revokeObjectURL(url);
   }, [imageFile, landmarkerLoaded, detectFace, lastAnalyzedFile]);
 
-  const handleExport = useCallback(async () => {
-    if (!workspaceRef.current) return;
-    console.log("Exporting analysis...");
-    
-    try {
-      const captureTarget = document.querySelector('[data-capture="face-table"]') as HTMLElement;
-      if (!captureTarget) {
-        console.error("Capture target not found");
-        return;
-      }
-
-      const dataUrl = await toPng(captureTarget, {
-        quality: 1.0,
-        pixelRatio: 2,
-      });
-      
-      const link = document.createElement('a');
-      link.download = `facepipe-analysis-${new Date().getTime()}.png`;
-      link.href = dataUrl;
-      link.click();
-    } catch (err) {
-      console.error("Export failed", err);
-    }
-  }, []);
 
   const compressImage = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -332,6 +308,7 @@ export function ClinicalWorkspace() {
           </div>
           
           <div className="flex items-center gap-6">
+
             <div className="flex flex-col items-end">
               <span className="text-[10px] text-white/40 uppercase font-bold tracking-widest">Status</span>
               <span className={isProcessing ? "text-amber-500 text-xs font-medium" : "text-emerald-500 text-xs font-medium"}>
