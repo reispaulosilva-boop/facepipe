@@ -75,6 +75,7 @@ interface FaceStore {
   setShowRegionsSubmenu: (v: boolean) => void;
   toggleRegionsSubmenu: () => void;
   toggleSpecificRegion: (region: keyof AnalysisResults["regions"]) => void;
+  setAllRegions: (v: boolean) => void;
 
   // Ajuste manual do Trichion (normalizado 0–1, null = usar landmark 10)
   trichionOverrideY: number | null;
@@ -183,7 +184,6 @@ export const useFaceStore = create<FaceStore>((set) => ({
   showRegionsSubmenu: false,
   setShowRegionsSubmenu: (v) => set({ showRegionsSubmenu: v }),
   toggleRegionsSubmenu: () => set((s) => ({ showRegionsSubmenu: !s.showRegionsSubmenu })),
-  
   toggleSpecificRegion: (region) => set((s) => ({
     analysisResults: {
       ...s.analysisResults,
@@ -193,6 +193,19 @@ export const useFaceStore = create<FaceStore>((set) => ({
       }
     }
   })),
+
+  setAllRegions: (v) => set((s) => {
+    const newRegions = { ...s.analysisResults.regions };
+    (Object.keys(newRegions) as Array<keyof AnalysisResults["regions"]>).forEach((k) => {
+      newRegions[k] = v;
+    });
+    return {
+      analysisResults: {
+        ...s.analysisResults,
+        regions: newRegions
+      }
+    };
+  }),
 
   trichionOverrideY: null,
   setTrichionOverrideY: (y) => set({ trichionOverrideY: y }),

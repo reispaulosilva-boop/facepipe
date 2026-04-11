@@ -47,6 +47,7 @@ export function ClinicalWorkspace() {
     showRegionsSubmenu,
     toggleRegionsSubmenu,
     toggleSpecificRegion,
+    setAllRegions,
     setIsAnalyzingSkin,
     isAnalyzingSkin,
     setAnalysisResults,
@@ -301,6 +302,7 @@ export function ClinicalWorkspace() {
         showRegionsSubmenu={showRegionsSubmenu}
         toggleRegionsSubmenu={toggleRegionsSubmenu}
         toggleSpecificRegion={toggleSpecificRegion}
+        setAllRegions={setAllRegions}
         activeRegions={analysisResults.regions}
         trichionOverrideY={trichionOverrideY}
         resetTrichion={resetTrichion}

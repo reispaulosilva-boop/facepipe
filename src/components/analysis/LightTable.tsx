@@ -656,7 +656,7 @@ export function LightTable({
       malar_medial_l: { fill: "rgba(236, 72, 153, 0.3)", stroke: "rgba(236, 72, 153, 0.8)", label: "MM-E" },
       infrapalpebral_r: { fill: "rgba(255, 255, 255, 0.3)", stroke: "rgba(255, 255, 255, 0.8)", label: "IP-D" },
       infrapalpebral_l: { fill: "rgba(255, 255, 255, 0.3)", stroke: "rgba(255, 255, 255, 0.8)", label: "IP-E" },
-      labial: { fill: "rgba(239, 68, 68, 0.35)", stroke: "rgba(239, 68, 68, 0.9)", label: "Lb" },
+      labial: { fill: "rgba(239, 68, 68, 0.35)", stroke: "rgba(239, 68, 68, 0.9)", label: "" }, // Label left empty by design (implicit in POr)
       subnasal: { fill: "rgba(34, 197, 94, 0.3)", stroke: "rgba(34, 197, 94, 0.9)", label: "SN" },
       perioral: { fill: "rgba(255, 255, 255, 0.3)", stroke: "rgba(255, 255, 255, 0.8)", label: "POr" },
       submalar_r: { fill: "rgba(251, 191, 36, 0.22)", stroke: "rgba(251, 191, 36, 0.7)", label: "SM-D" },

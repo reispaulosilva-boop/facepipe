@@ -289,7 +289,7 @@ export function calcLipRatio(
  */
 export const TOPOGRAPHIC_INDICES: { [key: string]: number[] } = {
   // 1. FRONTAL (F) - Manual Clinical Correction (v3.2)
-  frontal: [105, 104, 103, 67, 109, 10, 338, 297, 332, 333, 334, 296, 336, 9, 107, 66, 105, 63],
+  frontal: [105, 104, 103, 67, 109, 10, 338, 297, 332, 333, 334, 296, 336, 9, 107, 66, 63],
 
   // 2. GLABELA (G) - Manual Clinical Precision (v3.1)
   glabela: [107, 9, 336, 285, 351, 6, 122, 193, 55, 107],
@@ -301,8 +301,8 @@ export const TOPOGRAPHIC_INDICES: { [key: string]: number[] } = {
   // 4. (REMOVED)
 
   // 5. INFRAPALPEBRAL - Lower eyelid and tear trough
-  infrapalpebral_r: [156, 143, 111, 117, 118, 119, 120, 121, 128, 245, 244, 112, 26, 22, 23, 24, 226, 156],
-  infrapalpebral_l: [383, 372, 340, 346, 347, 348, 349, 350, 357, 465, 464, 341, 256, 252, 253, 254, 446, 383],
+  infrapalpebral_r: [111, 143, 156, 226, 110, 24, 23, 22, 26, 112, 243, 193, 122, 188, 121, 120, 119, 118, 117, 111],
+  infrapalpebral_l: [340, 372, 383, 446, 339, 254, 253, 252, 256, 341, 463, 417, 351, 412, 350, 349, 348, 347, 346, 340],
 
   // 6. MALAR LATERAL (ML) - External cheekbone
   malar_lateral_r: [162, 139, 156, 143, 111, 117, 118, 50, 187, 147, 93, 234, 127, 162],
@@ -317,8 +317,8 @@ export const TOPOGRAPHIC_INDICES: { [key: string]: number[] } = {
   submalar_l: [323, 376, 411, 426, 327, 391, 322, 410, 287, 422, 416, 435, 361, 323],
 
   // 8. MANDIBULAR (Ma) - Jawline
-  mandibular_r: [215, 138, 172, 136, 150, 149, 176, 140, 32, 194, 204, 215],
-  mandibular_l: [435, 367, 397, 365, 379, 378, 400, 369, 262, 418, 424, 435],
+  mandibular_r: [194, 204, 202, 192, 215, 58, 172, 136, 150, 149, 176, 140, 32, 194],
+  mandibular_l: [418, 424, 422, 416, 435, 288, 397, 365, 379, 378, 400, 369, 262, 418],
   
   // 9. LABIAL (Lb) - Standard lip unit
   labial: [61, 185, 40, 39, 37, 0, 267, 269, 270, 409, 291, 375, 321, 405, 314, 17, 84, 181, 91, 146, 61],
