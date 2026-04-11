@@ -284,15 +284,84 @@ export function calcLipRatio(
 }
 
 /**
- * Define as regiões topográficas baseadas em índices do MediaPipe.
+ * Define as regiões anatômicas baseadas no mapeamento clínico do Dr. Paulo.
+ * Perspectiva: R/L referem-se ao lado do PACIENTE (Anatômico).
  */
-const TOPOGRAPHIC_INDICES = {
-  frontal: [10, 338, 297, 332, 284, 251, 389, 356, 454, 323, 361, 288, 397, 365, 379, 378, 400, 377, 152, 148, 176, 149, 150, 136, 172, 58, 132, 93, 234, 127, 162, 21, 54, 103, 67, 109, 10], // Simplified oval for reference
-  malar_r: [454, 323, 361, 288, 397, 365, 379, 378, 400, 377, 454],
-  malar_l: [234, 93, 132, 58, 172, 136, 150, 149, 176, 148, 234],
-  mandibular: [172, 136, 150, 149, 176, 148, 152, 377, 400, 378, 379, 365, 397, 288, 361, 323, 454], // Simplified
-  temp_r: [10, 338, 297, 332, 284, 251, 389, 356, 454],
-  temp_l: [10, 109, 67, 103, 54, 21, 162, 127, 234],
+export const TOPOGRAPHIC_INDICES: { [key: string]: number[] } = {
+  // 1. FRONTAL (F) - Manual Clinical Correction (v3.2)
+  frontal: [105, 104, 103, 67, 109, 10, 338, 297, 332, 333, 334, 296, 336, 9, 107, 66, 105, 63],
+
+  // 2. GLABELA (G) - Manual Clinical Precision (v3.1)
+  glabela: [107, 9, 336, 285, 351, 6, 122, 193, 55, 107],
+
+  // 3. TEMPORAL (T) - Manual Clinical Precision (v3.1)
+  temporal_r: [156, 139, 162, 21, 54, 103, 104, 105, 63, 70, 156],
+  temporal_l: [332, 333, 334, 293, 300, 383, 368, 389, 251, 284, 332],
+
+  // 4. (REMOVED)
+
+  // 5. INFRAPALPEBRAL - Lower eyelid and tear trough
+  infrapalpebral_r: [156, 143, 111, 117, 118, 119, 120, 121, 128, 245, 244, 112, 26, 22, 23, 24, 226, 156],
+  infrapalpebral_l: [383, 372, 340, 346, 347, 348, 349, 350, 357, 465, 464, 341, 256, 252, 253, 254, 446, 383],
+
+  // 6. MALAR LATERAL (ML) - External cheekbone
+  malar_lateral_r: [162, 139, 156, 143, 111, 117, 118, 50, 187, 147, 93, 234, 127, 162],
+  malar_lateral_l: [389, 368, 383, 372, 340, 346, 347, 280, 411, 376, 323, 454, 356, 389],
+
+  // 6.1 MALAR MEDIAL (MM) - Mid-face zone
+  malar_medial_r: [118, 50, 187, 206, 98, 64, 49, 217, 188, 121, 120, 119, 118],
+  malar_medial_l: [347, 280, 411, 426, 327, 294, 279, 437, 412, 350, 349, 348, 347],
+
+  // 7. SUBMALAR (SM) - Inner cheek hollows
+  submalar_r: [93, 147, 187, 206, 98, 165, 92, 186, 57, 202, 192, 215, 132, 93],
+  submalar_l: [323, 376, 411, 426, 327, 391, 322, 410, 287, 422, 416, 435, 361, 323],
+
+  // 8. MANDIBULAR (Ma) - Jawline
+  mandibular_r: [215, 138, 172, 136, 150, 149, 176, 140, 32, 194, 204, 215],
+  mandibular_l: [435, 367, 397, 365, 379, 378, 400, 369, 262, 418, 424, 435],
+  
+  // 9. LABIAL (Lb) - Standard lip unit
+  labial: [61, 185, 40, 39, 37, 0, 267, 269, 270, 409, 291, 375, 321, 405, 314, 17, 84, 181, 91, 146, 61],
+
+  // 9.1 SUBNASAL (SN) - Base of the nose to upper lip
+  subnasal: [98, 97, 2, 326, 327, 391, 393, 164, 167, 165, 98],
+
+  // 10. PERIORAL (POr) - Skin around the mouth
+  perioral: [
+    57, 202, 204, 194, 201, 200, 421, 418, 424, 422, 287, 410, 322, 391, 393, 164, 167, 165, 92, 186, 57, // Outer
+    61, 185, 40, 39, 37, 0, 267, 269, 270, 409, 291, 375, 321, 405, 314, 17, 84, 181, 91, 146, 61 // Inner hole
+  ],
+
+  // 10. MENTO (Me) - Chin
+  mento: [32, 194, 201, 200, 421, 418, 262, 369, 400, 377, 152, 148, 176, 140, 32],
+
+  // 11. NARIZ (N) - Nasal unit
+  nariz: [188, 122, 6, 351, 412, 437, 429, 279, 294, 327, 326, 2, 97, 98, 64, 49, 209, 217, 188]
+};
+
+
+/**
+ * Pontos anatômicos individuais para cálculos de proporções.
+ */
+export const ANATOMICAL_POINTS = {
+  TRICHION: 10,
+  GLABELLA: 9,
+  NASION: 168,
+  NASAL_TIP: 1,
+  SUBNASALE: 2,
+  STOMION_UPPER: 13,
+  STOMION_LOWER: 14,
+  MENTON: 152,
+  CANTHI_MEDIAL_R: 133,
+  CANTHI_LATERAL_R: 33,
+  CANTHI_MEDIAL_L: 362,
+  CANTHI_LATERAL_L: 263,
+  IRIS_CENTER_R: 468,
+  IRIS_CENTER_L: 473,
+  COMMISSURE_R: 61,
+  COMMISSURE_L: 291,
+  GONION_R: 172,
+  GONION_L: 397
 };
 
 export function getTopographicRegions(landmarks: Landmark[]): TopographicRegion[] {

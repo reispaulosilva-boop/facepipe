@@ -44,6 +44,9 @@ export function ClinicalWorkspace() {
     toggleFacialShape,
     showRegions,
     toggleRegions,
+    showRegionsSubmenu,
+    toggleRegionsSubmenu,
+    toggleSpecificRegion,
     setIsAnalyzingSkin,
     isAnalyzingSkin,
     setAnalysisResults,
@@ -295,6 +298,10 @@ export function ClinicalWorkspace() {
         toggleFacialShape={toggleFacialShape}
         showRegions={showRegions}
         toggleRegions={toggleRegions}
+        showRegionsSubmenu={showRegionsSubmenu}
+        toggleRegionsSubmenu={toggleRegionsSubmenu}
+        toggleSpecificRegion={toggleSpecificRegion}
+        activeRegions={analysisResults.regions}
         trichionOverrideY={trichionOverrideY}
         resetTrichion={resetTrichion}
         zoomPercent={zoomPercent}
@@ -345,6 +352,7 @@ export function ClinicalWorkspace() {
           showMentonian={showMentonian}
           showFacialShape={showFacialShape}
           showRegions={showRegions}
+          activeRegions={analysisResults.regions}
           trichionOverrideY={trichionOverrideY}
           activeTool={activeTool}
           onTrichionAdjust={setTrichionOverrideY}

@@ -14,6 +14,27 @@ export interface AnalysisResults {
   bigonial: DistanceMeasurement | null;
   bitemporal: DistanceMeasurement | null;
   mentonian: DistanceMeasurement | null;
+  regions: {
+    frontal: boolean;
+    temporal_r: boolean;
+    temporal_l: boolean;
+    glabela: boolean;
+    labial: boolean;
+    subnasal: boolean;
+    perioral: boolean;
+    malar_lateral_r: boolean;
+    malar_lateral_l: boolean;
+    malar_medial_r: boolean;
+    malar_medial_l: boolean;
+    infrapalpebral_r: boolean;
+    infrapalpebral_l: boolean;
+    submalar_r: boolean;
+    submalar_l: boolean;
+    mandibular_r: boolean;
+    mandibular_l: boolean;
+    mento: boolean;
+    nariz: boolean;
+  };
 }
 
 interface FaceStore {
@@ -50,6 +71,10 @@ interface FaceStore {
 
   showRegions: boolean;
   toggleRegions: () => void;
+  showRegionsSubmenu: boolean;
+  setShowRegionsSubmenu: (v: boolean) => void;
+  toggleRegionsSubmenu: () => void;
+  toggleSpecificRegion: (region: keyof AnalysisResults["regions"]) => void;
 
   // Ajuste manual do Trichion (normalizado 0–1, null = usar landmark 10)
   trichionOverrideY: number | null;
@@ -96,6 +121,27 @@ const defaultAnalysisResults: AnalysisResults = {
   bigonial: null,
   bitemporal: null,
   mentonian: null,
+  regions: {
+    frontal: false,
+    temporal_r: false,
+    temporal_l: false,
+    glabela: false,
+    labial: false,
+    subnasal: false,
+    perioral: false,
+    malar_lateral_r: false,
+    malar_lateral_l: false,
+    malar_medial_r: false,
+    malar_medial_l: false,
+    infrapalpebral_r: false,
+    infrapalpebral_l: false,
+    submalar_r: false,
+    submalar_l: false,
+    mandibular_r: false,
+    mandibular_l: false,
+    mento: false,
+    nariz: false,
+  },
 };
 
 export const useFaceStore = create<FaceStore>((set) => ({
@@ -133,6 +179,20 @@ export const useFaceStore = create<FaceStore>((set) => ({
 
   showRegions: false,
   toggleRegions: () => set((s) => ({ showRegions: !s.showRegions })),
+  
+  showRegionsSubmenu: false,
+  setShowRegionsSubmenu: (v) => set({ showRegionsSubmenu: v }),
+  toggleRegionsSubmenu: () => set((s) => ({ showRegionsSubmenu: !s.showRegionsSubmenu })),
+  
+  toggleSpecificRegion: (region) => set((s) => ({
+    analysisResults: {
+      ...s.analysisResults,
+      regions: {
+        ...s.analysisResults.regions,
+        [region]: !s.analysisResults.regions[region]
+      }
+    }
+  })),
 
   trichionOverrideY: null,
   setTrichionOverrideY: (y) => set({ trichionOverrideY: y }),

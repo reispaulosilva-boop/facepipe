@@ -57,6 +57,7 @@ interface LightTableProps {
   transformRef?: React.RefObject<ReactZoomPanPinchRef | null>;
   activeTool?: string;
   showRegions?: boolean;
+  activeRegions?: any;
 }
 
 export function LightTable({
@@ -80,7 +81,8 @@ export function LightTable({
   resetKey = 0,
   transformRef,
   activeTool = "select",
-  showRegions = false
+  showRegions = false,
+  activeRegions = {}
 }: LightTableProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const photoRef = useRef<HTMLImageElement>(null);
@@ -253,14 +255,32 @@ export function LightTable({
            style={{ opacity: 0.6 }}
         />
         {landmarks.map((pt, i) => (
-          <circle 
-            key={i}
-            cx={pt.x * dimensions.width}
-            cy={pt.y * dimensions.height}
-            r="2.5"
-            fill={CYAN}
-            style={{ opacity: 0.7 }}
-          />
+          <g key={i}>
+            <circle 
+              cx={pt.x * dimensions.width}
+              cy={pt.y * dimensions.height}
+              r="1.8"
+              fill={CYAN}
+              style={{ opacity: 0.8 }}
+            />
+            <text
+              x={pt.x * dimensions.width + 3.5}
+              y={pt.y * dimensions.height + 3.5}
+              fill={CYAN}
+              fontSize="16px"
+              fontWeight="bold"
+              className="pointer-events-none select-none"
+              style={{ 
+                opacity: 0.9, 
+                textShadow: "0 0 3px rgba(0,0,0,0.9)",
+                paintOrder: "stroke",
+                stroke: "rgba(0,0,0,0.6)",
+                strokeWidth: "0.3px"
+              }}
+            >
+              {i}
+            </text>
+          </g>
         ))}
       </g>
     );
@@ -616,6 +636,42 @@ export function LightTable({
   const renderTopographicRegions = () => {
     if (!topographicRegions || !dimensions.width) return null;
 
+    // Se showRegions for true (global), mostramos todas.
+    // Se não, filtramos apenas as que estão em activeRegions como true.
+    const filteredRegions = showRegions 
+      ? topographicRegions 
+      : topographicRegions.filter(r => activeRegions[r.name.toLowerCase()] === true || activeRegions[r.name] === true);
+
+    if (filteredRegions.length === 0) return null;
+
+    const regionStyles: { [key: string]: { fill: string; stroke: string; label: string } } = {
+      frontal: { fill: "rgba(34, 197, 94, 0.3)", stroke: "rgba(34, 197, 94, 0.8)", label: "F" },
+      glabela: { fill: "rgba(249, 115, 22, 0.45)", stroke: "rgba(249, 115, 22, 0.9)", label: "G" },
+      temporal_r: { fill: "rgba(234, 179, 8, 0.3)", stroke: "rgba(234, 179, 8, 0.8)", label: "T-D" },
+      temporal_l: { fill: "rgba(234, 179, 8, 0.3)", stroke: "rgba(234, 179, 8, 0.8)", label: "T-E" },
+      nariz: { fill: "rgba(6, 182, 212, 0.35)", stroke: "rgba(6, 182, 212, 0.8)", label: "N" },
+      malar_lateral_r: { fill: "rgba(168, 85, 247, 0.3)", stroke: "rgba(168, 85, 247, 0.8)", label: "ML-D" },
+      malar_lateral_l: { fill: "rgba(168, 85, 247, 0.3)", stroke: "rgba(168, 85, 247, 0.8)", label: "ML-E" },
+      malar_medial_r: { fill: "rgba(236, 72, 153, 0.3)", stroke: "rgba(236, 72, 153, 0.8)", label: "MM-D" },
+      malar_medial_l: { fill: "rgba(236, 72, 153, 0.3)", stroke: "rgba(236, 72, 153, 0.8)", label: "MM-E" },
+      infrapalpebral_r: { fill: "rgba(255, 255, 255, 0.3)", stroke: "rgba(255, 255, 255, 0.8)", label: "IP-D" },
+      infrapalpebral_l: { fill: "rgba(255, 255, 255, 0.3)", stroke: "rgba(255, 255, 255, 0.8)", label: "IP-E" },
+      labial: { fill: "rgba(239, 68, 68, 0.35)", stroke: "rgba(239, 68, 68, 0.9)", label: "Lb" },
+      subnasal: { fill: "rgba(34, 197, 94, 0.3)", stroke: "rgba(34, 197, 94, 0.9)", label: "SN" },
+      perioral: { fill: "rgba(255, 255, 255, 0.3)", stroke: "rgba(255, 255, 255, 0.8)", label: "POr" },
+      submalar_r: { fill: "rgba(251, 191, 36, 0.22)", stroke: "rgba(251, 191, 36, 0.7)", label: "SM-D" },
+      submalar_l: { fill: "rgba(251, 191, 36, 0.22)", stroke: "rgba(251, 191, 36, 0.7)", label: "SM-E" },
+      mandibular_r: { fill: "rgba(37, 99, 235, 0.3)", stroke: "rgba(37, 99, 235, 0.8)", label: "Ma-D" },
+      mandibular_l: { fill: "rgba(37, 99, 235, 0.3)", stroke: "rgba(37, 99, 235, 0.8)", label: "Ma-E" },
+      mento: { fill: "rgba(168, 85, 247, 0.3)", stroke: "rgba(168, 85, 247, 0.8)", label: "Me" },
+    };
+
+    const defaultStyle = { fill: "rgba(251, 191, 36, 0.08)", stroke: "rgba(251, 191, 36, 0.4)", label: "" };
+
+    // Indices for Virtual Trichion projection
+    const TRICHION_CURVE_INDICES = [103, 67, 109, 10, 338, 297, 332];
+    const S = Math.max(dimensions.width, dimensions.height) / 1000;
+
     return (
       <motion.g 
         className="topographic-regions-layer"
@@ -624,22 +680,80 @@ export function LightTable({
         exit={{ opacity: 0 }}
         transition={{ duration: 0.4 }}
       >
-        {topographicRegions.map((region, i) => {
-          const pathD = region.points
+        {filteredRegions.map((region, i) => {
+          if (!region.points || region.points.length === 0) return null;
+          
+          const regionId = region.name.toLowerCase();
+          const style = regionStyles[regionId] || defaultStyle;
+
+          // Virtual Trichion projection logic
+          let projectedPoints = region.indices.map((idx, pointIdx) => {
+            const p = region.points[pointIdx];
+            if (!p) return null;
+
+            if (trichionOverrideY !== null && TRICHION_CURVE_INDICES.includes(idx)) {
+              const landmark10 = landmarks[10];
+              if (landmark10) {
+                const offsetY = trichionOverrideY - landmark10.y;
+                return { ...p, y: p.y + offsetY };
+              }
+            }
+            return p;
+          }).filter(Boolean) as Landmark[];
+
+          if (projectedPoints.length === 0) projectedPoints = region.points;
+
+          const pathD = projectedPoints
             .map((p, idx) => `${idx === 0 ? "M" : "L"} ${p.x * dimensions.width} ${p.y * dimensions.height}`)
             .join(" ") + " Z";
           
+          // True Centroid calculation (mean of points)
+          const centerX = (projectedPoints.reduce((acc, p) => acc + p.x, 0) / projectedPoints.length) * dimensions.width;
+          const centerY = (projectedPoints.reduce((acc, p) => acc + p.y, 0) / projectedPoints.length) * dimensions.height;
+          
+          const fontSize = S * 6.8;
+          const labelPadding = S * 2.8;
+          const labelWidth = style.label.length * (fontSize * 0.7) + labelPadding * 2;
+          const labelHeight = fontSize + labelPadding * 1.5;
+
           return (
-            <path
-              key={i}
-              d={pathD}
-              fill="rgba(6,182,212,0.03)"
-              stroke="rgba(6,182,212,0.15)"
-              strokeWidth="1"
-              strokeDasharray="4,4"
-              className="pointer-events-auto transition-colors"
-              style={{ fill: "rgba(6,182,212,0.03)" }} /* Avoid Tailwind color utilities */
-            />
+            <motion.g key={region.name + i}>
+              <path
+                d={pathD}
+                fill={style.fill}
+                fillRule="evenodd"
+                stroke={style.stroke}
+                strokeWidth="1.5"
+                strokeDasharray="3,1"
+                style={{ filter: "drop-shadow(0 0 2px rgba(0,0,0,0.2))" }}
+                className="pointer-events-auto transition-all duration-300"
+              />
+              {/* Label Badge */}
+              <g className="pointer-events-none select-none">
+                <rect
+                  x={centerX - labelWidth / 2}
+                  y={centerY - labelHeight / 2}
+                  width={labelWidth}
+                  height={labelHeight}
+                  rx={S * 2}
+                  fill="rgba(0,0,0,0.75)"
+                  className="drop-shadow-sm"
+                />
+                <text
+                  x={centerX}
+                  y={centerY}
+                  fill={style.stroke}
+                  fontSize={fontSize}
+                  fontWeight="bold"
+                  textAnchor="middle"
+                  dominantBaseline="central"
+                  fontFamily="monospace"
+                  style={{ textShadow: "0 0 1px rgba(0,0,0,0.5)" }}
+                >
+                  {style.label}
+                </text>
+              </g>
+            </motion.g>
           );
         })}
       </motion.g>
@@ -868,7 +982,7 @@ export function LightTable({
                 {renderLandmarks()}
                 {renderClinicalFacilitators()}
                 <AnimatePresence mode="wait">
-                  {showRegions && renderTopographicRegions()}
+                  {(showRegions || Object.values(activeRegions).some(v => v)) && renderTopographicRegions()}
                 </AnimatePresence>
 
                 {/* Thirds layer — animated with framer-motion via SVG foreignObject trick: use AnimatePresence wrapper at SVG level */}

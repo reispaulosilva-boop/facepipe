@@ -83,6 +83,10 @@ interface ToolboxProps {
   toggleFacialShape: () => void;
   showRegions: boolean;
   toggleRegions: () => void;
+  showRegionsSubmenu: boolean;
+  toggleRegionsSubmenu: () => void;
+  toggleSpecificRegion: (region: any) => void;
+  activeRegions: any;
   trichionOverrideY: number | null;
   resetTrichion: () => void;
   zoomPercent: number;
@@ -116,6 +120,10 @@ export function Toolbox(props: ToolboxProps) {
     toggleFacialShape,
     showRegions,
     toggleRegions,
+    showRegionsSubmenu,
+    toggleRegionsSubmenu,
+    toggleSpecificRegion,
+    activeRegions,
     trichionOverrideY,
     resetTrichion,
     zoomPercent,
@@ -301,23 +309,135 @@ export function Toolbox(props: ToolboxProps) {
         </div>
         
         {/* Regiões Anatômicas (Topográficas) */}
-        <ToolButton
-          icon={
-            <div className="relative flex items-center justify-center w-4 h-4">
-              <Target className="w-4 h-4" />
-              {showRegions && (
-                <motion.div
-                  layoutId="regions-indicator"
-                  className="absolute -top-0.5 -right-0.5 w-1 h-1 rounded-full bg-amber-400"
-                />
-              )}
-            </div>
-          }
-          label="Regiões Anatômicas"
-          active={showRegions}
-          onClick={toggleRegions}
-          colorScheme="amber"
-        />
+        <div className="flex flex-col gap-1.5 relative">
+          <ToolButton
+            icon={
+              <div className="relative flex items-center justify-center w-4 h-4">
+                <Target className="w-4 h-4" />
+                {(showRegions || Object.values(activeRegions).some(v => v)) && (
+                  <motion.div
+                    layoutId="regions-indicator"
+                    className="absolute -top-0.5 -right-0.5 w-1 h-1 rounded-full bg-amber-400"
+                  />
+                )}
+              </div>
+            }
+            label="Regiões Anatômicas"
+            active={showRegionsSubmenu || showRegions || Object.values(activeRegions).some(v => v)}
+            onClick={toggleRegionsSubmenu}
+            colorScheme="amber"
+          />
+
+          {/* Floating Submenu for Regions */}
+          <AnimatePresence>
+            {showRegionsSubmenu && (
+              <motion.div
+                initial={{ opacity: 0, x: -10, scale: 0.95 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                exit={{ opacity: 0, x: -10, scale: 0.95 }}
+                className="absolute left-14 top-0 min-w-[200px] p-2 rounded-xl bg-[#030712]/90 backdrop-blur-2xl border border-white/10 shadow-2xl flex flex-col gap-1 z-[60]"
+              >
+                <div className="px-2 py-1.5 border-b border-white/5 mb-1">
+                  <span className="text-[9px] font-bold text-amber-500 uppercase tracking-widest flex items-center gap-2">
+                    <div className="w-1 h-1 rounded-full bg-amber-500" />
+                    Mapeamento de Regiões
+                  </span>
+                </div>
+                
+                <div className="grid grid-cols-1 gap-1 max-h-[350px] overflow-y-auto pr-1 custom-scrollbar">
+                  {/* TERÇO SUPERIOR */}
+                  <div className="px-2 py-1 mt-1 bg-white/5 rounded">
+                    <span className="text-[8px] font-bold text-white/30 tracking-widest">TERÇO SUPERIOR</span>
+                  </div>
+                  {[
+                    { id: "frontal", label: "Frontal (F)" },
+                    { id: "temporal_r", label: "Temporal Dir (T-D)" },
+                    { id: "temporal_l", label: "Temporal Esq (T-E)" },
+                    { id: "glabela", label: "Glabela (G)" },
+                  ].map((reg) => (
+                    <button
+                      key={reg.id}
+                      onClick={() => toggleSpecificRegion(reg.id as any)}
+                      className={cn(
+                        "w-full flex items-center justify-between px-3 py-1.5 rounded-lg transition-all text-[11px] group",
+                        activeRegions[reg.id] ? "bg-amber-500/20 text-white" : "hover:bg-white/5 text-white/50 hover:text-white"
+                      )}
+                    >
+                      <span className="font-medium">{reg.label}</span>
+                      {activeRegions[reg.id] && <div className="w-1 h-1 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.6)]" />}
+                    </button>
+                  ))}
+
+                  {/* TERÇO MÉDIO */}
+                  <div className="px-2 py-1 mt-1 bg-white/5 rounded">
+                    <span className="text-[8px] font-bold text-white/30 tracking-widest">TERÇO MÉDIO</span>
+                  </div>
+                  {[
+                    { id: "nariz", label: "Nariz (N)" },
+                    { id: "malar_lateral_r", label: "Malar Lat Dir (ML-D)" },
+                    { id: "malar_lateral_l", label: "Malar Lat Esq (ML-E)" },
+                    { id: "malar_medial_r", label: "Malar Med Dir (MM-D)" },
+                    { id: "malar_medial_l", label: "Malar Med Esq (MM-E)" },
+                    { id: "infrapalpebral_r", label: "Infrapalpebral Dir (IP-D)" },
+                    { id: "infrapalpebral_l", label: "Infrapalpebral Esq (IP-E)" },
+                  ].map((reg) => (
+                    <button
+                      key={reg.id}
+                      onClick={() => toggleSpecificRegion(reg.id as any)}
+                      className={cn(
+                        "w-full flex items-center justify-between px-3 py-1.5 rounded-lg transition-all text-[11px] group",
+                        activeRegions[reg.id] ? "bg-amber-500/20 text-white" : "hover:bg-white/5 text-white/50 hover:text-white"
+                      )}
+                    >
+                      <span className="font-medium">{reg.label}</span>
+                      {activeRegions[reg.id] && <div className="w-1 h-1 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.6)]" />}
+                    </button>
+                  ))}
+
+                  {/* TERÇO INFERIOR */}
+                  <div className="px-2 py-1 mt-1 bg-white/5 rounded">
+                    <span className="text-[8px] font-bold text-white/30 tracking-widest">TERÇO INFERIOR</span>
+                  </div>
+                  {[
+                    { id: "labial", label: "Labial (Lb)" },
+                    { id: "subnasal", label: "Subnasal (SN)" },
+                    { id: "perioral", label: "Perioral (POr)" },
+                    { id: "submalar_r", label: "Submalar Dir (SM-D)" },
+                    { id: "submalar_l", label: "Submalar Esq (SM-E)" },
+                    { id: "mandibular_r", label: "Mandibular Dir (Ma-D)" },
+                    { id: "mandibular_l", label: "Mandibular Esq (Ma-E)" },
+                    { id: "mento", label: "Mento (Me)" },
+                  ].map((reg) => (
+                    <button
+                      key={reg.id}
+                      onClick={() => toggleSpecificRegion(reg.id as any)}
+                      className={cn(
+                        "w-full flex items-center justify-between px-3 py-1.5 rounded-lg transition-all text-[11px] group",
+                        activeRegions[reg.id] ? "bg-amber-500/20 text-white" : "hover:bg-white/5 text-white/50 hover:text-white"
+                      )}
+                    >
+                      <span className="font-medium">{reg.label}</span>
+                      {activeRegions[reg.id] && <div className="w-1 h-1 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.6)]" />}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="pt-1 mt-1 border-t border-white/5">
+                  <button
+                    onClick={toggleRegions}
+                    className={cn(
+                      "w-full flex items-center justify-between px-3 py-2 rounded-lg transition-all text-[10px] group",
+                      showRegions ? "bg-white/10 text-white" : "hover:bg-white/5 text-white/40 hover:text-white"
+                    )}
+                  >
+                    <span className="font-bold uppercase tracking-tighter">Visualização Global</span>
+                    {showRegions && <div className="w-1 h-1 rounded-full bg-white animate-pulse" />}
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
 
       <div className="h-px bg-white/5 mx-1" />
