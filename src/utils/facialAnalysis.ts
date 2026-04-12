@@ -4,6 +4,8 @@
  * Zero-Storage: all calculations are ephemeral, in memory only.
  */
 
+import topographicIndicesData from "@/data/topographicIndices.json";
+
 export interface Landmark {
   x: number;
   y: number;
@@ -286,58 +288,10 @@ export function calcLipRatio(
 /**
  * Define as regiões anatômicas baseadas no mapeamento clínico do Dr. Paulo.
  * Perspectiva: R/L referem-se ao lado do PACIENTE (Anatômico).
+ * Os índices são mantidos em src/data/topographicIndices.json para facilitar
+ * manutenção clínica sem necessidade de alterar código TypeScript.
  */
-export const TOPOGRAPHIC_INDICES: { [key: string]: number[] } = {
-  // 1. FRONTAL (F) - Manual Clinical Correction (v3.2)
-  frontal: [105, 104, 103, 67, 109, 10, 338, 297, 332, 333, 334, 296, 336, 9, 107, 66, 63],
-
-  // 2. GLABELA (G) - Manual Clinical Precision (v3.1)
-  glabela: [107, 9, 336, 285, 351, 6, 122, 193, 55, 107],
-
-  // 3. TEMPORAL (T) - Manual Clinical Precision (v3.1)
-  temporal_r: [156, 139, 162, 21, 54, 103, 104, 105, 63, 70, 156],
-  temporal_l: [332, 333, 334, 293, 300, 383, 368, 389, 251, 284, 332],
-
-  // 4. (REMOVED)
-
-  // 5. INFRAPALPEBRAL - Lower eyelid and tear trough
-  infrapalpebral_r: [111, 143, 156, 226, 110, 24, 23, 22, 26, 112, 243, 193, 122, 188, 121, 120, 119, 118, 117, 111],
-  infrapalpebral_l: [340, 372, 383, 446, 339, 254, 253, 252, 256, 341, 463, 417, 351, 412, 350, 349, 348, 347, 346, 340],
-
-  // 6. MALAR LATERAL (ML) - External cheekbone
-  malar_lateral_r: [162, 139, 156, 143, 111, 117, 118, 50, 187, 147, 93, 234, 127, 162],
-  malar_lateral_l: [389, 368, 383, 372, 340, 346, 347, 280, 411, 376, 323, 454, 356, 389],
-
-  // 6.1 MALAR MEDIAL (MM) - Mid-face zone
-  malar_medial_r: [118, 50, 187, 206, 98, 64, 49, 217, 188, 121, 120, 119, 118],
-  malar_medial_l: [347, 280, 411, 426, 327, 294, 279, 437, 412, 350, 349, 348, 347],
-
-  // 7. SUBMALAR (SM) - Inner cheek hollows
-  submalar_r: [93, 147, 187, 206, 98, 165, 92, 186, 57, 202, 192, 215, 132, 93],
-  submalar_l: [323, 376, 411, 426, 327, 391, 322, 410, 287, 422, 416, 435, 361, 323],
-
-  // 8. MANDIBULAR (Ma) - Jawline
-  mandibular_r: [194, 204, 202, 192, 215, 58, 172, 136, 150, 149, 176, 140, 32, 194],
-  mandibular_l: [418, 424, 422, 416, 435, 288, 397, 365, 379, 378, 400, 369, 262, 418],
-  
-  // 9. LABIAL (Lb) - Standard lip unit
-  labial: [61, 185, 40, 39, 37, 0, 267, 269, 270, 409, 291, 375, 321, 405, 314, 17, 84, 181, 91, 146, 61],
-
-  // 9.1 SUBNASAL (SN) - Base of the nose to upper lip
-  subnasal: [98, 97, 2, 326, 327, 391, 393, 164, 167, 165, 98],
-
-  // 10. PERIORAL (POr) - Skin around the mouth
-  perioral: [
-    57, 202, 204, 194, 201, 200, 421, 418, 424, 422, 287, 410, 322, 391, 393, 164, 167, 165, 92, 186, 57, // Outer
-    61, 185, 40, 39, 37, 0, 267, 269, 270, 409, 291, 375, 321, 405, 314, 17, 84, 181, 91, 146, 61 // Inner hole
-  ],
-
-  // 10. MENTO (Me) - Chin
-  mento: [32, 194, 201, 200, 421, 418, 262, 369, 400, 377, 152, 148, 176, 140, 32],
-
-  // 11. NARIZ (N) - Nasal unit
-  nariz: [188, 122, 6, 351, 412, 437, 429, 279, 294, 327, 326, 2, 97, 98, 64, 49, 209, 217, 188]
-};
+export const TOPOGRAPHIC_INDICES: { [key: string]: number[] } = topographicIndicesData as { [key: string]: number[] };
 
 
 /**
@@ -490,4 +444,159 @@ export function landmarkToPixel(
   imageHeight: number
 ): { x: number; y: number } {
   return { x: lm.x * imageWidth, y: lm.y * imageHeight };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Cálculo de Áreas Topográficas
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type TopographicGroup = "Superior" | "Médio" | "Inferior";
+
+export interface TopographicAreaResult {
+  name: string;
+  label: string;
+  code: string;
+  group: TopographicGroup;
+  areaPx2: number;
+  areaMm2: number;
+  percent: number;
+}
+
+/**
+ * Metadados de exibição para cada região anatômica.
+ * Fonte de verdade para label clínico, código abreviado e terço.
+ */
+export const REGION_META: Record<string, { label: string; code: string; group: TopographicGroup }> = {
+  frontal:          { label: "Frontal",             code: "F",    group: "Superior"  },
+  glabela:          { label: "Glabela",             code: "G",    group: "Superior"  },
+  temporal_r:       { label: "Temporal Dir.",        code: "T-D",  group: "Superior"  },
+  temporal_l:       { label: "Temporal Esq.",        code: "T-E",  group: "Superior"  },
+  nariz:            { label: "Nariz",               code: "N",    group: "Médio"     },
+  malar_lateral_r:  { label: "Malar Lateral Dir.",  code: "ML-D", group: "Médio"     },
+  malar_lateral_l:  { label: "Malar Lateral Esq.",  code: "ML-E", group: "Médio"     },
+  malar_medial_r:   { label: "Malar Medial Dir.",   code: "MM-D", group: "Médio"     },
+  malar_medial_l:   { label: "Malar Medial Esq.",   code: "MM-E", group: "Médio"     },
+  infrapalpebral_r: { label: "Infrapalpebral Dir.", code: "IP-D", group: "Médio"     },
+  infrapalpebral_l: { label: "Infrapalpebral Esq.", code: "IP-E", group: "Médio"     },
+  subnasal:         { label: "Subnasal",            code: "SN",   group: "Inferior"  },
+  labial:           { label: "Labial",              code: "Lb",   group: "Inferior"  },
+  perioral:         { label: "Perioral",            code: "POr",  group: "Inferior"  },
+  submalar_r:       { label: "Submalar Dir.",        code: "SM-D", group: "Inferior"  },
+  submalar_l:       { label: "Submalar Esq.",        code: "SM-E", group: "Inferior"  },
+  mandibular_r:     { label: "Mandibular Dir.",      code: "Ma-D", group: "Inferior"  },
+  mandibular_l:     { label: "Mandibular Esq.",      code: "Ma-E", group: "Inferior"  },
+  mento:            { label: "Mento",               code: "Me",   group: "Inferior"  },
+};
+
+/**
+ * Separa um array linear de índices em sub-caminhos.
+ * Um sub-caminho é encerrado quando o índice atual repete o primeiro índice
+ * do sub-caminho corrente (convenção MediaPipe para polígonos fechados).
+ *
+ * Ex.: [A, B, C, A, D, E, D] → [[A, B, C], [D, E]]
+ */
+export function extractPolygonPaths(indices: number[]): number[][] {
+  const paths: number[][] = [];
+  if (indices.length === 0) return paths;
+
+  let start = 0;
+  let i = 1;
+
+  while (i < indices.length) {
+    if (indices[i] === indices[start]) {
+      paths.push(indices.slice(start, i));
+      start = i + 1;
+      i = start + 1;
+    } else {
+      i++;
+    }
+  }
+
+  if (start < indices.length) {
+    const tail = indices.slice(start);
+    // Remove closing vertex se repete o início
+    if (tail.length > 1 && tail[tail.length - 1] === tail[0]) {
+      tail.pop();
+    }
+    paths.push(tail);
+  }
+
+  return paths;
+}
+
+/**
+ * Algoritmo de Shoelace (Gauss) — área assinada de um polígono simples.
+ * Recebe índices de landmarks, converte para pixels e calcula.
+ */
+function shoelaceAreaPx(
+  indices: number[],
+  landmarks: Landmark[],
+  W: number,
+  H: number
+): number {
+  let area = 0;
+  const n = indices.length;
+  for (let i = 0; i < n; i++) {
+    const j = (i + 1) % n;
+    const a = landmarks[indices[i]];
+    const b = landmarks[indices[j]];
+    if (!a || !b) continue;
+    area += (a.x * W) * (b.y * H);
+    area -= (b.x * W) * (a.y * H);
+  }
+  return Math.abs(area) / 2;
+}
+
+/**
+ * Calcula a área em pixels² e mm² de cada região topográfica.
+ *
+ * Tratamento especial para "perioral":
+ *   O array de índices codifica dois sub-caminhos (outer + labial como furo).
+ *   Área = |shoelace(outer)| − |shoelace(furo)|
+ *
+ * @param pxPerMm  Calibração da íris (pixels por mm). Use 1 se não disponível.
+ */
+export function calcTopographicAreas(
+  landmarks: Landmark[],
+  imageWidth: number,
+  imageHeight: number,
+  pxPerMm: number
+): TopographicAreaResult[] {
+  const pxPerMm2 = pxPerMm * pxPerMm;
+
+  const results: TopographicAreaResult[] = [];
+
+  for (const [name, indices] of Object.entries(TOPOGRAPHIC_INDICES)) {
+    const meta = REGION_META[name];
+    if (!meta) continue;
+
+    const paths = extractPolygonPaths(indices);
+    if (paths.length === 0) continue;
+
+    let areaPx2 = shoelaceAreaPx(paths[0], landmarks, imageWidth, imageHeight);
+
+    // Sub-caminhos adicionais são furos — subtrair suas áreas (evenodd)
+    for (let p = 1; p < paths.length; p++) {
+      areaPx2 -= shoelaceAreaPx(paths[p], landmarks, imageWidth, imageHeight);
+    }
+    areaPx2 = Math.max(0, areaPx2);
+
+    results.push({
+      name,
+      label: meta.label,
+      code:  meta.code,
+      group: meta.group,
+      areaPx2,
+      areaMm2: pxPerMm2 > 0 ? areaPx2 / pxPerMm2 : 0,
+      percent: 0, // calculado após somar o total
+    });
+  }
+
+  const total = results.reduce((sum, r) => sum + r.areaPx2, 0);
+
+  for (const r of results) {
+    r.percent = total > 0 ? (r.areaPx2 / total) * 100 : 0;
+  }
+
+  return results;
 }

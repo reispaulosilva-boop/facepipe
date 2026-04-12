@@ -1,30 +1,22 @@
 "use client";
 
-import React from "react";
-import { 
-  Eye, 
-  EyeOff, 
-  Plus, 
+import React, { useState } from "react";
+import {
+  Eye,
+  EyeOff,
+  Plus,
   Minus,
   AlignVerticalDistributeCenter,
   AlignHorizontalDistributeCenter,
   RotateCcw,
   Sparkles,
-  Scale,
   Target,
   Ruler,
-  Sun,
-  Grid,
-  Sparkle,
-  Thermometer,
-  Zap,
-  Activity,
-  ArrowDownCircle,
-  Lock
+  Lock,
+  PieChart,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { useFaceStore } from "@/store/useFaceStore";
 
 interface ToolButtonProps {
   icon: React.ReactNode;
@@ -92,12 +84,25 @@ interface ToolboxProps {
   resetTrichion: () => void;
   zoomPercent: number;
   setZoomPercent: (percent: number) => void;
-  onGenerateReport: () => void;
+  onGenerateReport: (type: string) => void;
   isGenerating?: boolean;
-  onAnalyzeSkin: (type: string) => void;
+  hasLandmarks?: boolean;
+  showAreasPanel: boolean;
+  toggleAreasPanel: () => void;
 }
 
+const AI_ANALYSIS_OPTIONS = [
+  { id: "acne",        label: "Acne",             icon: "🔴" },
+  { id: "melasma",     label: "Melasma",           icon: "🟤" },
+  { id: "poros",       label: "Poros",             icon: "🔬" },
+  { id: "oleosidade",  label: "Oleosidade",        icon: "💧" },
+  { id: "vermelhidao", label: "Vermelhidão",       icon: "🌡️" },
+  { id: "rugas",       label: "Rugas e Linhas",    icon: "〰️" },
+  { id: "flacidez",    label: "Flacidez",          icon: "📉" },
+] as const;
+
 export function Toolbox(props: ToolboxProps) {
+  const [showAISubmenu, setShowAISubmenu] = useState(false);
   const {
     showLandmarks,
     setShowLandmarks,
@@ -132,34 +137,10 @@ export function Toolbox(props: ToolboxProps) {
     setZoomPercent,
     onGenerateReport,
     isGenerating,
-    onAnalyzeSkin
+    hasLandmarks,
+    showAreasPanel,
+    toggleAreasPanel,
   } = props;
-
-  const {
-    showSkinAnalysisSubmenu,
-    toggleSkinAnalysisSubmenu,
-    setActiveSkinAnalysis,
-    isAnalyzingSkin
-  } = useFaceStore();
-
-  const skinParams = [
-    { id: "melasma", label: "Melasma", icon: <Sun className="w-3.5 h-3.5" /> },
-    { id: "poros", label: "Poros Dilatados", icon: <Grid className="w-3.5 h-3.5" /> },
-    { id: "brilho", label: "Brilho", icon: <Sparkle className="w-3.5 h-3.5" /> },
-    { id: "vermelhidao", label: "Vermelhidão", icon: <Thermometer className="w-3.5 h-3.5" /> },
-    { id: "cravos", label: "Cravos e Espinhas", icon: <Zap className="w-3.5 h-3.5" /> },
-    { id: "rugas", label: "Rugas e Linhas Finas", icon: <Activity className="w-3.5 h-3.5" /> },
-    { id: "flacidez", label: "Flacidez", icon: <ArrowDownCircle className="w-3.5 h-3.5" /> },
-  ];
-
-  const handleSkinParamClick = (label: string) => {
-    if (label === "Melasma") {
-      onAnalyzeSkin("Melasma");
-    } else {
-      alert(`Avaliação de ${label}: Função em desenvolvimento.`);
-    }
-    setActiveSkinAnalysis(label);
-  };
 
   return (
     <motion.aside 
@@ -459,46 +440,89 @@ export function Toolbox(props: ToolboxProps) {
 
       <div className="h-px bg-white/5 mx-1" />
 
-      {/* Skin Quality Section — NEW */}
-      <div className="flex flex-col gap-1.5 relative">
-        <span className="text-[8px] font-bold text-white/20 uppercase tracking-[0.2em] text-center select-none mb-0.5">
-          Pele
-        </span>
-        
+      {/* Áreas Topográficas */}
+      <div className="flex flex-col items-center gap-1">
         <ToolButton
-          icon={isAnalyzingSkin ? <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }}><Sparkles className="w-4 h-4 text-primary" /></motion.div> : <Sparkles className="w-4 h-4" />}
-          label={isAnalyzingSkin ? "Analisando Pele..." : "Qualidade da Pele"}
-          active={showSkinAnalysisSubmenu || isAnalyzingSkin}
-          onClick={toggleSkinAnalysisSubmenu}
+          icon={<PieChart className="w-4 h-4" />}
+          label="Áreas Topográficas"
+          active={showAreasPanel}
+          onClick={toggleAreasPanel}
           colorScheme="cyan"
         />
+        <span className="text-[7px] font-bold text-white/20 uppercase tracking-[0.12em] select-none">
+          Áreas
+        </span>
+      </div>
 
-        {/* Floating Submenu */}
+      <div className="h-px bg-white/5 mx-1" />
+
+      {/* Análise por IA */}
+      <div className="flex flex-col items-center gap-1 relative">
+        <motion.button
+          whileHover={hasLandmarks && !isGenerating ? { scale: 1.05, x: 2 } : {}}
+          whileTap={hasLandmarks && !isGenerating ? { scale: 0.95 } : {}}
+          onClick={() => hasLandmarks && !isGenerating && setShowAISubmenu(v => !v)}
+          disabled={!hasLandmarks || isGenerating}
+          className={cn(
+            "group relative flex items-center justify-center w-10 h-10 rounded-lg transition-all duration-300",
+            showAISubmenu
+              ? "bg-primary/30 border border-primary/60 text-sky-300 shadow-[0_0_20px_rgba(14,165,233,0.2)]"
+              : hasLandmarks && !isGenerating
+              ? "bg-primary/20 border border-primary/50 text-sky-400 shadow-[0_0_20px_rgba(14,165,233,0.15)] cursor-pointer"
+              : "bg-white/5 border border-white/10 text-white/20 cursor-not-allowed"
+          )}
+          title={
+            !hasLandmarks
+              ? "Realize a análise facial primeiro"
+              : isGenerating
+              ? "Analisando com IA..."
+              : "Análise por IA"
+          }
+        >
+          {isGenerating ? (
+            <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}>
+              <Sparkles className="w-4 h-4 text-primary" />
+            </motion.div>
+          ) : (
+            <Sparkles className="w-4 h-4" />
+          )}
+          {!showAISubmenu && (
+            <div className="absolute left-14 px-2 py-1 rounded bg-black/80 border border-white/10 text-white/70 text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity font-medium tracking-wide z-50">
+              {!hasLandmarks ? "Análise facial necessária" : isGenerating ? "Analisando..." : "Análise por IA"}
+            </div>
+          )}
+        </motion.button>
+        <span className="text-[7px] font-bold text-white/20 uppercase tracking-[0.15em] select-none">
+          IA
+        </span>
+
+        {/* Submenu de tipos de análise */}
         <AnimatePresence>
-          {showSkinAnalysisSubmenu && (
+          {showAISubmenu && (
             <motion.div
               initial={{ opacity: 0, x: -10, scale: 0.95 }}
               animate={{ opacity: 1, x: 0, scale: 1 }}
               exit={{ opacity: 0, x: -10, scale: 0.95 }}
-              className="absolute left-14 top-0 min-w-[180px] p-2 rounded-xl bg-[#030712]/90 backdrop-blur-2xl border border-white/10 shadow-2xl flex flex-col gap-1 z-[60]"
+              className="absolute left-14 top-0 min-w-[200px] p-2 rounded-xl bg-[#030712]/90 backdrop-blur-2xl border border-white/10 shadow-2xl flex flex-col gap-1 z-[60]"
             >
               <div className="px-2 py-1.5 border-b border-white/5 mb-1">
-                <span className="text-[9px] font-bold text-primary uppercase tracking-widest flex items-center gap-2">
-                  <div className="w-1 h-1 rounded-full bg-primary" />
-                  AVALIAÇÃO GEMINI
+                <span className="text-[9px] font-bold text-sky-400 uppercase tracking-widest flex items-center gap-2">
+                  <Sparkles className="w-3 h-3" />
+                  ANÁLISE POR IA
                 </span>
               </div>
-              
-              {skinParams.map((param) => (
+
+              {AI_ANALYSIS_OPTIONS.map((opt) => (
                 <button
-                  key={param.id}
-                  onClick={() => handleSkinParamClick(param.label)}
-                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5 text-white/60 hover:text-white transition-all text-xs group"
+                  key={opt.id}
+                  onClick={() => {
+                    setShowAISubmenu(false);
+                    onGenerateReport(opt.id);
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-xs hover:bg-white/8 text-white/60 hover:text-white group"
                 >
-                  <div className="text-primary group-hover:scale-110 transition-transform">
-                    {param.icon}
-                  </div>
-                  <span className="font-medium">{param.label}</span>
+                  <span className="text-base leading-none">{opt.icon}</span>
+                  <span className="font-medium">{opt.label}</span>
                 </button>
               ))}
             </motion.div>

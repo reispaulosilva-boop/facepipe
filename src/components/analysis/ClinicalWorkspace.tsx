@@ -8,9 +8,12 @@ import { useFaceLandmarker } from "@/hooks/useFaceLandmarker";
 import { useFaceStore } from "@/store/useFaceStore";
 import { toPng } from "html-to-image";
 import { buildDiagnosticReportPrompt } from "@/lib/prompts/diagnosticReport";
-import { motion } from "framer-motion";
+import { buildSkinAnalysisPrompt, formatSkinAnalysisMarkdown, SKIN_ANALYSIS_TYPES, type SkinAnalysisResult } from "@/lib/prompts/skinAnalysis";
+import { hashBase64Image } from "@/utils/imageHash";
+import { motion, AnimatePresence } from "framer-motion";
 import { ReactZoomPanPinchRef } from "react-zoom-pan-pinch";
 import { cn } from "@/lib/utils";
+import { TopographicAreasPanel } from "./TopographicAreasPanel";
 
 export function ClinicalWorkspace() {
   const { 
@@ -48,9 +51,13 @@ export function ClinicalWorkspace() {
     toggleRegionsSubmenu,
     toggleSpecificRegion,
     setAllRegions,
-    setIsAnalyzingSkin,
-    isAnalyzingSkin,
     setAnalysisResults,
+    showAreasPanel,
+    toggleAreasPanel,
+    skinAnalysisResult,
+    setSkinAnalysisResult,
+    activeSkinAnalysis,
+    setActiveSkinAnalysis,
   } = useFaceStore();
 
   const [activeTool, setActiveTool] = useState("select");
@@ -144,55 +151,83 @@ export function ClinicalWorkspace() {
   };
 
 
-  const generateDiagnosticReport = useCallback(async () => {
+  const generateDiagnosticReport = useCallback(async (analysisType: string) => {
     if (isGeneratingReport) return;
-    
+
     const captureTarget = document.querySelector('[data-capture="face-table"]') as HTMLElement;
     if (!captureTarget || !analysisResults.thirds) {
       alert("Por favor, realize a análise facial primeiro.");
       return;
     }
 
+    const isSkinAnalysis = SKIN_ANALYSIS_TYPES.has(analysisType);
+
     setIsGeneratingReport(true);
     setDiagnosticReport(null);
+    setSkinAnalysisResult(null);
+    setActiveSkinAnalysis(isSkinAnalysis ? analysisType : null);
+
     try {
-      // 1. Capturar imagem com overlays usando toPng (que suporta oklch)
-      console.log("Capturing screen for AI with toPng...");
-      
-      const dataUrl = await toPng(captureTarget, {
-        quality: 0.85,
-        pixelRatio: 1.5,
-        cacheBust: true,
-      });
-      
-      if (!dataUrl || !dataUrl.includes(",")) {
-        throw new Error("Falha ao capturar imagem da análise.");
+      // 1. Resolve image data
+      // • Skin analysis → send the original file (no overlays; better quality for lesion detection)
+      // • Clinical report → capture the annotated canvas (overlays visible to AI)
+      let base64Data: string;
+      let mimeType: string;
+
+      if (isSkinAnalysis) {
+        // Use the source file directly — avoids html-to-image blob-URL serialisation error
+        // and gives the AI a clean, full-resolution image of the skin.
+        base64Data = await compressImage(imageFile!);
+        mimeType = "image/jpeg";
+      } else {
+        const dataUrl = await toPng(captureTarget, {
+          quality: 0.85,
+          pixelRatio: 1.5,
+          cacheBust: true,
+        });
+        if (!dataUrl || !dataUrl.includes(",")) {
+          throw new Error("Falha ao capturar imagem da análise.");
+        }
+        base64Data = dataUrl.split(",")[1];
+        mimeType = "image/png";
       }
 
-      const base64Data = dataUrl.split(",")[1];
+      // 2. SHA-256 hash of the image for Gemini Context Caching
+      let imageHash: string | undefined;
+      try {
+        imageHash = await hashBase64Image(base64Data);
+      } catch {
+        // If hash fails, caching will be skipped; continue normally
+      }
 
-      // 2. Construir prompt especializado (AB Face)
-      const { thirds, lipRatio, topographicRegions } = analysisResults;
+      // 3. Build the appropriate prompt
+      const prompt = isSkinAnalysis
+        ? buildSkinAnalysisPrompt(analysisType)
+        : buildDiagnosticReportPrompt({
+            thirds: analysisResults.thirds!,
+            lipRatio: analysisResults.lipRatio,
+            topographicRegions: analysisResults.topographicRegions ?? [],
+            analysisResults,
+            patientGender,
+            patientAge,
+            analysisType,
+          });
 
-      const prompt = buildDiagnosticReportPrompt({
-        thirds: thirds!,
-        lipRatio,
-        topographicRegions: topographicRegions ?? [],
-        analysisResults,
-        patientGender,
-        patientAge,
-      });
-
-      // 3. Chamar API Proxy do Gemini
-      console.log("Sending request to Gemini API...");
+      // 4. Call Gemini API proxy
+      const apiSecret = process.env.NEXT_PUBLIC_API_SECRET;
       const response = await fetch("/api/gemini", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(apiSecret && { Authorization: `Bearer ${apiSecret}` }),
+        },
         body: JSON.stringify({
           prompt,
-          imageParts: [{ inlineData: { mimeType: "image/png", data: base64Data } }],
+          imageParts: [{ inlineData: { mimeType, data: base64Data } }],
           model: "gemini-2.5-flash",
-        })
+          responseFormat: isSkinAnalysis ? "json" : undefined,
+          imageHash,
+        }),
       });
 
       if (!response.ok) {
@@ -204,27 +239,36 @@ export function ClinicalWorkspace() {
       if (!result.text) {
         throw new Error("A IA não retornou um texto válido.");
       }
-      
-      setDiagnosticReport(result.text);
+
+      if (isSkinAnalysis) {
+        // Parse JSON response and split into overlay + text report
+        let parsed: SkinAnalysisResult;
+        try {
+          parsed = JSON.parse(result.text);
+        } catch {
+          throw new Error("A IA retornou JSON inválido. Tente novamente.");
+        }
+        setSkinAnalysisResult(parsed);
+        setDiagnosticReport(formatSkinAnalysisMarkdown(parsed, analysisType));
+      } else {
+        setDiagnosticReport(result.text);
+      }
     } catch (err: any) {
-      console.error("Detailed error generating report:", err);
+      console.error("Error generating report:", err);
       let errorMessage = "Erro desconhecido";
-      
       if (err instanceof Error) {
         errorMessage = err.message;
-      } else if (err && typeof err === 'object' && err.type) {
-        // Provavelmente um ErrorEvent do html-to-image
+      } else if (err && typeof err === "object" && err.type) {
         errorMessage = `Erro de renderização (Event: ${err.type})`;
-        if (err.target) console.log("Erro no alvo:", err.target);
       } else {
         errorMessage = String(err);
       }
-      
-      alert(`Erro ao gerar laudo: ${errorMessage}`);
+      alert(`Erro ao gerar análise: ${errorMessage}`);
     } finally {
       setIsGeneratingReport(false);
     }
-  }, [analysisResults, isGeneratingReport, patientGender, patientAge, setDiagnosticReport, setIsGeneratingReport]);
+  }, [analysisResults, imageFile, isGeneratingReport, patientGender, patientAge,
+      setDiagnosticReport, setIsGeneratingReport, setSkinAnalysisResult, setActiveSkinAnalysis]);
 
   const [resetKey, setResetKey] = useState(0);
 
@@ -286,11 +330,9 @@ export function ClinicalWorkspace() {
         setZoomPercent={handleZoomPercentChange}
         onGenerateReport={generateDiagnosticReport}
         isGenerating={isGeneratingReport}
-        onAnalyzeSkin={(type) => {
-          if (type === "Melasma") {
-            alert("Melasma: Em desenvolvimento / Aguardando implementação");
-          }
-        }}
+        hasLandmarks={landmarks.length > 0}
+        showAreasPanel={showAreasPanel}
+        toggleAreasPanel={toggleAreasPanel}
       />
       
       <main className="flex-1 flex flex-col h-full overflow-hidden">
@@ -332,6 +374,9 @@ export function ClinicalWorkspace() {
           showFacialShape={showFacialShape}
           showRegions={showRegions}
           activeRegions={analysisResults.regions}
+          showAreasLayer={showAreasPanel}
+          skinAnalysisResult={skinAnalysisResult}
+          activeSkinAnalysis={activeSkinAnalysis}
           trichionOverrideY={trichionOverrideY}
           activeTool={activeTool}
           onTrichionAdjust={setTrichionOverrideY}
@@ -352,9 +397,19 @@ export function ClinicalWorkspace() {
           />
         )}
 
-        {/* DiagnosticReport removido por hora */}
-        {/* <DiagnosticReport /> */}
+        <DiagnosticReport />
       </main>
+
+      {/* Painel de Áreas Topográficas */}
+      <AnimatePresence>
+        {showAreasPanel && analysisResults.topographicAreas && (
+          <TopographicAreasPanel
+            areas={analysisResults.topographicAreas}
+            pxPerMm={analysisResults.pxPerMm}
+            onClose={toggleAreasPanel}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

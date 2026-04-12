@@ -7,6 +7,8 @@ interface ReportPromptParams {
   analysisResults: AnalysisResults;
   patientGender: string;
   patientAge: string | number | null;
+  /** Tipo de análise selecionado pelo usuário (acne, melasma, poros, etc.) */
+  analysisType: string;
 }
 
 export function buildDiagnosticReportPrompt(p: ReportPromptParams): string {

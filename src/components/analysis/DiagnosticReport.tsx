@@ -3,6 +3,7 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Copy, FileText, CheckCircle2 } from "lucide-react";
+// FileText e CheckCircle2 mantidos; PDF removido até implementação real
 import { useFaceStore } from "@/store/useFaceStore";
 import ReactMarkdown from "react-markdown";
 
@@ -74,10 +75,10 @@ export function DiagnosticReport() {
 
             {/* Footer */}
             {!isGeneratingReport && (
-              <footer className="p-4 border-t border-white/5 bg-white/5 flex gap-2">
+              <footer className="p-4 border-t border-white/5 bg-white/5">
                 <button
                   onClick={handleCopy}
-                  className="flex-1 flex items-center justify-center gap-2 py-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all active:scale-95 group"
+                  className="w-full flex items-center justify-center gap-2 py-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all active:scale-95 group"
                 >
                   {copied ? (
                     <CheckCircle2 className="w-4 h-4 text-emerald-400" />
@@ -87,11 +88,6 @@ export function DiagnosticReport() {
                   <span className="text-[10px] font-bold uppercase tracking-widest">
                     {copied ? "Copiado!" : "Copiar Texto"}
                   </span>
-                </button>
-                <button
-                  className="px-6 py-3 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl transition-all active:scale-95 font-bold text-[10px] uppercase tracking-widest"
-                >
-                  PDF
                 </button>
               </footer>
             )}
