@@ -54,31 +54,29 @@ export default function Home() {
 
         {/* Sidebar / Tools */}
         <aside className="w-full lg:w-80 flex flex-col gap-4 lg:overflow-y-auto lg:max-h-[calc(100vh-8rem)] pr-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
-          <div className="glass-panel p-5 rounded-2xl flex flex-col gap-4 flex-1">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="bg-white/10 p-2 rounded-lg">
+          <div className="glass-panel p-6 rounded-2xl flex flex-col gap-5">
+            <div className="flex items-center gap-3">
+              <div className="bg-white/10 p-2 rounded-lg flex-shrink-0">
                 <Stethoscope className="w-5 h-5 text-white/70" />
               </div>
-              <h2 className="font-semibold text-white/90">Análise Facial</h2>
+              <h2 className="font-semibold text-white/90 text-base">Análise Facial</h2>
             </div>
 
-            <p className="text-sm text-white/50 leading-relaxed mb-4">
+            <p className="text-sm text-white/50 leading-relaxed">
               Realize o upload de uma foto frontal do paciente para iniciar o processamento local (Zero-Storage).{" "}
               Nenhuma imagem é salva na nuvem.
             </p>
 
-            <FileDropzone onFileSelect={handleFileSelect} className="mt-auto" />
+            <FileDropzone onFileSelect={handleFileSelect} />
 
             {imageFile && (
-              <div className="mt-4 p-3 rounded-xl bg-primary/10 border border-primary/20 animate-in fade-in slide-in-from-bottom-2">
-                <p className="text-[10px] text-primary uppercase font-bold tracking-widest mb-1">Arquivo Selecionado</p>
+              <div className="p-4 rounded-xl bg-primary/10 border border-primary/20 animate-in fade-in slide-in-from-bottom-2">
+                <p className="text-[10px] text-primary uppercase font-bold tracking-widest mb-2">Arquivo Selecionado</p>
                 <p className="text-xs text-white/80 font-medium truncate">{imageFile.name}</p>
-                <p className="text-[10px] text-white/40">{(imageFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                <p className="text-[10px] text-white/40 mt-1">{(imageFile.size / 1024 / 1024).toFixed(2)} MB</p>
               </div>
             )}
           </div>
-
-
         </aside>
 
         {/* Canvas / Preview Area */}
