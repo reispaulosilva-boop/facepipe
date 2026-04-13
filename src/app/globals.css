@@ -72,6 +72,54 @@ body {
   animation: progress-slide 1.5s ease-in-out infinite;
 }
 
+/* ── FileDropzone animations ── */
+
+/* Gentle float for the icon */
+@keyframes dropzone-float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-5px); }
+}
+.animate-dropzone-float {
+  animation: dropzone-float 3s ease-in-out infinite;
+}
+
+/* Concentric ring expand + fade */
+@keyframes dropzone-ring {
+  0%   { transform: scale(0.7); opacity: 0.6; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+.animate-dropzone-ring {
+  animation: dropzone-ring 1.2s ease-out forwards;
+}
+
+/* Particles float upward and fade */
+@keyframes dropzone-particle {
+  0%   { transform: translateY(0px) scale(1);   opacity: 0.6; }
+  80%  { transform: translateY(-28px) scale(1.3); opacity: 0.3; }
+  100% { transform: translateY(-36px) scale(0);  opacity: 0; }
+}
+.animate-dropzone-particle {
+  animation: dropzone-particle var(--duration, 2.4s) ease-in-out infinite;
+}
+
+/* Rotating conic border glow */
+@keyframes dropzone-border-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Scan line sweeps top → bottom */
+@keyframes dropzone-scanline {
+  0%   { top: 8px;  opacity: 0; }
+  15%  { opacity: 1; }
+  85%  { opacity: 1; }
+  100% { top: calc(100% - 8px); opacity: 0; }
+}
+.animate-dropzone-scanline {
+  animation: dropzone-scanline 2s ease-in-out infinite;
+  position: absolute;
+}
+
 /* Diagnostic Report Markdown Styles */
 .markdown-report h1, .markdown-report h2, .markdown-report h3 {
   color: #22d3ee; /* cyan-400 */
