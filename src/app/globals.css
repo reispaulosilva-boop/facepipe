@@ -7,6 +7,10 @@
   --color-primary-glow: rgba(14, 165, 233, 0.4);
   --color-glass-bg: rgba(15, 23, 42, 0.4);
   --color-glass-border: rgba(255, 255, 255, 0.08);
+
+  --font-heading: var(--font-bodoni);
+  --font-ui: var(--font-figtree);
+  --font-body: var(--font-jost);
 }
 
 body {
@@ -98,5 +102,19 @@ body {
 .markdown-report strong {
   color: #fff;
   font-weight: 600;
+}
+
+@layer utilities {
+  .font-heading { font-family: var(--font-heading), serif; }
+  .font-ui { font-family: var(--font-ui), sans-serif; }
+  .font-body { font-family: var(--font-body), sans-serif; }
+
+  .transition-premium {
+    transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .cursor-ptr {
+    cursor: pointer;
+  }
 }
 

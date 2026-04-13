@@ -1,19 +1,17 @@
 "use client";
 
 import React, { useState, useCallback, useRef } from "react";
-import { Toolbox } from "./Toolbox";
+import { Toolbox, ZoomPanel } from "./Toolbox";
 import { LightTable } from "./LightTable";
-import { DiagnosticReport } from "./DiagnosticReport";
 import { useFaceLandmarker } from "@/hooks/useFaceLandmarker";
 import { useFaceStore } from "@/store/useFaceStore";
-import { toPng } from "html-to-image";
-import { buildDiagnosticReportPrompt } from "@/lib/prompts/diagnosticReport";
-import { buildSkinAnalysisPrompt, formatSkinAnalysisMarkdown, SKIN_ANALYSIS_TYPES, type SkinAnalysisResult } from "@/lib/prompts/skinAnalysis";
-import { hashBase64Image } from "@/utils/imageHash";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { ReactZoomPanPinchRef } from "react-zoom-pan-pinch";
 import { cn } from "@/lib/utils";
 import { TopographicAreasPanel } from "./TopographicAreasPanel";
+import { FacialEvaluationPanel } from "./FacialEvaluationPanel";
+import { ScanFace, ArrowLeft, Image as ImageIcon } from "lucide-react";
 
 export function ClinicalWorkspace() {
   const { 
@@ -26,11 +24,6 @@ export function ClinicalWorkspace() {
     setTrichionOverrideY,
     resetTrichion,
     analysisResults,
-    setDiagnosticReport,
-    setIsGeneratingReport,
-    isGeneratingReport,
-    patientGender,
-    patientAge,
     showDistances,
     toggleDistances,
     showDistancesSubmenu,
@@ -54,11 +47,11 @@ export function ClinicalWorkspace() {
     setAnalysisResults,
     showAreasPanel,
     toggleAreasPanel,
-    skinAnalysisResult,
-    setSkinAnalysisResult,
-    activeSkinAnalysis,
-    setActiveSkinAnalysis,
+    showEvaluationPanel,
+    toggleEvaluationPanel,
   } = useFaceStore();
+
+  const router = useRouter();
 
   const [activeTool, setActiveTool] = useState("select");
   const [showLandmarks, setShowLandmarks] = useState(true);
@@ -75,200 +68,67 @@ export function ClinicalWorkspace() {
 
   const [lastAnalyzedFile, setLastAnalyzedFile] = useState<File | null>(null);
 
-  // Load and analyze image
+  // 1. Instant UI update: Convert file to URL for display
   React.useEffect(() => {
-    if (!imageFile || !landmarkerLoaded) return;
-    if (imageFile === lastAnalyzedFile) return;
-
-    const url = URL.createObjectURL(imageFile);
-    setImageUrl(url);
-    
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = async () => {
-      console.log("Analyzing clinical image...");
-      setIsProcessing(true);
-      try {
-        const result = await detectFace(img);
-        if (result && result.faceLandmarks && result.faceLandmarks.length > 0) {
-          console.log(`Success: Found ${result.faceLandmarks[0].length} facial landmarks.`);
-          setLandmarks(result.faceLandmarks[0]);
-          setLastAnalyzedFile(imageFile);
-        } else {
-          console.warn("No face detected in the image.");
-        }
-      } catch (err) {
-        console.error("Clinical analysis failed:", err);
-      } finally {
-        setIsProcessing(false);
-      }
-    };
-    img.src = url;
-
-    return () => URL.revokeObjectURL(url);
-  }, [imageFile, landmarkerLoaded, detectFace, lastAnalyzedFile]);
-
-
-  const compressImage = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = (event) => {
-        const img = new Image();
-        img.src = event.target?.result as string;
-        img.onload = () => {
-          const canvas = document.createElement("canvas");
-          let width = img.width;
-          let height = img.height;
-          
-          // Redimensionar se for maior que 1600px para economizar banda e evitar HTTP 413
-          const MAX_SIZE = 1600;
-          if (width > height) {
-            if (width > MAX_SIZE) {
-              height *= MAX_SIZE / width;
-              width = MAX_SIZE;
-            }
-          } else {
-            if (height > MAX_SIZE) {
-              width *= MAX_SIZE / height;
-              height = MAX_SIZE;
-            }
-          }
-          
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext("2d");
-          ctx?.drawImage(img, 0, 0, width, height);
-          
-          // Exportar como JPEG com 80% de qualidade
-          const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
-          resolve(dataUrl.split(",")[1]);
-        };
-        img.onerror = reject;
-      };
-      reader.onerror = reject;
-    });
-  };
-
-
-  const generateDiagnosticReport = useCallback(async (analysisType: string) => {
-    if (isGeneratingReport) return;
-
-    const captureTarget = document.querySelector('[data-capture="face-table"]') as HTMLElement;
-    if (!captureTarget || !analysisResults.thirds) {
-      alert("Por favor, realize a análise facial primeiro.");
+    if (!imageFile) {
+      setImageUrl(null);
+      setLandmarks([]);
+      setLastAnalyzedFile(null);
       return;
     }
 
-    const isSkinAnalysis = SKIN_ANALYSIS_TYPES.has(analysisType);
+    const url = URL.createObjectURL(imageFile);
+    setImageUrl(url);
+    console.log("Image URL created for instant display.");
 
-    setIsGeneratingReport(true);
-    setDiagnosticReport(null);
-    setSkinAnalysisResult(null);
-    setActiveSkinAnalysis(isSkinAnalysis ? analysisType : null);
+    return () => {
+      URL.revokeObjectURL(url);
+    };
+  }, [imageFile]);
 
-    try {
-      // 1. Resolve image data
-      // • Skin analysis → send the original file (no overlays; better quality for lesion detection)
-      // • Clinical report → capture the annotated canvas (overlays visible to AI)
-      let base64Data: string;
-      let mimeType: string;
+  // 2. Background Analysis: Trigger detection when engine is ready
+  React.useEffect(() => {
+    if (!imageFile || !landmarkerLoaded || !imageUrl) return;
+    if (imageFile === lastAnalyzedFile) return;
 
-      if (isSkinAnalysis) {
-        // Use the source file directly — avoids html-to-image blob-URL serialisation error
-        // and gives the AI a clean, full-resolution image of the skin.
-        base64Data = await compressImage(imageFile!);
-        mimeType = "image/jpeg";
-      } else {
-        const dataUrl = await toPng(captureTarget, {
-          quality: 0.85,
-          pixelRatio: 1.5,
-          cacheBust: true,
-        });
-        if (!dataUrl || !dataUrl.includes(",")) {
-          throw new Error("Falha ao capturar imagem da análise.");
-        }
-        base64Data = dataUrl.split(",")[1];
-        mimeType = "image/png";
-      }
-
-      // 2. SHA-256 hash of the image for Gemini Context Caching
-      let imageHash: string | undefined;
-      try {
-        imageHash = await hashBase64Image(base64Data);
-      } catch {
-        // If hash fails, caching will be skipped; continue normally
-      }
-
-      // 3. Build the appropriate prompt
-      const prompt = isSkinAnalysis
-        ? buildSkinAnalysisPrompt(analysisType)
-        : buildDiagnosticReportPrompt({
-            thirds: analysisResults.thirds!,
-            lipRatio: analysisResults.lipRatio,
-            topographicRegions: analysisResults.topographicRegions ?? [],
-            analysisResults,
-            patientGender,
-            patientAge,
-            analysisType,
-          });
-
-      // 4. Call Gemini API proxy
-      const apiSecret = process.env.NEXT_PUBLIC_API_SECRET;
-      const response = await fetch("/api/gemini", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(apiSecret && { Authorization: `Bearer ${apiSecret}` }),
-        },
-        body: JSON.stringify({
-          prompt,
-          imageParts: [{ inlineData: { mimeType, data: base64Data } }],
-          model: "gemini-2.5-flash",
-          responseFormat: isSkinAnalysis ? "json" : undefined,
-          imageHash,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: "Erro desconhecido no servidor" }));
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      if (!result.text) {
-        throw new Error("A IA não retornou um texto válido.");
-      }
-
-      if (isSkinAnalysis) {
-        // Parse JSON response and split into overlay + text report
-        let parsed: SkinAnalysisResult;
+    let mounted = true;
+    
+    const analyzeImage = async () => {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.src = imageUrl;
+      
+      img.onload = async () => {
+        if (!mounted) return;
+        
+        console.log("Starting background clinical analysis...");
+        setIsProcessing(true);
         try {
-          parsed = JSON.parse(result.text);
-        } catch {
-          throw new Error("A IA retornou JSON inválido. Tente novamente.");
+          const result = await detectFace(img);
+          if (!mounted) return;
+
+          if (result && result.faceLandmarks && result.faceLandmarks.length > 0) {
+            console.log(`AI Success: Found ${result.faceLandmarks[0].length} landmarks.`);
+            setLandmarks(result.faceLandmarks[0]);
+            setLastAnalyzedFile(imageFile);
+          } else {
+            console.warn("AI Detection: No face found in the current buffer.");
+          }
+        } catch (err) {
+          console.error("Clinical analysis engine error:", err);
+        } finally {
+          if (mounted) setIsProcessing(false);
         }
-        setSkinAnalysisResult(parsed);
-        setDiagnosticReport(formatSkinAnalysisMarkdown(parsed, analysisType));
-      } else {
-        setDiagnosticReport(result.text);
-      }
-    } catch (err: any) {
-      console.error("Error generating report:", err);
-      let errorMessage = "Erro desconhecido";
-      if (err instanceof Error) {
-        errorMessage = err.message;
-      } else if (err && typeof err === "object" && err.type) {
-        errorMessage = `Erro de renderização (Event: ${err.type})`;
-      } else {
-        errorMessage = String(err);
-      }
-      alert(`Erro ao gerar análise: ${errorMessage}`);
-    } finally {
-      setIsGeneratingReport(false);
-    }
-  }, [analysisResults, imageFile, isGeneratingReport, patientGender, patientAge,
-      setDiagnosticReport, setIsGeneratingReport, setSkinAnalysisResult, setActiveSkinAnalysis]);
+      };
+    };
+
+    analyzeImage();
+
+    return () => {
+      mounted = false;
+    };
+  }, [imageFile, landmarkerLoaded, detectFace, lastAnalyzedFile, imageUrl]);
+
 
   const [resetKey, setResetKey] = useState(0);
 
@@ -292,10 +152,30 @@ export function ClinicalWorkspace() {
     setZoomPercent(percent);
   }, []);
 
-  if (!imageUrl) return null;
+  if (!imageFile || !imageUrl) {
+    return (
+      <div className="flex flex-col items-center justify-center w-full h-screen bg-[#020617] text-white p-6">
+        <div className="relative mb-8">
+          <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full" />
+          <ImageIcon className="w-20 h-20 text-white/10 relative" />
+        </div>
+        <h2 className="text-2xl font-heading font-semibold mb-2">Nenhuma Foto Ativa</h2>
+        <p className="text-white/40 text-center max-w-sm mb-8">
+          Por questões de privacidade, a análise requer que você selecione a foto novamente ao recarregar o sistema.
+        </p>
+        <button
+          onClick={() => router.push("/")}
+          className="flex items-center gap-2 px-6 py-3 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-premium group"
+        >
+          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+          <span>Voltar para o Início</span>
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex w-full h-screen bg-[#020617] overflow-hidden font-sans text-white">
+    <div className="flex w-full h-screen bg-[#020617] overflow-hidden font-body text-white selection:bg-primary/20">
       <Toolbox 
         showLandmarks={showLandmarks}
         setShowLandmarks={setShowLandmarks}
@@ -323,38 +203,56 @@ export function ClinicalWorkspace() {
         toggleRegionsSubmenu={toggleRegionsSubmenu}
         toggleSpecificRegion={toggleSpecificRegion}
         setAllRegions={setAllRegions}
-        activeRegions={analysisResults.regions}
+        activeRegions={(analysisResults as any).regions}
         trichionOverrideY={trichionOverrideY}
         resetTrichion={resetTrichion}
-        zoomPercent={zoomPercent}
-        setZoomPercent={handleZoomPercentChange}
-        onGenerateReport={generateDiagnosticReport}
-        isGenerating={isGeneratingReport}
         hasLandmarks={landmarks.length > 0}
         showAreasPanel={showAreasPanel}
         toggleAreasPanel={toggleAreasPanel}
+        showEvaluationPanel={showEvaluationPanel}
+        toggleEvaluationPanel={toggleEvaluationPanel}
+      />
+
+      <ZoomPanel 
+        zoomPercent={zoomPercent}
+        setZoomPercent={handleZoomPercentChange}
       />
       
       <main className="flex-1 flex flex-col h-full overflow-hidden">
         {/* Header Branding */}
-        <header className="h-16 flex items-center justify-between px-10 border-b border-white/5 bg-[#000105]/40 backdrop-blur-md z-30">
-          <div className="flex flex-col">
-            <h2 className="text-white/90 font-semibold tracking-tight leading-none mb-1">Análise de Proporções</h2>
-            <div className="flex items-center gap-2">
-              <span className="flex items-center gap-1.5 text-[10px] font-medium px-2 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/20">
-                <div className="w-1 h-1 rounded-full bg-primary animate-pulse" />
-                {isProcessing ? "Processando Geometria..." : "Diagnóstico Pronto"}
-              </span>
-              <span className="text-[10px] text-white/30 font-medium">Ref: 480 Pontos Mapeados</span>
+        <header className="h-16 flex items-center justify-between px-10 border-b border-white/5 bg-[#000105]/60 backdrop-blur-xl z-50 transition-premium">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              <div className="bg-primary/20 p-2 rounded-lg">
+                <ScanFace className="w-6 h-6 text-primary" />
+              </div>
+              <div className="flex flex-col">
+                <h1 className="font-semibold text-lg tracking-tight text-white/90 leading-none">
+                  Facepipe
+                </h1>
+                <p className="text-xs text-white/40 font-medium">Estúdio de Análise Clínica</p>
+              </div>
+            </div>
+
+            <div className="w-px h-8 bg-white/5 mx-2" />
+
+            <div className="flex items-center gap-2 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full">
+              <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.5)] animate-pulse" />
+              <span className="text-[10px] font-ui text-white/30 font-medium tracking-wide">480 Pontos de Alta Precisão</span>
             </div>
           </div>
           
           <div className="flex items-center gap-6">
 
             <div className="flex flex-col items-end">
-              <span className="text-[10px] text-white/40 uppercase font-bold tracking-widest">Status</span>
-              <span className={isProcessing ? "text-amber-500 text-xs font-medium" : "text-emerald-500 text-xs font-medium"}>
-                {isProcessing ? "ANALISANDO TECIDOS..." : "DIAGNÓSTICO PRONTO"}
+              <span className="text-[9px] text-white/40 uppercase font-bold tracking-widest font-ui mb-1">Status de Análise</span>
+              <span className={cn(
+                "text-[10px] font-bold px-3 py-1 rounded-sm border transition-premium",
+                isProcessing 
+                  ? "text-amber-400 bg-amber-400/10 border-amber-400/20" 
+                  : "text-emerald-400 bg-emerald-400/10 border-emerald-400/20"
+              )}>
+                {isProcessing ? "PROCESSANDO TECIDOS..." : "PROCESSAMENTO COMPLETO"}
               </span>
             </div>
           </div>
@@ -375,8 +273,6 @@ export function ClinicalWorkspace() {
           showRegions={showRegions}
           activeRegions={analysisResults.regions}
           showAreasLayer={showAreasPanel}
-          skinAnalysisResult={skinAnalysisResult}
-          activeSkinAnalysis={activeSkinAnalysis}
           trichionOverrideY={trichionOverrideY}
           activeTool={activeTool}
           onTrichionAdjust={setTrichionOverrideY}
@@ -396,8 +292,6 @@ export function ClinicalWorkspace() {
             transition={{ duration: 2, repeat: Infinity }}
           />
         )}
-
-        <DiagnosticReport />
       </main>
 
       {/* Painel de Áreas Topográficas */}
@@ -407,6 +301,18 @@ export function ClinicalWorkspace() {
             areas={analysisResults.topographicAreas}
             pxPerMm={analysisResults.pxPerMm}
             onClose={toggleAreasPanel}
+            className="fixed top-24 bottom-6 right-24 z-40 transition-all duration-500"
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Painel de Avaliação Facial */}
+      <AnimatePresence>
+        {showEvaluationPanel && analysisResults.facialEvaluation && (
+          <FacialEvaluationPanel
+            evaluation={analysisResults.facialEvaluation}
+            onClose={toggleEvaluationPanel}
+            className="fixed top-24 bottom-6 right-24 z-40 transition-all duration-500"
           />
         )}
       </AnimatePresence>

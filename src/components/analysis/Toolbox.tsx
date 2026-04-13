@@ -9,7 +9,6 @@ import {
   AlignVerticalDistributeCenter,
   AlignHorizontalDistributeCenter,
   RotateCcw,
-  Sparkles,
   Target,
   Ruler,
   Lock,
@@ -22,7 +21,7 @@ interface ToolButtonProps {
   icon: React.ReactNode;
   label: string;
   active?: boolean;
-  onClick: () => void;
+  onClick: (e: React.MouseEvent) => void;
   colorScheme?: "cyan" | "amber";
 }
 
@@ -34,18 +33,23 @@ function ToolButton({ icon, label, active, onClick, colorScheme = "cyan" }: Tool
 
   return (
     <motion.button
+      type="button"
       whileHover={{ scale: 1.05, x: 2 }}
       whileTap={{ scale: 0.95 }}
-      onClick={onClick}
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onClick(e);
+      }}
       className={cn(
-        "group relative flex items-center justify-center w-10 h-10 rounded-lg transition-all duration-300",
-        "bg-white/5 border border-white/10 hover:border-white/20",
+        "group relative flex items-center justify-center w-10 min-w-[40px] h-10 rounded-lg transition-premium",
+        "bg-white/5 border border-white/10 hover:border-white/20 select-none",
         active && activeStyles[colorScheme]
       )}
       title={label}
     >
       {icon}
-      <div className="absolute left-14 px-2 py-1 rounded bg-black/80 border border-white/10 text-white/70 text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity font-medium tracking-wide z-50">
+      <div className="absolute left-14 px-2 py-1 rounded bg-black/90 border border-white/15 text-white/80 text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-premium font-ui font-semibold tracking-wide z-50 shadow-2xl backdrop-blur-md">
         {label}
       </div>
     </motion.button>
@@ -82,27 +86,13 @@ interface ToolboxProps {
   activeRegions: any;
   trichionOverrideY: number | null;
   resetTrichion: () => void;
-  zoomPercent: number;
-  setZoomPercent: (percent: number) => void;
-  onGenerateReport: (type: string) => void;
-  isGenerating?: boolean;
-  hasLandmarks?: boolean;
   showAreasPanel: boolean;
   toggleAreasPanel: () => void;
+  showEvaluationPanel: boolean;
+  toggleEvaluationPanel: () => void;
 }
 
-const AI_ANALYSIS_OPTIONS = [
-  { id: "acne",        label: "Acne",             icon: "🔴" },
-  { id: "melasma",     label: "Melasma",           icon: "🟤" },
-  { id: "poros",       label: "Poros",             icon: "🔬" },
-  { id: "oleosidade",  label: "Oleosidade",        icon: "💧" },
-  { id: "vermelhidao", label: "Vermelhidão",       icon: "🌡️" },
-  { id: "rugas",       label: "Rugas e Linhas",    icon: "〰️" },
-  { id: "flacidez",    label: "Flacidez",          icon: "📉" },
-] as const;
-
 export function Toolbox(props: ToolboxProps) {
-  const [showAISubmenu, setShowAISubmenu] = useState(false);
   const {
     showLandmarks,
     setShowLandmarks,
@@ -133,21 +123,19 @@ export function Toolbox(props: ToolboxProps) {
     activeRegions,
     trichionOverrideY,
     resetTrichion,
-    zoomPercent,
-    setZoomPercent,
-    onGenerateReport,
-    isGenerating,
-    hasLandmarks,
     showAreasPanel,
     toggleAreasPanel,
+    showEvaluationPanel,
+    toggleEvaluationPanel,
   } = props;
 
   return (
-    <motion.aside 
-      initial={{ x: -20, opacity: 0 }}
+    <motion.div
+      initial={{ x: -100, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
-      className="fixed left-4 top-[calc(50%+32px)] -translate-y-1/2 flex flex-col gap-3 p-2 rounded-xl bg-[#030712]/60 backdrop-blur-xl border border-white/5 z-50 shadow-2xl"
+      className="fixed left-6 top-24 bottom-6 w-14 hover:w-64 flex flex-col gap-3 p-2 rounded-2xl bg-[#000105]/40 backdrop-blur-2xl border border-white/5 z-50 transition-all duration-500 ease-out group/sidebar overflow-y-auto scrollbar-none"
     >
+      <div className="flex flex-col gap-3 min-h-full">
       {/* Visual State — Landmarks */}
       <div className="flex flex-col gap-1.5">
         <ToolButton 
@@ -164,7 +152,7 @@ export function Toolbox(props: ToolboxProps) {
       {/* Analysis toggles */}
       <div className="flex flex-col gap-1.5">
         {/* Section label */}
-        <span className="text-[8px] font-bold text-white/20 uppercase tracking-[0.2em] text-center select-none mb-0.5">
+        <span className="text-[8px] font-bold text-white/20 uppercase tracking-[0.2em] text-left pl-2 select-none mb-0.5">
           Capas
         </span>
 
@@ -234,12 +222,12 @@ export function Toolbox(props: ToolboxProps) {
                 initial={{ opacity: 0, x: -10, scale: 0.95 }}
                 animate={{ opacity: 1, x: 0, scale: 1 }}
                 exit={{ opacity: 0, x: -10, scale: 0.95 }}
-                className="absolute left-14 top-0 min-w-[180px] p-2 rounded-xl bg-[#030712]/90 backdrop-blur-2xl border border-white/10 shadow-2xl flex flex-col gap-1 z-[60]"
+                className="absolute left-15 top-0 min-w-[200px] p-2.5 rounded-2xl bg-[#030712]/95 backdrop-blur-3xl border border-white/15 shadow-[0_20px_50px_rgba(0,0,0,0.4)] flex flex-col gap-1 z-[60]"
               >
-                <div className="px-2 py-1.5 border-b border-white/5 mb-1">
-                  <span className="text-[9px] font-bold text-amber-500 uppercase tracking-widest flex items-center gap-2">
-                    <div className="w-1 h-1 rounded-full bg-amber-500" />
-                    DISTÂNCIAS HORIZONTAIS
+                <div className="px-2 py-1.5 border-b border-white/10 mb-1.5">
+                  <span className="text-[10px] font-ui font-black text-amber-500 uppercase tracking-[0.2em] flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
+                    Distâncias Faciais
                   </span>
                 </div>
                 
@@ -251,7 +239,11 @@ export function Toolbox(props: ToolboxProps) {
                 ].map((dist) => (
                   <button
                     key={dist.id}
-                    onClick={dist.toggle}
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      dist.toggle();
+                    }}
                     className={cn(
                       "w-full flex items-center justify-between px-3 py-2 rounded-lg transition-all text-xs group",
                       dist.active ? "bg-white/10 text-white" : "hover:bg-white/5 text-white/60 hover:text-white"
@@ -318,12 +310,12 @@ export function Toolbox(props: ToolboxProps) {
                 initial={{ opacity: 0, x: -10, scale: 0.95 }}
                 animate={{ opacity: 1, x: 0, scale: 1 }}
                 exit={{ opacity: 0, x: -10, scale: 0.95 }}
-                className="absolute left-14 top-0 min-w-[200px] p-2 rounded-xl bg-[#030712]/90 backdrop-blur-2xl border border-white/10 shadow-2xl flex flex-col gap-1 z-[60]"
+                className="absolute left-15 top-0 min-w-[220px] p-2.5 rounded-2xl bg-[#030712]/95 backdrop-blur-3xl border border-white/15 shadow-[0_20px_50px_rgba(0,0,0,0.4)] flex flex-col gap-1 z-[60]"
               >
-                <div className="px-2 py-1.5 border-b border-white/5 mb-1">
-                  <span className="text-[9px] font-bold text-amber-500 uppercase tracking-widest flex items-center gap-2">
-                    <div className="w-1 h-1 rounded-full bg-amber-500" />
-                    Mapeamento de Regiões
+                <div className="px-2 py-1.5 border-b border-white/10 mb-1.5">
+                  <span className="text-[10px] font-ui font-black text-amber-500 uppercase tracking-[0.2em] flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
+                    Regiões Anatômicas
                   </span>
                 </div>
 
@@ -441,7 +433,7 @@ export function Toolbox(props: ToolboxProps) {
       <div className="h-px bg-white/5 mx-1" />
 
       {/* Áreas Topográficas */}
-      <div className="flex flex-col items-center gap-1">
+      <div className="flex flex-col items-start gap-1">
         <ToolButton
           icon={<PieChart className="w-4 h-4" />}
           label="Áreas Topográficas"
@@ -449,86 +441,28 @@ export function Toolbox(props: ToolboxProps) {
           onClick={toggleAreasPanel}
           colorScheme="cyan"
         />
-        <span className="text-[7px] font-bold text-white/20 uppercase tracking-[0.12em] select-none">
+        <span className="text-[7px] font-bold text-white/20 uppercase tracking-[0.12em] text-left pl-2 select-none">
           Áreas
         </span>
       </div>
 
       <div className="h-px bg-white/5 mx-1" />
 
-      {/* Análise por IA */}
-      <div className="flex flex-col items-center gap-1 relative">
-        <motion.button
-          whileHover={hasLandmarks && !isGenerating ? { scale: 1.05, x: 2 } : {}}
-          whileTap={hasLandmarks && !isGenerating ? { scale: 0.95 } : {}}
-          onClick={() => hasLandmarks && !isGenerating && setShowAISubmenu(v => !v)}
-          disabled={!hasLandmarks || isGenerating}
-          className={cn(
-            "group relative flex items-center justify-center w-10 h-10 rounded-lg transition-all duration-300",
-            showAISubmenu
-              ? "bg-primary/30 border border-primary/60 text-sky-300 shadow-[0_0_20px_rgba(14,165,233,0.2)]"
-              : hasLandmarks && !isGenerating
-              ? "bg-primary/20 border border-primary/50 text-sky-400 shadow-[0_0_20px_rgba(14,165,233,0.15)] cursor-pointer"
-              : "bg-white/5 border border-white/10 text-white/20 cursor-not-allowed"
-          )}
-          title={
-            !hasLandmarks
-              ? "Realize a análise facial primeiro"
-              : isGenerating
-              ? "Analisando com IA..."
-              : "Análise por IA"
-          }
-        >
-          {isGenerating ? (
-            <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}>
-              <Sparkles className="w-4 h-4 text-primary" />
-            </motion.div>
-          ) : (
-            <Sparkles className="w-4 h-4" />
-          )}
-          {!showAISubmenu && (
-            <div className="absolute left-14 px-2 py-1 rounded bg-black/80 border border-white/10 text-white/70 text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity font-medium tracking-wide z-50">
-              {!hasLandmarks ? "Análise facial necessária" : isGenerating ? "Analisando..." : "Análise por IA"}
-            </div>
-          )}
-        </motion.button>
-        <span className="text-[7px] font-bold text-white/20 uppercase tracking-[0.15em] select-none">
-          IA
+      {/* Avaliação Facial (Proporção) */}
+      <div className="flex flex-col items-start gap-1">
+        <ToolButton
+          icon={<Target className={cn("w-4 h-4", showEvaluationPanel && "text-amber-400")} />}
+          label="Avaliação Estética"
+          active={showEvaluationPanel}
+          onClick={toggleEvaluationPanel}
+          colorScheme="amber"
+        />
+        <span className="text-[7px] font-bold text-white/20 uppercase tracking-[0.12em] text-left pl-2 select-none">
+          Score
         </span>
-
-        {/* Submenu de tipos de análise */}
-        <AnimatePresence>
-          {showAISubmenu && (
-            <motion.div
-              initial={{ opacity: 0, x: -10, scale: 0.95 }}
-              animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={{ opacity: 0, x: -10, scale: 0.95 }}
-              className="absolute left-14 top-0 min-w-[200px] p-2 rounded-xl bg-[#030712]/90 backdrop-blur-2xl border border-white/10 shadow-2xl flex flex-col gap-1 z-[60]"
-            >
-              <div className="px-2 py-1.5 border-b border-white/5 mb-1">
-                <span className="text-[9px] font-bold text-sky-400 uppercase tracking-widest flex items-center gap-2">
-                  <Sparkles className="w-3 h-3" />
-                  ANÁLISE POR IA
-                </span>
-              </div>
-
-              {AI_ANALYSIS_OPTIONS.map((opt) => (
-                <button
-                  key={opt.id}
-                  onClick={() => {
-                    setShowAISubmenu(false);
-                    onGenerateReport(opt.id);
-                  }}
-                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-xs hover:bg-white/8 text-white/60 hover:text-white group"
-                >
-                  <span className="text-base leading-none">{opt.icon}</span>
-                  <span className="font-medium">{opt.label}</span>
-                </button>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
+
+      <div className="h-px bg-white/5 mx-1" />
 
       <div className="h-px bg-white/5 mx-1" />
 
@@ -536,14 +470,18 @@ export function Toolbox(props: ToolboxProps) {
       {trichionOverrideY != null && (
         <>
           <div className="h-px bg-white/5 mx-1" />
-          <div className="flex flex-col items-center gap-1.5 py-1 px-1">
+          <div className="flex flex-col items-start gap-1.5 py-1 px-1">
             <motion.button
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
               whileHover={{ scale: 1.05, x: 2 }}
               whileTap={{ scale: 0.95 }}
-              onClick={resetTrichion}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                resetTrichion();
+              }}
               className="group relative flex items-center justify-center w-10 h-10 rounded-lg transition-all duration-300 bg-green-500/20 border border-green-500/50 text-green-400 shadow-[0_0_20px_rgba(74,222,128,0.15)]"
               title="Resetar Trichion"
             >
@@ -555,23 +493,41 @@ export function Toolbox(props: ToolboxProps) {
           </div>
         </>
       )}
+      </div>
+    </motion.div>
+  );
+}
 
-      <div className="h-px bg-white/5 mx-1" />
+interface ZoomPanelProps {
+  zoomPercent: number;
+  setZoomPercent: (percent: number) => void;
+}
 
+export function ZoomPanel({ zoomPercent, setZoomPercent }: ZoomPanelProps) {
+  return (
+    <motion.div
+      initial={{ x: 100, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      className="fixed right-6 top-24 bottom-6 w-14 flex flex-col items-center justify-center p-2 rounded-2xl bg-[#000105]/40 backdrop-blur-2xl border border-white/5 z-50 transition-premium"
+    >
       {/* Zoom Precise Controls Column */}
-      <div className="flex flex-col items-center gap-2 py-1.5 px-1 rounded-lg bg-white/5 border border-white/5">
+      <div className="flex flex-col items-center gap-2 py-4 px-1 rounded-2xl bg-white/5 border border-white/5 w-full">
         <button 
-          onClick={() => setZoomPercent(zoomPercent + 25)}
-          className="p-1.5 hover:text-primary text-white/30 transition-all hover:scale-110 active:scale-90"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setZoomPercent(zoomPercent + 25);
+          }}
+          className="p-1.5 hover:text-primary text-white/40 transition-all hover:scale-110 active:scale-90"
           title="Aumentar"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-5 h-5" />
         </button>
         
-        <div className="relative h-28 w-1 bg-white/10 rounded-full overflow-hidden flex flex-col justify-end">
+        <div className="relative h-48 w-1.5 bg-white/10 rounded-full overflow-hidden flex flex-col justify-end">
           <motion.div 
             animate={{ height: `${Math.min(zoomPercent / 5, 100)}%` }}
-            className="w-full bg-primary shadow-[0_0_10px_rgba(14,165,233,0.4)]" 
+            className="w-full bg-primary shadow-[0_0_15px_rgba(14,165,233,0.5)]" 
           />
           <input 
             type="range"
@@ -585,23 +541,33 @@ export function Toolbox(props: ToolboxProps) {
         </div>
 
         <button 
-           onClick={() => setZoomPercent(zoomPercent - 25)}
-           className="p-1.5 hover:text-primary text-white/30 transition-all hover:scale-110 active:scale-90"
+           onClick={(e) => {
+             e.preventDefault();
+             e.stopPropagation();
+             setZoomPercent(zoomPercent - 25);
+           }}
+           className="p-1.5 hover:text-primary text-white/40 transition-all hover:scale-110 active:scale-90"
            title="Diminuir"
         >
-          <Minus className="w-4 h-4" />
+          <Minus className="w-5 h-5" />
         </button>
 
-        <div className="flex flex-col gap-1 mt-0.5">
-          {[100, 200].map(p => (
+        <div className="h-px bg-white/10 w-8 my-2" />
+
+        <div className="flex flex-col gap-2">
+          {[100, 200, 400].map(p => (
             <button
               key={p}
-              onClick={() => setZoomPercent(p)}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setZoomPercent(p);
+              }}
               className={cn(
-                "text-[8px] font-bold px-1.5 py-0.5 rounded transition-all",
+                "text-[9px] font-bold px-2 py-1 rounded-lg transition-all",
                 zoomPercent >= p - 5 && zoomPercent <= p + 5 
-                  ? "bg-primary text-black" 
-                  : "text-white/20 hover:text-white/50 hover:bg-white/5"
+                  ? "bg-primary text-black shadow-[0_0_15px_rgba(14,165,233,0.4)]" 
+                  : "text-white/40 hover:text-white/60 hover:bg-white/5"
               )}
             >
               {p}%
@@ -609,6 +575,6 @@ export function Toolbox(props: ToolboxProps) {
           ))}
         </div>
       </div>
-    </motion.aside>
+    </motion.div>
   );
 }

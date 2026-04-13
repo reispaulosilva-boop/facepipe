@@ -24,9 +24,10 @@ interface Props {
   areas: TopographicAreaResult[];
   pxPerMm: number | null;
   onClose: () => void;
+  className?: string;
 }
 
-export function TopographicAreasPanel({ areas, pxPerMm, onClose }: Props) {
+export function TopographicAreasPanel({ areas, pxPerMm, onClose, className }: Props) {
   const calibrated = (pxPerMm ?? 0) > 0;
 
   const totalPx2  = useMemo(() => areas.reduce((s, r) => s + r.areaPx2, 0),  [areas]);
@@ -48,19 +49,19 @@ export function TopographicAreasPanel({ areas, pxPerMm, onClose }: Props) {
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 24 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
-      className="fixed right-4 top-[72px] bottom-4 w-[300px] flex flex-col rounded-xl bg-[#030712]/85 backdrop-blur-2xl border border-white/8 shadow-2xl z-40 overflow-hidden"
+      className={cn(
+        "w-[300px] flex flex-col rounded-2xl bg-[#030712]/85 backdrop-blur-2xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-40 overflow-hidden transition-all duration-500",
+        className
+      )}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/6 shrink-0">
-        <div className="flex items-center gap-2">
-          <Sigma className="w-3.5 h-3.5 text-amber-400" />
-          <span className="text-[10px] font-bold text-white/70 uppercase tracking-[0.2em]">
-            Áreas Topográficas
-          </span>
+      <div className="flex items-center justify-between px-5 py-4 border-b border-white/5 shrink-0 bg-white/5 transition-premium">
+        <div className="flex items-center gap-2.5">
+          <Sigma className="w-4 h-4 text-emerald-400" />
+          <h3 className="text-sm font-heading text-white/90 tracking-tight">Análise Volumétrica</h3>
         </div>
         <button
           onClick={onClose}
-          className="p-1 rounded hover:bg-white/10 text-white/30 hover:text-white/70 transition-colors"
+          className="p-1.5 rounded-full hover:bg-white/10 text-white/30 hover:text-white/70 transition-premium cursor-ptr"
         >
           <X className="w-3.5 h-3.5" />
         </button>

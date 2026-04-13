@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import { ThirdsResult, FifthsResult, LipRatioResult, TopographicRegion, DistanceMeasurement, TopographicAreaResult } from "@/utils/facialAnalysis";
-import type { SkinAnalysisResult } from "@/lib/prompts/skinAnalysis";
 
 export type PatientGender = "Feminino" | "Masculino" | "Outro";
 
@@ -18,6 +17,7 @@ export interface AnalysisResults {
   bitemporal: DistanceMeasurement | null;
   mentonian: DistanceMeasurement | null;
   topographicAreas: TopographicAreaResult[] | null;
+  facialEvaluation: import("@/types/facial-evaluation").FaceEvaluationResult | null;
   regions: {
     frontal: boolean;
     temporal_r: boolean;
@@ -91,33 +91,11 @@ interface FaceStore {
   setAnalysisResults: (results: Partial<AnalysisResults>) => void;
   clearAnalysisResults: () => void;
 
-  // AI Diagnostic Report
-  diagnosticReport: string | null;
-  isGeneratingReport: boolean;
-  setDiagnosticReport: (report: string | null) => void;
-  setIsGeneratingReport: (v: boolean) => void;
-
-  // Patient Info
-  patientGender: PatientGender;
-  patientAge: number | null;
-  setPatientInfo: (info: { gender?: PatientGender; age?: number | null }) => void;
-
-  // Skin Quality Analysis State
-  activeSkinAnalysis: string | null;
-  setActiveSkinAnalysis: (v: string | null) => void;
-  showSkinAnalysisSubmenu: boolean;
-  setShowSkinAnalysisSubmenu: (v: boolean) => void;
-  toggleSkinAnalysisSubmenu: () => void;
-
-  isAnalyzingSkin: boolean;
-  setIsAnalyzingSkin: (v: boolean) => void;
-
-  skinAnalysisResult: SkinAnalysisResult | null;
-  setSkinAnalysisResult: (v: SkinAnalysisResult | null) => void;
-
   // Painel de Áreas Topográficas
   showAreasPanel: boolean;
   toggleAreasPanel: () => void;
+  showEvaluationPanel: boolean;
+  toggleEvaluationPanel: () => void;
 }
 
 const defaultAnalysisResults: AnalysisResults = {
@@ -134,6 +112,7 @@ const defaultAnalysisResults: AnalysisResults = {
   bitemporal: null,
   mentonian: null,
   topographicAreas: null,
+  facialEvaluation: null,
   regions: {
     frontal: false,
     temporal_r: false,
@@ -161,7 +140,11 @@ export const useFaceStore = create<FaceStore>((set) => ({
   imageFile: null,
   setImageFile: (file) => set({ imageFile: file }),
   clearImageFile: () =>
-    set({ imageFile: null, analysisResults: defaultAnalysisResults, trichionOverrideY: null }),
+    set({ 
+      imageFile: null, 
+      analysisResults: defaultAnalysisResults, 
+      trichionOverrideY: null,
+    }),
 
   showThirds: false,
   setShowThirds: (v) => set({ showThirds: v }),
@@ -231,31 +214,8 @@ export const useFaceStore = create<FaceStore>((set) => ({
   clearAnalysisResults: () =>
     set({ analysisResults: defaultAnalysisResults }),
 
-  diagnosticReport: null,
-  isGeneratingReport: false,
-  setDiagnosticReport: (report) => set({ diagnosticReport: report }),
-  setIsGeneratingReport: (v) => set({ isGeneratingReport: v }),
-
-  patientGender: "Feminino",
-  patientAge: null,
-  setPatientInfo: (info) => set((s) => ({
-    patientGender: info.gender ?? s.patientGender,
-    patientAge: info.age !== undefined ? info.age : s.patientAge,
-  })),
-
-  // Skin Quality Analysis State
-  activeSkinAnalysis: null,
-  setActiveSkinAnalysis: (v) => set({ activeSkinAnalysis: v }),
-  showSkinAnalysisSubmenu: false,
-  setShowSkinAnalysisSubmenu: (v) => set({ showSkinAnalysisSubmenu: v }),
-  toggleSkinAnalysisSubmenu: () => set((s) => ({ showSkinAnalysisSubmenu: !s.showSkinAnalysisSubmenu })),
-
-  isAnalyzingSkin: false,
-  setIsAnalyzingSkin: (v) => set({ isAnalyzingSkin: v }),
-
-  skinAnalysisResult: null,
-  setSkinAnalysisResult: (v) => set({ skinAnalysisResult: v }),
-
   showAreasPanel: false,
   toggleAreasPanel: () => set((s) => ({ showAreasPanel: !s.showAreasPanel })),
+  showEvaluationPanel: false,
+  toggleEvaluationPanel: () => set((s) => ({ showEvaluationPanel: !s.showEvaluationPanel })),
 }));

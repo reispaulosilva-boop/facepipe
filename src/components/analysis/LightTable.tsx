@@ -10,6 +10,7 @@ import {
   getTopographicRegions, calcTopographicAreas,
   ThirdsResult, FifthsResult, LipRatioResult, Landmark,
 } from "@/utils/facialAnalysis";
+import { extractEvaluationFeatures, evaluateFace, DEFAULT_TARGET_VECTOR } from "@/lib/facial-evaluation";
 import { useFaceStore } from "@/store/useFaceStore";
 
 import { LandmarksLayer }           from "./layers/LandmarksLayer";
@@ -19,9 +20,7 @@ import { FifthsLayer }               from "./layers/FifthsLayer";
 import { LipRatioLayer }             from "./layers/LipRatioLayer";
 import { TopographicRegionsLayer }   from "./layers/TopographicRegionsLayer";
 import { TopographicAreasLayer }     from "./layers/TopographicAreasLayer";
-import { SkinAnalysisOverlay }       from "./layers/SkinAnalysisOverlay";
 import { DistancesLayer }            from "./layers/DistancesLayer";
-import type { SkinAnalysisResult }   from "@/lib/prompts/skinAnalysis";
 
 interface LightTableProps {
   imageUrl: string;
@@ -44,8 +43,6 @@ interface LightTableProps {
   onLandmarksLoad?:    (count: number) => void;
   onZoomChange?:       (zoom: number, baseScale: number) => void;
   showAreasLayer?:     boolean;
-  skinAnalysisResult?: SkinAnalysisResult | null;
-  activeSkinAnalysis?: string | null;
   resetKey?:           number;
   transformRef?:       React.RefObject<ReactZoomPanPinchRef | null>;
   activeTool?:         string;
@@ -58,7 +55,6 @@ export function LightTable({
   showMentonian = false, showFacialShape = false,
   showRegions = false, activeRegions = {},
   showAreasLayer = false,
-  skinAnalysisResult = null, activeSkinAnalysis = null,
   trichionOverrideY, onTrichionAdjust, analysisResults, onLandmarksDetected,
   onLandmarksLoad, onZoomChange,
   resetKey = 0, transformRef, activeTool = "select",
@@ -143,6 +139,13 @@ export function LightTable({
     return calcTopographicAreas(landmarks, dimensions.width, dimensions.height, pxPerMm);
   }, [landmarks, dimensions, thirdsData]);
 
+  const facialEvaluation = useMemo(() => {
+    if (!landmarks.length || !dimensions.width) return null;
+    const features = extractEvaluationFeatures(landmarks, dimensions.width, dimensions.height);
+    if (!features) return null;
+    return evaluateFace(features);
+  }, [landmarks, dimensions]);
+
   useEffect(() => {
     if (landmarks.length > 0 && dimensions.width > 0) {
       setAnalysisResults({
@@ -152,9 +155,10 @@ export function LightTable({
         morphology, bizygomatic: bizygomaticData, bigonial: bigonialData,
         bitemporal: bitemporalData, mentonian: mentonianData,
         topographicAreas,
+        facialEvaluation,
       });
     }
-  }, [landmarks, dimensions, thirdsData, fifthsData, lipRatioData, topographicRegions, bizygomaticData, bigonialData, bitemporalData, mentonianData, topographicAreas, setAnalysisResults]);
+  }, [landmarks, dimensions, thirdsData, fifthsData, lipRatioData, topographicRegions, bizygomaticData, bigonialData, bitemporalData, mentonianData, topographicAreas, facialEvaluation, setAnalysisResults]);
 
   const showAnyDistance = showBitemporal || showBizygomatic || showBigonial || showMentonian || showFacialShape;
   const showAnyRegion   = showRegions || Object.values(activeRegions).some(Boolean);
@@ -225,18 +229,6 @@ export function LightTable({
                   )}
                 </AnimatePresence>
 
-                <AnimatePresence>
-                  {skinAnalysisResult && activeSkinAnalysis && (
-                    <SkinAnalysisOverlay
-                      key={`skin-${activeSkinAnalysis}`}
-                      result={skinAnalysisResult}
-                      dimensions={dimensions}
-                      analysisType={activeSkinAnalysis}
-                      landmarks={landmarks}
-                    />
-                  )}
-                </AnimatePresence>
-
                 <AnimatePresence mode="wait">
                   {showThirds && thirdsData && (
                     <motion.g key="thirds" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4, ease: "easeInOut" }}>
@@ -269,22 +261,24 @@ export function LightTable({
 
       <AnimatePresence>
         {!isLoaded && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-[#000105] flex flex-col items-center justify-center z-50 px-8">
-            <div className="relative w-full max-w-xs h-[1px] bg-white/5 overflow-hidden rounded-full mt-4">
-              <motion.div initial={{ x: "-100%" }} animate={{ x: "100%" }} transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }} className="absolute inset-0 blur-[1px]" style={{ backgroundColor: "rgba(6, 182, 212, 0.6)" }} />
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-[#000105] flex flex-col items-center justify-center z-50 px-8 transition-premium">
+            <div className="relative w-full max-w-xs h-[2px] bg-white/5 overflow-hidden rounded-full mt-4">
+              <motion.div initial={{ x: "-100%" }} animate={{ x: "100%" }} transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }} className="absolute inset-0 blur-[2px] bg-cyan-500/80 shadow-[0_0_15px_rgba(6,182,212,0.5)]" />
             </div>
-            <span className="mt-6 text-[9px] font-bold text-white/30 tracking-[0.6em] uppercase">Securing Neural Gateway</span>
+            <span className="mt-8 text-[10px] font-ui font-black text-white/20 tracking-[0.6em] uppercase animate-pulse">
+              Securing Neural Gateway
+            </span>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <div className="absolute bottom-10 right-10 pointer-events-none hidden lg:flex flex-col items-end gap-1.5 opacity-40">
+      <div className="absolute bottom-10 right-10 pointer-events-none hidden lg:flex flex-col items-end gap-1.5 opacity-60 transition-premium">
         <div className="flex items-center gap-3">
-          <span className="text-[8px] font-mono uppercase" style={{ color: "rgba(34, 211, 238, 0.6)" }}>System Ready</span>
-          <div className="w-1.5 h-1.5 rounded-full shadow-[0_0_8px_#06b6d4]" style={{ backgroundColor: "#06b6d4" }} />
+          <span className="text-[9px] font-ui font-bold uppercase tracking-widest text-cyan-400/80">System Online</span>
+          <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_10px_rgba(34,211,238,0.6)]" />
         </div>
-        <span className="text-[8px] font-mono text-white/40 uppercase">Mode: CLINICAL_MESH_V3</span>
-        <span className="text-[8px] font-mono text-white/40 uppercase">Res: {dimensions.width}x{dimensions.height}</span>
+        <span className="text-[8px] font-mono text-white/30 uppercase tracking-widest">Mode: CLINICAL_MESH_V3</span>
+        <span className="text-[8px] font-mono text-white/30 uppercase">Res: {dimensions.width}x{dimensions.height} px</span>
       </div>
     </div>
   );
