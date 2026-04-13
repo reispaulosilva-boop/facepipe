@@ -146,6 +146,7 @@ export function extractEvaluationFeatures(
 export function evaluateFace(
   features: EvaluationFeatures,
   target: EvaluationFeatures = DEFAULT_TARGET_VECTOR,
+  targetName: string = "Miss Universe 2023",
   version: string = "mu-2023-v1"
 ): FaceEvaluationResult {
   let sqSum = 0;
@@ -162,8 +163,10 @@ export function evaluateFace(
     const normDev = (observed - targetVal) / tol;
     breakdown[key] = {
       observed,
+      actual: observed,
       target: targetVal,
       deviationUnits: normDev,
+      deviation: normDev,
       weight
     };
     
@@ -178,6 +181,7 @@ export function evaluateFace(
     score,
     distance,
     vectorVersion: version,
+    target_name: targetName,
     breakdown
   };
 }

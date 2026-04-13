@@ -1,9 +1,11 @@
 import { Landmark } from "@/utils/facialAnalysis";
 
 export interface FeatureBreakdown {
-  observed: number;
+  observed: number;   // Alias for actual
+  actual: number;     // Alias for observed
   target: number;
-  deviationUnits: number; // norm_dev in Python
+  deviationUnits: number; // Error units (normalized)
+  deviation: number;      // Alias for deviationUnits
   weight: number;
 }
 
@@ -11,6 +13,7 @@ export interface FaceEvaluationResult {
   score: number;
   distance: number;
   vectorVersion: string;
+  target_name: string;
   breakdown: Record<string, FeatureBreakdown>;
 }
 
