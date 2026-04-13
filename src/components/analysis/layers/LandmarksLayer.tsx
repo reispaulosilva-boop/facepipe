@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import React, { memo, useId } from "react";
 import { FaceLandmarker } from "@mediapipe/tasks-vision";
 import { Landmark } from "@/utils/facialAnalysis";
 
@@ -7,12 +7,19 @@ interface Props {
   dimensions: { width: number; height: number };
 }
 
+// Approximate path length used for stroke-dasharray draw-on effect.
+// Using a large-enough value ensures the dash covers the whole path.
+const MESH_DASH = 8000;
+const CONTOUR_DASH = 3000;
+
 export const LandmarksLayer = memo(function LandmarksLayer({ landmarks, dimensions }: Props) {
   if (!landmarks.length || !dimensions.width) return null;
 
   const { width: W, height: H } = dimensions;
   const CYAN = "#00fbcc";
+  const clipId = useId();
 
+  // Build mesh path
   let meshPath = "";
   for (const c of FaceLandmarker.FACE_LANDMARKS_TESSELATION) {
     const from = landmarks[c.start];
@@ -22,30 +29,112 @@ export const LandmarksLayer = memo(function LandmarksLayer({ landmarks, dimensio
     }
   }
 
+  // Build contours paths per set so each draws independently
   const contourSets = [
     FaceLandmarker.FACE_LANDMARKS_FACE_OVAL,
     FaceLandmarker.FACE_LANDMARKS_LEFT_EYE,
     FaceLandmarker.FACE_LANDMARKS_RIGHT_EYE,
     FaceLandmarker.FACE_LANDMARKS_LIPS,
   ];
-  let contoursPath = "";
-  for (const contour of contourSets) {
+
+  const contourPaths: string[] = contourSets.map((contour) => {
+    let d = "";
     for (const c of contour) {
       const from = landmarks[c.start];
       const to   = landmarks[c.end];
       if (from && to) {
-        contoursPath += `M ${from.x * W} ${from.y * H} L ${to.x * W} ${to.y * H} `;
+        d += `M ${from.x * W} ${from.y * H} L ${to.x * W} ${to.y * H} `;
       }
     }
-  }
+    return d;
+  });
+
+  // Sub-sample landmarks for cascaded dot animation (every 4th to keep it fast)
+  const sampledLandmarks = landmarks.filter((_, i) => i % 4 === 0);
 
   return (
     <g className="biometric-mesh-layer">
-      <path d={meshPath}    stroke={CYAN} strokeWidth="2.5"  fill="none" style={{ opacity: 0.12 }} />
-      <path d={contoursPath} stroke={CYAN} strokeWidth="6.25" fill="none" style={{ opacity: 0.60 }} />
-      {landmarks.map((pt, i) => (
-        <circle key={i} cx={pt.x * W} cy={pt.y * H} r="4.5" fill={CYAN} style={{ opacity: 0.8 }} />
+      {/* Mesh: drawn on over ~1.2s */}
+      <path
+        d={meshPath}
+        stroke={CYAN}
+        strokeWidth="2.5"
+        fill="none"
+        strokeDasharray={MESH_DASH}
+        strokeDashoffset={MESH_DASH}
+        style={{ opacity: 0.12 }}
+      >
+        <animate
+          attributeName="stroke-dashoffset"
+          from={MESH_DASH}
+          to={0}
+          dur="1.2s"
+          begin="0s"
+          fill="freeze"
+          calcMode="spline"
+          keySplines="0.4 0 0.2 1"
+        />
+      </path>
+
+      {/* Contours: each drawn sequentially with a delay */}
+      {contourPaths.map((d, i) => (
+        <path
+          key={i}
+          d={d}
+          stroke={CYAN}
+          strokeWidth="6.25"
+          fill="none"
+          strokeDasharray={CONTOUR_DASH}
+          strokeDashoffset={CONTOUR_DASH}
+          style={{ opacity: 0.6 }}
+        >
+          <animate
+            attributeName="stroke-dashoffset"
+            from={CONTOUR_DASH}
+            to={0}
+            dur="0.55s"
+            begin={`${0.5 + i * 0.18}s`}
+            fill="freeze"
+            calcMode="spline"
+            keySplines="0.4 0 0.2 1"
+          />
+          <animate
+            attributeName="opacity"
+            from={0}
+            to={0.6}
+            dur="0.2s"
+            begin={`${0.5 + i * 0.18}s`}
+            fill="freeze"
+          />
+        </path>
       ))}
+
+      {/* Landmark dots: pop in one by one in a fast cascade */}
+      {sampledLandmarks.map((pt, i) => {
+        const delay = (0.8 + i * 0.012).toFixed(3);
+        return (
+          <circle key={i} cx={pt.x * W} cy={pt.y * H} r="0" fill={CYAN}>
+            <animate
+              attributeName="r"
+              from={0}
+              to={4.5}
+              dur="0.25s"
+              begin={`${delay}s`}
+              fill="freeze"
+              calcMode="spline"
+              keySplines="0.34 1.56 0.64 1"
+            />
+            <animate
+              attributeName="opacity"
+              from={0}
+              to={0.8}
+              dur="0.15s"
+              begin={`${delay}s`}
+              fill="freeze"
+            />
+          </circle>
+        );
+      })}
     </g>
   );
 });
