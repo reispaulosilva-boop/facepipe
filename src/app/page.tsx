@@ -4,22 +4,9 @@ import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { ScanFace, Stethoscope, Download, User, Settings, Play, Sparkles } from "lucide-react";
 import { FileDropzone } from "@/components/FileDropzone";
-import { useFaceStore, type PatientGender } from "@/store/useFaceStore";
-
-const GENDER_OPTIONS: PatientGender[] = ["Feminino", "Masculino", "Outro"];
-
 export default function Home() {
   const router = useRouter();
-  const { imageFile, setImageFile, patientGender, patientAge, setPatientInfo } = useFaceStore();
-
-  const handleAgeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value;
-    if (raw === "") { setPatientInfo({ age: null }); return; }
-    const parsed = parseInt(raw, 10);
-    if (!isNaN(parsed) && parsed >= 1 && parsed <= 120) {
-      setPatientInfo({ age: parsed });
-    }
-  };
+  const { imageFile, setImageFile } = useFaceStore();
 
   const handleFileSelect = useCallback(
     (file: File) => {
@@ -87,43 +74,6 @@ export default function Home() {
                 <p className="text-[10px] text-white/40">{(imageFile.size / 1024 / 1024).toFixed(2)} MB</p>
               </div>
             )}
-          </div>
-
-          {/* Patient Info */}
-          <div className="glass-panel p-5 rounded-2xl flex flex-col gap-4">
-            <h3 className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Dados do Paciente</h3>
-            <div className="flex flex-col gap-3">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] text-white/50 font-medium uppercase tracking-wider">Gênero</label>
-                <div className="flex gap-2">
-                  {GENDER_OPTIONS.map((g) => (
-                    <button
-                      key={g}
-                      onClick={() => setPatientInfo({ gender: g })}
-                      className={`flex-1 py-1.5 rounded-lg text-[10px] font-semibold border transition-all ${
-                        patientGender === g
-                          ? "bg-primary/20 border-primary/50 text-sky-400"
-                          : "bg-white/5 border-white/10 text-white/40 hover:text-white/70 hover:bg-white/10"
-                      }`}
-                    >
-                      {g}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] text-white/50 font-medium uppercase tracking-wider">Idade</label>
-                <input
-                  type="number"
-                  min={1}
-                  max={120}
-                  placeholder="ex: 34"
-                  value={patientAge ?? ""}
-                  onChange={handleAgeChange}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white/80 placeholder:text-white/20 focus:outline-none focus:border-primary/50 focus:bg-primary/5 transition-all"
-                />
-              </div>
-            </div>
           </div>
 
           <div className="glass-panel p-5 rounded-2xl flex flex-col gap-4">

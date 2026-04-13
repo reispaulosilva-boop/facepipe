@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { ThirdsResult, FifthsResult, LipRatioResult, TopographicRegion, DistanceMeasurement, TopographicAreaResult } from "@/utils/facialAnalysis";
 
-export type PatientGender = "Feminino" | "Masculino" | "Outro";
+
 
 export interface AnalysisResults {
   thirds: ThirdsResult | null;
