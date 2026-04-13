@@ -49,8 +49,8 @@ export const LandmarksLayer = memo(function LandmarksLayer({ landmarks, dimensio
     return d;
   });
 
-  // Sub-sample landmarks for cascaded dot animation (every 4th to keep it fast)
-  const sampledLandmarks = landmarks.filter((_, i) => i % 4 === 0);
+  // Sub-sample landmarks for cascaded dot animation (every 2nd for higher density)
+  const sampledLandmarks = landmarks.filter((_, i) => i % 2 === 0);
 
   return (
     <g className="biometric-mesh-layer">
@@ -62,7 +62,7 @@ export const LandmarksLayer = memo(function LandmarksLayer({ landmarks, dimensio
         fill="none"
         strokeDasharray={MESH_DASH}
         strokeDashoffset={MESH_DASH}
-        style={{ opacity: 0.35 }}
+        style={{ opacity: 0.60 }}
       >
         <animate
           attributeName="stroke-dashoffset"
@@ -145,18 +145,18 @@ export const LandmarksLayer = memo(function LandmarksLayer({ landmarks, dimensio
         const delay = (0.8 + i * 0.012).toFixed(3);
         return (
           <g key={i}>
-            {/* Glow */}
-            <circle 
-              cx={pt.x * W} 
-              cy={pt.y * H} 
-              r="0" 
+            {/* Outer glow */}
+            <circle
+              cx={pt.x * W}
+              cy={pt.y * H}
+              r="0"
               fill={CYAN}
-              style={{ filter: "blur(3px)" }}
+              style={{ filter: "blur(5px)" }}
             >
               <animate
                 attributeName="r"
                 from={0}
-                to={6}
+                to={9}
                 dur="0.25s"
                 begin={`${delay}s`}
                 fill="freeze"
@@ -166,18 +166,45 @@ export const LandmarksLayer = memo(function LandmarksLayer({ landmarks, dimensio
               <animate
                 attributeName="opacity"
                 from={0}
-                to={0.5}
+                to={0.55}
+                dur="0.15s"
+                begin={`${delay}s`}
+                fill="freeze"
+              />
+            </circle>
+            {/* Inner glow */}
+            <circle
+              cx={pt.x * W}
+              cy={pt.y * H}
+              r="0"
+              fill={CYAN}
+              style={{ filter: "blur(1.5px)" }}
+            >
+              <animate
+                attributeName="r"
+                from={0}
+                to={5}
+                dur="0.25s"
+                begin={`${delay}s`}
+                fill="freeze"
+                calcMode="spline"
+                keySplines="0.34 1.56 0.64 1"
+              />
+              <animate
+                attributeName="opacity"
+                from={0}
+                to={0.8}
                 dur="0.15s"
                 begin={`${delay}s`}
                 fill="freeze"
               />
             </circle>
             {/* Core dot */}
-            <circle cx={pt.x * W} cy={pt.y * H} r="0" fill={CYAN}>
+            <circle cx={pt.x * W} cy={pt.y * H} r="0" fill="white">
               <animate
                 attributeName="r"
                 from={0}
-                to={3}
+                to={2}
                 dur="0.25s"
                 begin={`${delay}s`}
                 fill="freeze"
