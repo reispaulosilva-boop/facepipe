@@ -43,22 +43,57 @@ export const FifthsLayer = memo(function FifthsLayer({ fifthsData, landmarks, di
 
   return (
     <g className="fifths-layer">
-      {verticals.map((x, i) => (
-        <g key={i}>
-          <line x1={x} y1={yTop} x2={x} y2={yBot} stroke={AMBER}       strokeWidth={strokeW} strokeDasharray={dashArr} />
-          <line x1={x} y1={yTop} x2={x} y2={yBot} stroke={AMBER_SOLID} strokeWidth={strokeW * 0.4} />
-          <line x1={x - tickLen} y1={yTop} x2={x + tickLen} y2={yTop} stroke={AMBER_SOLID} strokeWidth={tickW} />
-          <line x1={x - tickLen} y1={yBot} x2={x + tickLen} y2={yBot} stroke={AMBER_SOLID} strokeWidth={tickW} />
-        </g>
-      ))}
+      {verticals.map((x, i) => {
+        // Stagger delays: left to right movement
+        const sweepDelay = i * 0.1;
 
+        return (
+          <g key={i}>
+            {/* Animated main line with vertical sweep */}
+            <g
+              className="animate-line-sweep-v"
+              style={{
+                "--sweep-duration": "0.6s",
+                "--sweep-delay": `${sweepDelay}s`,
+              } as React.CSSProperties}
+            >
+              <line x1={x} y1={yTop} x2={x} y2={yBot} stroke={AMBER} strokeWidth={strokeW} strokeDasharray={dashArr} />
+            </g>
+
+            {/* Solid line overlay (no animation, instant) */}
+            <line x1={x} y1={yTop} x2={x} y2={yBot} stroke={AMBER_SOLID} strokeWidth={strokeW * 0.4} />
+
+            {/* Animated tick marks */}
+            <g
+              className="animate-line-sweep-v"
+              style={{
+                "--sweep-duration": "0.45s",
+                "--sweep-delay": `${sweepDelay + 0.15}s`,
+              } as React.CSSProperties}
+            >
+              <line x1={x - tickLen} y1={yTop} x2={x + tickLen} y2={yTop} stroke={AMBER_SOLID} strokeWidth={tickW} />
+              <line x1={x - tickLen} y1={yBot} x2={x + tickLen} y2={yBot} stroke={AMBER_SOLID} strokeWidth={tickW} />
+            </g>
+          </g>
+        );
+      })}
+
+      {/* Animated segment labels */}
       {segments.map((seg, i) => {
         const midX = (seg.x1 + seg.x2) / 2;
         const segW = Math.abs(seg.x2 - seg.x1);
         const lw   = Math.min(segW * 0.92, S * 90);
         const rowY = i % 2 === 0 ? labelY1 : labelY2;
+        const labelDelay = i * 0.12 + 0.4;
+
         return (
-          <g key={`label-${i}`}>
+          <g 
+            key={`label-${i}`}
+            className="animate-region-appear"
+            style={{
+              "--region-delay": `${labelDelay}s`,
+            } as React.CSSProperties}
+          >
             <rect x={midX - lw / 2} y={rowY} width={lw} height={labelH} rx={labelRx} fill={AMBER_LABEL_BG} stroke={AMBER} strokeWidth={S * 0.8} />
             <text x={midX} y={rowY + labelH * 0.65} fill={AMBER_SOLID} fontSize={fontSz} fontFamily="'SF Mono','Fira Code',monospace" fontWeight="600" textAnchor="middle" letterSpacing="0.02em">
               {seg.data.label}: {seg.data.mm}mm

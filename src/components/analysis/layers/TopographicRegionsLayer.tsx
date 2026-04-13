@@ -81,9 +81,31 @@ export const TopographicRegionsLayer = memo(function TopographicRegionsLayer({
         const labelWidth  = style.label.length * (fontSize * 0.7) + pad * 2;
         const labelHeight = fontSize + pad * 1.5;
 
+        // Stagger delay for cascading region appearance
+        const staggerDelay = i * 0.06;
+
         return (
-          <motion.g key={region.name + i}>
-            <path d={d} fill={style.fill} fillRule="evenodd" stroke={style.stroke} strokeWidth="1.5" strokeDasharray="3,1" style={{ filter: "drop-shadow(0 0 2px rgba(0,0,0,0.2))" }} className="pointer-events-auto transition-all duration-300" />
+          <motion.g 
+            key={region.name + i}
+            initial={{ opacity: 0, scale: 0.97 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.97 }}
+            transition={{ 
+              duration: 0.35, 
+              delay: staggerDelay,
+              ease: "easeOut"
+            }}
+          >
+            <path 
+              d={d} 
+              fill={style.fill} 
+              fillRule="evenodd" 
+              stroke={style.stroke} 
+              strokeWidth="1.5" 
+              strokeDasharray="3,1" 
+              style={{ filter: "drop-shadow(0 0 2px rgba(0,0,0,0.2))" }} 
+              className="pointer-events-auto transition-all duration-300" 
+            />
             <g className="pointer-events-none select-none">
               <rect x={cx - labelWidth / 2} y={cy - labelHeight / 2} width={labelWidth} height={labelHeight} rx={S * 2} fill="rgba(0,0,0,0.75)" />
               <text x={cx} y={cy} fill={style.stroke} fontSize={fontSize} fontWeight="bold" textAnchor="middle" dominantBaseline="central" fontFamily="monospace">{style.label}</text>

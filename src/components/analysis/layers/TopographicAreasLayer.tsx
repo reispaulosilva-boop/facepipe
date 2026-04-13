@@ -29,6 +29,7 @@ export const TopographicAreasLayer = memo(function TopographicAreasLayer({
   }, [topographicAreas]);
 
   const lm10 = landmarks[10];
+  const areaEntries = Object.entries(TOPOGRAPHIC_INDICES);
 
   return (
     <motion.g
@@ -38,7 +39,7 @@ export const TopographicAreasLayer = memo(function TopographicAreasLayer({
       exit={{ opacity: 0 }}
       transition={{ duration: 0.35 }}
     >
-      {Object.entries(TOPOGRAPHIC_INDICES).map(([name, rawIndices]) => {
+      {areaEntries.map(([name, rawIndices], index) => {
         const area = areaMap.get(name);
         if (!area) return null;
 
@@ -94,8 +95,21 @@ export const TopographicAreasLayer = memo(function TopographicAreasLayer({
         const pctText   = `${area.percent.toFixed(1)}%`;
         const codeText  = area.code;
 
+        // Stagger delay based on region index
+        const staggerDelay = index * 0.08;
+
         return (
-          <g key={name}>
+          <motion.g 
+            key={name}
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            transition={{ 
+              duration: 0.4, 
+              delay: staggerDelay,
+              ease: "easeOut"
+            }}
+          >
             {/* Region outline — fill none, solid stroke */}
             <path
               d={d}
@@ -106,7 +120,6 @@ export const TopographicAreasLayer = memo(function TopographicAreasLayer({
               strokeLinejoin="round"
               style={{ filter: "drop-shadow(0 0 3px rgba(0,0,0,0.6))" }}
             />
-
 
             {/* Region code — small, dimmer, with dark halo for readability */}
             <text
@@ -145,7 +158,7 @@ export const TopographicAreasLayer = memo(function TopographicAreasLayer({
             >
               {pctText}
             </text>
-          </g>
+          </motion.g>
         );
       })}
     </motion.g>

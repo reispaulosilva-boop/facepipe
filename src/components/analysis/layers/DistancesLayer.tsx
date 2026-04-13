@@ -43,8 +43,39 @@ export const DistancesLayer = memo(function DistancesLayer({
       const d = pts.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x * W} ${p.y * H}`).join(" ") + " Z";
       shapeElement = (
         <g className="facial-shape-layer">
-          <path d={d} fill="rgba(0,255,255,0.05)" stroke="#00FFFF" strokeWidth={S * 3.5} strokeLinejoin="round" strokeLinecap="round" style={{ filter: "drop-shadow(0 0 10px rgba(0,255,255,0.4))" }} />
-          {pts.map((p, i) => <circle key={i} cx={p.x * W} cy={p.y * H} r={S * 4.5} fill="#00FFFF" />)}
+          {/* Animated path fill + stroke for shape */}
+          <g
+            className="animate-region-appear"
+            style={{
+              "--region-delay": "0.1s",
+            } as React.CSSProperties}
+          >
+            <path 
+              d={d} 
+              fill="rgba(0,255,255,0.05)" 
+              stroke="#00FFFF" 
+              strokeWidth={S * 3.5} 
+              strokeLinejoin="round" 
+              strokeLinecap="round" 
+              style={{ filter: "drop-shadow(0 0 10px rgba(0,255,255,0.4))" }} 
+            />
+          </g>
+
+          {/* Animated corner dots */}
+          {pts.map((p, i) => (
+            <circle 
+              key={i}
+              cx={p.x * W} 
+              cy={p.y * H} 
+              r={S * 4.5} 
+              fill="#00FFFF"
+              className="animate-dot-pop"
+              style={{
+                "--dot-r": `${S * 4.5}px`,
+                "--dot-delay": `${0.1 + i * 0.08}s`,
+              } as React.CSSProperties}
+            />
+          ))}
         </g>
       );
     }
@@ -58,14 +89,57 @@ export const DistancesLayer = memo(function DistancesLayer({
         const x1   = line.p1.x * W; const y1 = line.p1.y * H;
         const x2   = line.p2.x * W; const y2 = line.p2.y * H;
         const midY = (y1 + y2) / 2;
+        const drawDelay = i * 0.15;
+        const labelDelay = i * 0.15 + 0.5;
+
         return (
           <g key={i}>
-            <line x1={x1} y1={midY} x2={x2} y2={midY} stroke={line.color} strokeWidth={S * 2.5} strokeDasharray={`${S * 8},${S * 5}`} opacity="0.8" />
-            <circle cx={x1} cy={midY} r={S * 4} fill={line.color} />
-            <circle cx={x2} cy={midY} r={S * 4} fill={line.color} />
-            <text x={(x1 + x2) / 2} y={midY - S * 10} fill="#FFFFFF" fontSize={S * 10} textAnchor="middle" fontWeight="bold" fontFamily="monospace" style={{ textShadow: "0 0 4px rgba(0,0,0,0.8)" }}>
-              {line.data.label}: {line.data.mm}mm
-            </text>
+            {/* Animated distance line */}
+            <g
+              className="animate-line-sweep-h"
+              style={{
+                "--sweep-duration": "0.65s",
+                "--sweep-delay": `${drawDelay}s`,
+              } as React.CSSProperties}
+            >
+              <line x1={x1} y1={midY} x2={x2} y2={midY} stroke={line.color} strokeWidth={S * 2.5} strokeDasharray={`${S * 8},${S * 5}`} opacity="0.8" />
+            </g>
+
+            {/* Animated endpoint circles */}
+            <circle 
+              cx={x1} 
+              cy={midY} 
+              r={S * 4} 
+              fill={line.color}
+              className="animate-dot-pop"
+              style={{
+                "--dot-r": `${S * 4}px`,
+                "--dot-delay": `${drawDelay + 0.4}s`,
+              } as React.CSSProperties}
+            />
+            <circle 
+              cx={x2} 
+              cy={midY} 
+              r={S * 4} 
+              fill={line.color}
+              className="animate-dot-pop"
+              style={{
+                "--dot-r": `${S * 4}px`,
+                "--dot-delay": `${drawDelay + 0.5}s`,
+              } as React.CSSProperties}
+            />
+
+            {/* Animated label */}
+            <g
+              className="animate-label-slide-in"
+              style={{
+                "--label-delay": `${labelDelay}s`,
+              } as React.CSSProperties}
+            >
+              <text x={(x1 + x2) / 2} y={midY - S * 10} fill="#FFFFFF" fontSize={S * 10} textAnchor="middle" fontWeight="bold" fontFamily="monospace" style={{ textShadow: "0 0 4px rgba(0,0,0,0.8)" }}>
+                {line.data.label}: {line.data.mm}mm
+              </text>
+            </g>
           </g>
         );
       })}

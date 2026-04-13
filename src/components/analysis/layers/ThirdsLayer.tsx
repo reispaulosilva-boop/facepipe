@@ -64,12 +64,38 @@ export const ThirdsLayer = memo(function ThirdsLayer({
         const isTrichion = i === 0;
         const lineColor  = isTrichion && isManual ? "rgba(74, 222, 128, 0.5)" : AMBER;
         const lineSolid  = isTrichion && isManual ? "rgba(74, 222, 128, 0.9)" : AMBER_SOLID;
+        
+        // Stagger delays: each line comes after the previous
+        const sweepDelay = i * 0.15;
+        const labelDelay = i * 0.15 + 0.5;
+
         return (
           <g key={i}>
-            <line x1={xStart} y1={line.y} x2={xEnd} y2={line.y} stroke={lineColor} strokeWidth={strokeW} strokeDasharray={dashArr} />
+            {/* Animated main line with sweep effect */}
+            <g
+              className="animate-line-sweep-h"
+              style={{
+                "--sweep-duration": "0.7s",
+                "--sweep-delay": `${sweepDelay}s`,
+              } as React.CSSProperties}
+            >
+              <line x1={xStart} y1={line.y} x2={xEnd} y2={line.y} stroke={lineColor} strokeWidth={strokeW} strokeDasharray={dashArr} />
+            </g>
+
+            {/* Solid line overlay (no animation, instant) */}
             <line x1={xStart} y1={line.y} x2={xEnd} y2={line.y} stroke={lineSolid} strokeWidth={strokeW * 0.4} />
-            <line x1={xStart} y1={line.y - tickLen} x2={xStart} y2={line.y + tickLen} stroke={lineSolid} strokeWidth={tickW} />
-            <line x1={xEnd}   y1={line.y - tickLen} x2={xEnd}   y2={line.y + tickLen} stroke={lineSolid} strokeWidth={tickW} />
+
+            {/* Animated tick marks */}
+            <g
+              className="animate-line-sweep-h"
+              style={{
+                "--sweep-duration": "0.5s",
+                "--sweep-delay": `${sweepDelay + 0.2}s`,
+              } as React.CSSProperties}
+            >
+              <line x1={xStart} y1={line.y - tickLen} x2={xStart} y2={line.y + tickLen} stroke={lineSolid} strokeWidth={tickW} />
+              <line x1={xEnd}   y1={line.y - tickLen} x2={xEnd}   y2={line.y + tickLen} stroke={lineSolid} strokeWidth={tickW} />
+            </g>
 
             {isTrichion && showThirds && (
               <>
@@ -105,12 +131,21 @@ export const ThirdsLayer = memo(function ThirdsLayer({
         );
       })}
 
+      {/* Animated labels */}
       {lines.slice(1).map((line, i) => {
         if (!line.label) return null;
         const { name, mm, midY } = line.label;
         const lx = xEnd + padX;
+        const labelDelay = (i + 1) * 0.15 + 0.5;
+
         return (
-          <g key={`label-${i}`}>
+          <g 
+            key={`label-${i}`}
+            className="animate-label-slide-in"
+            style={{
+              "--label-delay": `${labelDelay}s`,
+            } as React.CSSProperties}
+          >
             <rect x={lx} y={midY - labelH / 2} width={labelW} height={labelH} rx={labelRx} fill={AMBER_LABEL_BG} stroke={AMBER} strokeWidth={S} />
             <text x={lx + padX} y={midY - fontMm * 0.2} fill={AMBER_SOLID} fontSize={fontName} fontFamily="'SF Mono','Fira Code',monospace" fontWeight="600" letterSpacing="0.04em">{name}</text>
             <text x={lx + padX} y={midY + fontMm * 1.2} fill="rgba(251,191,36,0.7)" fontSize={fontMm} fontFamily="'SF Mono','Fira Code',monospace">{mm} mm</text>
