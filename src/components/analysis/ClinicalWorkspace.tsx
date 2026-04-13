@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { TopographicAreasPanel } from "./TopographicAreasPanel";
 import { FacialEvaluationPanel } from "./FacialEvaluationPanel";
 import { ScanFace, ArrowLeft, Image as ImageIcon } from "lucide-react";
+import { DownloadAnalysisButton } from "./DownloadAnalysisButton";
 
 export function ClinicalWorkspace() {
   const { 
@@ -242,6 +243,10 @@ export function ClinicalWorkspace() {
           </div>
           
           <div className="flex items-center gap-6">
+            {/* Download button */}
+            <DownloadAnalysisButton disabled={isProcessing || !landmarks.length} />
+
+            <div className="w-px h-8 bg-white/5" />
 
             <div className="flex flex-col items-end">
               <span className="text-[9px] text-white/40 uppercase font-bold tracking-widest font-ui mb-1">Status de Análise</span>
