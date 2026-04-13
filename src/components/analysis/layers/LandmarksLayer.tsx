@@ -76,113 +76,89 @@ export const LandmarksLayer = memo(function LandmarksLayer({ landmarks, dimensio
         />
       </path>
 
-      {/* Contours: each drawn sequentially with a delay - bolder strokes */}
+      {/* Contours: subtle, thin lines — discrete to not obscure anatomy */}
       {contourPaths.map((d, i) => (
-        <g key={i}>
-          {/* Glow layer */}
-          <path
-            d={d}
-            stroke={CYAN}
-            strokeWidth="4"
-            fill="none"
-            strokeDasharray={CONTOUR_DASH}
-            strokeDashoffset={CONTOUR_DASH}
-            style={{ opacity: 0, filter: "blur(4px)" }}
-          >
-            <animate
-              attributeName="stroke-dashoffset"
-              from={CONTOUR_DASH}
-              to={0}
-              dur="0.55s"
-              begin={`${0.5 + i * 0.18}s`}
-              fill="freeze"
-              calcMode="spline"
-              keySplines="0.4 0 0.2 1"
-            />
-            <animate
-              attributeName="opacity"
-              from={0}
-              to={0.5}
-              dur="0.2s"
-              begin={`${0.5 + i * 0.18}s`}
-              fill="freeze"
-            />
-          </path>
-          {/* Main stroke */}
-          <path
-            d={d}
-            stroke={CYAN}
-            strokeWidth="2"
-            fill="none"
-            strokeDasharray={CONTOUR_DASH}
-            strokeDashoffset={CONTOUR_DASH}
-            style={{ opacity: 0 }}
-          >
-            <animate
-              attributeName="stroke-dashoffset"
-              from={CONTOUR_DASH}
-              to={0}
-              dur="0.55s"
-              begin={`${0.5 + i * 0.18}s`}
-              fill="freeze"
-              calcMode="spline"
-              keySplines="0.4 0 0.2 1"
-            />
-            <animate
-              attributeName="opacity"
-              from={0}
-              to={0.9}
-              dur="0.2s"
-              begin={`${0.5 + i * 0.18}s`}
-              fill="freeze"
-            />
-          </path>
-        </g>
+        <path
+          key={i}
+          d={d}
+          stroke={CYAN}
+          strokeWidth="0.8"
+          fill="none"
+          strokeDasharray={CONTOUR_DASH}
+          strokeDashoffset={CONTOUR_DASH}
+          style={{ opacity: 0 }}
+        >
+          <animate
+            attributeName="stroke-dashoffset"
+            from={CONTOUR_DASH}
+            to={0}
+            dur="0.6s"
+            begin={`${0.5 + i * 0.15}s`}
+            fill="freeze"
+            calcMode="spline"
+            keySplines="0.4 0 0.2 1"
+          />
+          <animate
+            attributeName="opacity"
+            from={0}
+            to={0.4}
+            dur="0.25s"
+            begin={`${0.5 + i * 0.15}s`}
+            fill="freeze"
+          />
+        </path>
       ))}
 
-      {/* Landmark dots: beacon pulse — discrete, modern, non-obstructive */}
+      {/* Landmark dots: intense glow beacon — modern, eye-catching */}
+      <defs>
+        <filter id="landmark-glow" x="-200%" y="-200%" width="500%" height="500%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
       {sampledLandmarks.map((pt, i) => {
         const cx = pt.x * W;
         const cy = pt.y * H;
         // Entry delay: cascade in as mesh finishes
-        const entryDelay = (0.9 + i * 0.008).toFixed(3);
-        // Pulse offset: spread pulses so they don't all beat in sync
-        const pulseOffset = ((i * 0.37) % 2.4).toFixed(3);
-        const pulseDur = (2.2 + (i % 5) * 0.15).toFixed(2);
+        const entryDelay = (0.9 + i * 0.006).toFixed(3);
+        // Varied pulse timing for organic feel
+        const pulseDur = (1.8 + (i % 7) * 0.12).toFixed(2);
 
         return (
           <g key={i}>
-            {/* Ping ring — expands outward and fades, loops continuously */}
-            <circle cx={cx} cy={cy} r="1.5" fill="none" stroke={CYAN} strokeWidth="0.8">
-              {/* Wait for entry, then start pulsing */}
+            {/* Outer ping ring — expands and fades */}
+            <circle cx={cx} cy={cy} r="2" fill="none" stroke={CYAN} strokeWidth="1">
               <animate
                 attributeName="r"
-                values="1.5;7;7"
-                keyTimes="0;0.6;1"
+                values="2;10;10"
+                keyTimes="0;0.7;1"
                 dur={`${pulseDur}s`}
                 begin={`${entryDelay}s`}
                 repeatCount="indefinite"
                 calcMode="spline"
-                keySplines="0.4 0 0.6 1;0 0 1 1"
+                keySplines="0.2 0 0.4 1;0 0 1 1"
               />
               <animate
                 attributeName="opacity"
-                values="0.7;0;0"
-                keyTimes="0;0.6;1"
+                values="0.8;0;0"
+                keyTimes="0;0.7;1"
                 dur={`${pulseDur}s`}
                 begin={`${entryDelay}s`}
                 repeatCount="indefinite"
               />
             </circle>
 
-            {/* Core dot — tiny, sharp, always visible after entry */}
-            <circle cx={cx} cy={cy} r="0" fill={CYAN}>
-              {/* Entry pop */}
+            {/* Intense glow halo */}
+            <circle cx={cx} cy={cy} r="0" fill={CYAN} filter="url(#landmark-glow)">
               <animate
                 attributeName="r"
-                values={`0;2.2;1.6`}
-                keyTimes="0;0.5;1"
-                dur="0.35s"
+                values="0;4;2.5"
+                keyTimes="0;0.4;1"
+                dur="0.4s"
                 begin={`${entryDelay}s`}
                 fill="freeze"
                 calcMode="spline"
@@ -190,20 +166,42 @@ export const LandmarksLayer = memo(function LandmarksLayer({ landmarks, dimensio
               />
               <animate
                 attributeName="opacity"
-                from={0}
-                to={1}
-                dur="0.2s"
+                values="0;1;0.85"
+                keyTimes="0;0.3;1"
+                dur="0.4s"
                 begin={`${entryDelay}s`}
                 fill="freeze"
               />
             </circle>
 
-            {/* Subtle brightness pulse on the core itself */}
-            <circle cx={cx} cy={cy} r="1.6" fill={CYAN} opacity="0">
+            {/* Core dot — bright white center */}
+            <circle cx={cx} cy={cy} r="0" fill="white">
+              <animate
+                attributeName="r"
+                values="0;1.8;1.2"
+                keyTimes="0;0.5;1"
+                dur="0.35s"
+                begin={`${entryDelay}s`}
+                fill="freeze"
+                calcMode="spline"
+                keySplines="0.34 1.56 0.64 1;0.4 0 0.2 1"
+              />
+            </circle>
+
+            {/* Pulsing brightness overlay */}
+            <circle cx={cx} cy={cy} r="2.5" fill={CYAN} opacity="0">
               <animate
                 attributeName="opacity"
-                values="0;0;0.9;0.5;0"
-                keyTimes="0;0.05;0.2;0.5;1"
+                values="0;0.7;0.3;0"
+                keyTimes="0;0.15;0.5;1"
+                dur={`${pulseDur}s`}
+                begin={`${entryDelay}s`}
+                repeatCount="indefinite"
+              />
+              <animate
+                attributeName="r"
+                values="2.5;3.5;2.5"
+                keyTimes="0;0.3;1"
                 dur={`${pulseDur}s`}
                 begin={`${entryDelay}s`}
                 repeatCount="indefinite"
