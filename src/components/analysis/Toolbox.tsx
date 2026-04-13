@@ -133,7 +133,7 @@ export function Toolbox(props: ToolboxProps) {
     <motion.div
       initial={{ x: -100, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
-      className="fixed left-6 top-24 bottom-6 w-14 hover:w-64 flex flex-col gap-3 p-2 rounded-2xl bg-[#000105]/40 backdrop-blur-2xl border border-white/5 z-50 transition-all duration-500 ease-out group/sidebar overflow-y-auto scrollbar-none"
+      className="fixed left-6 top-24 bottom-6 w-14 hover:w-56 flex flex-col gap-2 p-2 rounded-2xl bg-[#000105]/40 backdrop-blur-2xl border border-white/5 z-50 transition-all duration-500 ease-out group/sidebar overflow-y-auto scrollbar-none"
     >
       <div className="flex flex-col gap-3 min-h-full">
       {/* Visual State — Landmarks */}
@@ -222,20 +222,20 @@ export function Toolbox(props: ToolboxProps) {
                 initial={{ opacity: 0, x: -10, scale: 0.95 }}
                 animate={{ opacity: 1, x: 0, scale: 1 }}
                 exit={{ opacity: 0, x: -10, scale: 0.95 }}
-                className="absolute left-15 top-0 min-w-[200px] p-2.5 rounded-2xl bg-[#030712]/95 backdrop-blur-3xl border border-white/15 shadow-[0_20px_50px_rgba(0,0,0,0.4)] flex flex-col gap-1 z-[60]"
+                className="absolute left-14 top-0 w-[240px] p-3 rounded-2xl bg-[#030712]/95 backdrop-blur-3xl border border-white/15 shadow-[0_20px_50px_rgba(0,0,0,0.4)] flex flex-col gap-1.5 z-[60]"
               >
-                <div className="px-2 py-1.5 border-b border-white/10 mb-1.5">
-                  <span className="text-[10px] font-ui font-black text-amber-500 uppercase tracking-[0.2em] flex items-center gap-2">
+                <div className="px-2 py-1.5 border-b border-white/10 mb-1">
+                  <span className="text-[10px] font-ui font-black text-amber-500 uppercase tracking-[0.15em] flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
                     Distâncias Faciais
                   </span>
                 </div>
                 
                 {[
-                  { id: "bitemporal", label: "Distância Bitemporal", active: showBitemporal, toggle: toggleBitemporal },
-                  { id: "bizygomatic", label: "Distância Bizigomática", active: showBizygomatic, toggle: toggleBizygomatic },
-                  { id: "bigonial", label: "Distância Bigonial", active: showBigonial, toggle: toggleBigonial },
-                  { id: "mentonian", label: "Distância Mentoniana", active: showMentonian, toggle: toggleMentonian },
+                  { id: "bitemporal", label: "Bitemporal", active: showBitemporal, toggle: toggleBitemporal },
+                  { id: "bizygomatic", label: "Bizigomática", active: showBizygomatic, toggle: toggleBizygomatic },
+                  { id: "bigonial", label: "Bigonial", active: showBigonial, toggle: toggleBigonial },
+                  { id: "mentonian", label: "Mentoniana", active: showMentonian, toggle: toggleMentonian },
                 ].map((dist) => (
                   <button
                     key={dist.id}
@@ -245,12 +245,12 @@ export function Toolbox(props: ToolboxProps) {
                       dist.toggle();
                     }}
                     className={cn(
-                      "w-full flex items-center justify-between px-3 py-2 rounded-lg transition-all text-xs group",
+                      "w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-all text-xs group",
                       dist.active ? "bg-white/10 text-white" : "hover:bg-white/5 text-white/60 hover:text-white"
                     )}
                   >
-                    <span className="font-medium">{dist.label}</span>
-                    {dist.active && <div className="w-1 h-1 rounded-full bg-[#A3E635] shadow-[0_0_8px_rgba(163,230,53,0.6)]" />}
+                    <span className="font-medium">Distância {dist.label}</span>
+                    {dist.active && <div className="w-1.5 h-1.5 rounded-full bg-[#A3E635] shadow-[0_0_8px_rgba(163,230,53,0.6)]" />}
                   </button>
                 ))}
 
@@ -310,104 +310,113 @@ export function Toolbox(props: ToolboxProps) {
                 initial={{ opacity: 0, x: -10, scale: 0.95 }}
                 animate={{ opacity: 1, x: 0, scale: 1 }}
                 exit={{ opacity: 0, x: -10, scale: 0.95 }}
-                className="absolute left-15 top-0 min-w-[220px] p-2.5 rounded-2xl bg-[#030712]/95 backdrop-blur-3xl border border-white/15 shadow-[0_20px_50px_rgba(0,0,0,0.4)] flex flex-col gap-1 z-[60]"
+                className="absolute left-14 top-0 w-[260px] p-3 rounded-2xl bg-[#030712]/95 backdrop-blur-3xl border border-white/15 shadow-[0_20px_50px_rgba(0,0,0,0.4)] flex flex-col gap-1.5 z-[60]"
               >
-                <div className="px-2 py-1.5 border-b border-white/10 mb-1.5">
-                  <span className="text-[10px] font-ui font-black text-amber-500 uppercase tracking-[0.2em] flex items-center gap-2">
+                <div className="px-2 py-1.5 border-b border-white/10 mb-1">
+                  <span className="text-[10px] font-ui font-black text-amber-500 uppercase tracking-[0.15em] flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
                     Regiões Anatômicas
                   </span>
                 </div>
 
-                <div className="px-3 py-2 flex gap-2">
+                <div className="px-2 py-1.5 flex gap-2">
                   <button 
                     onClick={() => setAllRegions(true)}
-                    className="flex-1 px-2 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 text-[9px] font-bold rounded border border-amber-500/20 transition-all uppercase tracking-tighter"
+                    className="flex-1 px-2 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 text-[9px] font-bold rounded border border-amber-500/20 transition-all uppercase tracking-tight"
                   >
                     Ativar Todas
                   </button>
                   <button 
                     onClick={() => setAllRegions(false)}
-                    className="flex-1 px-2 py-1 bg-white/5 hover:bg-white/10 text-white/40 hover:text-white text-[9px] font-bold rounded border border-white/10 transition-all uppercase tracking-tighter"
+                    className="flex-1 px-2 py-1.5 bg-white/5 hover:bg-white/10 text-white/40 hover:text-white text-[9px] font-bold rounded border border-white/10 transition-all uppercase tracking-tight"
                   >
                     Limpar
                   </button>
                 </div>
                 
-                <div className="grid grid-cols-1 gap-1 max-h-[350px] overflow-y-auto pr-1 custom-scrollbar">
+                <div className="flex flex-col gap-0.5 max-h-[320px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
                   {/* TERÇO SUPERIOR */}
-                  <div className="px-2 py-1 mt-1 bg-white/5 rounded">
-                    <span className="text-[8px] font-bold text-white/30 tracking-widest">TERÇO SUPERIOR</span>
+                  <div className="px-2 py-1.5 mt-1 bg-white/5 rounded">
+                    <span className="text-[9px] font-bold text-white/40 tracking-wider">TERÇO SUPERIOR</span>
                   </div>
                   {[
-                    { id: "frontal", label: "Frontal (F)" },
-                    { id: "temporal_r", label: "Temporal Dir (T-D)" },
-                    { id: "temporal_l", label: "Temporal Esq (T-E)" },
-                    { id: "glabela", label: "Glabela (G)" },
+                    { id: "frontal", label: "Frontal", abbr: "F" },
+                    { id: "temporal_r", label: "Temporal Dir", abbr: "T-D" },
+                    { id: "temporal_l", label: "Temporal Esq", abbr: "T-E" },
+                    { id: "glabela", label: "Glabela", abbr: "G" },
                   ].map((reg) => (
                     <button
                       key={reg.id}
                       onClick={() => toggleSpecificRegion(reg.id as any)}
                       className={cn(
-                        "w-full flex items-center justify-between px-3 py-1.5 rounded-lg transition-all text-[11px] group",
-                        activeRegions[reg.id] ? "bg-amber-500/20 text-white" : "hover:bg-white/5 text-white/50 hover:text-white"
+                        "w-full flex items-center justify-between px-3 py-2 rounded-lg transition-all text-xs group",
+                        activeRegions[reg.id] ? "bg-amber-500/20 text-white" : "hover:bg-white/5 text-white/60 hover:text-white"
                       )}
                     >
-                      <span className="font-medium">{reg.label}</span>
-                      {activeRegions[reg.id] && <div className="w-1 h-1 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.6)]" />}
+                      <span className="font-medium truncate">{reg.label}</span>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <span className="text-[9px] text-white/30 font-mono">{reg.abbr}</span>
+                        {activeRegions[reg.id] && <div className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.6)]" />}
+                      </div>
                     </button>
                   ))}
 
                   {/* TERÇO MÉDIO */}
-                  <div className="px-2 py-1 mt-1 bg-white/5 rounded">
-                    <span className="text-[8px] font-bold text-white/30 tracking-widest">TERÇO MÉDIO</span>
+                  <div className="px-2 py-1.5 mt-2 bg-white/5 rounded">
+                    <span className="text-[9px] font-bold text-white/40 tracking-wider">TERÇO MÉDIO</span>
                   </div>
                   {[
-                    { id: "nariz", label: "Nariz (N)" },
-                    { id: "malar_lateral_r", label: "Malar Lat Dir (ML-D)" },
-                    { id: "malar_lateral_l", label: "Malar Lat Esq (ML-E)" },
-                    { id: "malar_medial_r", label: "Malar Med Dir (MM-D)" },
-                    { id: "malar_medial_l", label: "Malar Med Esq (MM-E)" },
-                    { id: "infrapalpebral_r", label: "Infrapalpebral Dir (IP-D)" },
-                    { id: "infrapalpebral_l", label: "Infrapalpebral Esq (IP-E)" },
+                    { id: "nariz", label: "Nariz", abbr: "N" },
+                    { id: "malar_lateral_r", label: "Malar Lat Dir", abbr: "ML-D" },
+                    { id: "malar_lateral_l", label: "Malar Lat Esq", abbr: "ML-E" },
+                    { id: "malar_medial_r", label: "Malar Med Dir", abbr: "MM-D" },
+                    { id: "malar_medial_l", label: "Malar Med Esq", abbr: "MM-E" },
+                    { id: "infrapalpebral_r", label: "Infrapalpebral Dir", abbr: "IP-D" },
+                    { id: "infrapalpebral_l", label: "Infrapalpebral Esq", abbr: "IP-E" },
                   ].map((reg) => (
                     <button
                       key={reg.id}
                       onClick={() => toggleSpecificRegion(reg.id as any)}
                       className={cn(
-                        "w-full flex items-center justify-between px-3 py-1.5 rounded-lg transition-all text-[11px] group",
-                        activeRegions[reg.id] ? "bg-amber-500/20 text-white" : "hover:bg-white/5 text-white/50 hover:text-white"
+                        "w-full flex items-center justify-between px-3 py-2 rounded-lg transition-all text-xs group",
+                        activeRegions[reg.id] ? "bg-amber-500/20 text-white" : "hover:bg-white/5 text-white/60 hover:text-white"
                       )}
                     >
-                      <span className="font-medium">{reg.label}</span>
-                      {activeRegions[reg.id] && <div className="w-1 h-1 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.6)]" />}
+                      <span className="font-medium truncate">{reg.label}</span>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <span className="text-[9px] text-white/30 font-mono">{reg.abbr}</span>
+                        {activeRegions[reg.id] && <div className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.6)]" />}
+                      </div>
                     </button>
                   ))}
 
                   {/* TERÇO INFERIOR */}
-                  <div className="px-2 py-1 mt-1 bg-white/5 rounded">
-                    <span className="text-[8px] font-bold text-white/30 tracking-widest">TERÇO INFERIOR</span>
+                  <div className="px-2 py-1.5 mt-2 bg-white/5 rounded">
+                    <span className="text-[9px] font-bold text-white/40 tracking-wider">TERÇO INFERIOR</span>
                   </div>
                   {[
-                    { id: "labial", label: "Labial (Lb)" },
-                    { id: "subnasal", label: "Subnasal (SN)" },
-                    { id: "perioral", label: "Perioral (POr)" },
-                    { id: "submalar_r", label: "Submalar Dir (SM-D)" },
-                    { id: "submalar_l", label: "Submalar Esq (SM-E)" },
-                    { id: "mandibular_r", label: "Mandibular Dir (Ma-D)" },
-                    { id: "mandibular_l", label: "Mandibular Esq (Ma-E)" },
-                    { id: "mento", label: "Mento (Me)" },
+                    { id: "labial", label: "Labial", abbr: "Lb" },
+                    { id: "subnasal", label: "Subnasal", abbr: "SN" },
+                    { id: "perioral", label: "Perioral", abbr: "POr" },
+                    { id: "submalar_r", label: "Submalar Dir", abbr: "SM-D" },
+                    { id: "submalar_l", label: "Submalar Esq", abbr: "SM-E" },
+                    { id: "mandibular_r", label: "Mandibular Dir", abbr: "Ma-D" },
+                    { id: "mandibular_l", label: "Mandibular Esq", abbr: "Ma-E" },
+                    { id: "mento", label: "Mento", abbr: "Me" },
                   ].map((reg) => (
                     <button
                       key={reg.id}
                       onClick={() => toggleSpecificRegion(reg.id as any)}
                       className={cn(
-                        "w-full flex items-center justify-between px-3 py-1.5 rounded-lg transition-all text-[11px] group",
-                        activeRegions[reg.id] ? "bg-amber-500/20 text-white" : "hover:bg-white/5 text-white/50 hover:text-white"
+                        "w-full flex items-center justify-between px-3 py-2 rounded-lg transition-all text-xs group",
+                        activeRegions[reg.id] ? "bg-amber-500/20 text-white" : "hover:bg-white/5 text-white/60 hover:text-white"
                       )}
                     >
-                      <span className="font-medium">{reg.label}</span>
-                      {activeRegions[reg.id] && <div className="w-1 h-1 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.6)]" />}
+                      <span className="font-medium truncate">{reg.label}</span>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <span className="text-[9px] text-white/30 font-mono">{reg.abbr}</span>
+                        {activeRegions[reg.id] && <div className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.6)]" />}
+                      </div>
                     </button>
                   ))}
                 </div>
@@ -433,7 +442,7 @@ export function Toolbox(props: ToolboxProps) {
       <div className="h-px bg-white/5 mx-1" />
 
       {/* Áreas Topográficas */}
-      <div className="flex flex-col items-start gap-1">
+      <div className="flex flex-col gap-1.5">
         <ToolButton
           icon={<PieChart className="w-4 h-4" />}
           label="Áreas Topográficas"
@@ -441,15 +450,12 @@ export function Toolbox(props: ToolboxProps) {
           onClick={toggleAreasPanel}
           colorScheme="cyan"
         />
-        <span className="text-[7px] font-bold text-white/20 uppercase tracking-[0.12em] text-left pl-2 select-none">
-          Áreas
-        </span>
       </div>
 
       <div className="h-px bg-white/5 mx-1" />
 
       {/* Avaliação Facial (Proporção) */}
-      <div className="flex flex-col items-start gap-1">
+      <div className="flex flex-col gap-1.5">
         <ToolButton
           icon={<Target className={cn("w-4 h-4", showEvaluationPanel && "text-amber-400")} />}
           label="Avaliação Estética"
@@ -457,12 +463,7 @@ export function Toolbox(props: ToolboxProps) {
           onClick={toggleEvaluationPanel}
           colorScheme="amber"
         />
-        <span className="text-[7px] font-bold text-white/20 uppercase tracking-[0.12em] text-left pl-2 select-none">
-          Score
-        </span>
       </div>
-
-      <div className="h-px bg-white/5 mx-1" />
 
       <div className="h-px bg-white/5 mx-1" />
 
