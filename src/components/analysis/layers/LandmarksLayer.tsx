@@ -54,15 +54,15 @@ export const LandmarksLayer = memo(function LandmarksLayer({ landmarks, dimensio
 
   return (
     <g className="biometric-mesh-layer">
-      {/* Mesh: drawn on over ~1.2s */}
+      {/* Mesh: drawn on over ~1.2s - increased visibility */}
       <path
         d={meshPath}
         stroke={CYAN}
-        strokeWidth="2.5"
+        strokeWidth="1"
         fill="none"
         strokeDasharray={MESH_DASH}
         strokeDashoffset={MESH_DASH}
-        style={{ opacity: 0.12 }}
+        style={{ opacity: 0.35 }}
       >
         <animate
           attributeName="stroke-dashoffset"
@@ -76,63 +76,124 @@ export const LandmarksLayer = memo(function LandmarksLayer({ landmarks, dimensio
         />
       </path>
 
-      {/* Contours: each drawn sequentially with a delay */}
+      {/* Contours: each drawn sequentially with a delay - bolder strokes */}
       {contourPaths.map((d, i) => (
-        <path
-          key={i}
-          d={d}
-          stroke={CYAN}
-          strokeWidth="6.25"
-          fill="none"
-          strokeDasharray={CONTOUR_DASH}
-          strokeDashoffset={CONTOUR_DASH}
-          style={{ opacity: 0.6 }}
-        >
-          <animate
-            attributeName="stroke-dashoffset"
-            from={CONTOUR_DASH}
-            to={0}
-            dur="0.55s"
-            begin={`${0.5 + i * 0.18}s`}
-            fill="freeze"
-            calcMode="spline"
-            keySplines="0.4 0 0.2 1"
-          />
-          <animate
-            attributeName="opacity"
-            from={0}
-            to={0.6}
-            dur="0.2s"
-            begin={`${0.5 + i * 0.18}s`}
-            fill="freeze"
-          />
-        </path>
-      ))}
-
-      {/* Landmark dots: pop in one by one in a fast cascade */}
-      {sampledLandmarks.map((pt, i) => {
-        const delay = (0.8 + i * 0.012).toFixed(3);
-        return (
-          <circle key={i} cx={pt.x * W} cy={pt.y * H} r="0" fill={CYAN}>
+        <g key={i}>
+          {/* Glow layer */}
+          <path
+            d={d}
+            stroke={CYAN}
+            strokeWidth="4"
+            fill="none"
+            strokeDasharray={CONTOUR_DASH}
+            strokeDashoffset={CONTOUR_DASH}
+            style={{ opacity: 0, filter: "blur(4px)" }}
+          >
             <animate
-              attributeName="r"
-              from={0}
-              to={4.5}
-              dur="0.25s"
-              begin={`${delay}s`}
+              attributeName="stroke-dashoffset"
+              from={CONTOUR_DASH}
+              to={0}
+              dur="0.55s"
+              begin={`${0.5 + i * 0.18}s`}
               fill="freeze"
               calcMode="spline"
-              keySplines="0.34 1.56 0.64 1"
+              keySplines="0.4 0 0.2 1"
             />
             <animate
               attributeName="opacity"
               from={0}
-              to={0.8}
-              dur="0.15s"
-              begin={`${delay}s`}
+              to={0.5}
+              dur="0.2s"
+              begin={`${0.5 + i * 0.18}s`}
               fill="freeze"
             />
-          </circle>
+          </path>
+          {/* Main stroke */}
+          <path
+            d={d}
+            stroke={CYAN}
+            strokeWidth="2"
+            fill="none"
+            strokeDasharray={CONTOUR_DASH}
+            strokeDashoffset={CONTOUR_DASH}
+            style={{ opacity: 0 }}
+          >
+            <animate
+              attributeName="stroke-dashoffset"
+              from={CONTOUR_DASH}
+              to={0}
+              dur="0.55s"
+              begin={`${0.5 + i * 0.18}s`}
+              fill="freeze"
+              calcMode="spline"
+              keySplines="0.4 0 0.2 1"
+            />
+            <animate
+              attributeName="opacity"
+              from={0}
+              to={0.9}
+              dur="0.2s"
+              begin={`${0.5 + i * 0.18}s`}
+              fill="freeze"
+            />
+          </path>
+        </g>
+      ))}
+
+      {/* Landmark dots: pop in one by one - larger and brighter */}
+      {sampledLandmarks.map((pt, i) => {
+        const delay = (0.8 + i * 0.012).toFixed(3);
+        return (
+          <g key={i}>
+            {/* Glow */}
+            <circle 
+              cx={pt.x * W} 
+              cy={pt.y * H} 
+              r="0" 
+              fill={CYAN}
+              style={{ filter: "blur(3px)" }}
+            >
+              <animate
+                attributeName="r"
+                from={0}
+                to={6}
+                dur="0.25s"
+                begin={`${delay}s`}
+                fill="freeze"
+                calcMode="spline"
+                keySplines="0.34 1.56 0.64 1"
+              />
+              <animate
+                attributeName="opacity"
+                from={0}
+                to={0.5}
+                dur="0.15s"
+                begin={`${delay}s`}
+                fill="freeze"
+              />
+            </circle>
+            {/* Core dot */}
+            <circle cx={pt.x * W} cy={pt.y * H} r="0" fill={CYAN}>
+              <animate
+                attributeName="r"
+                from={0}
+                to={3}
+                dur="0.25s"
+                begin={`${delay}s`}
+                fill="freeze"
+                calcMode="spline"
+                keySplines="0.34 1.56 0.64 1"
+              />
+              <animate
+                attributeName="opacity"
+                from={0}
+                to={1}
+                dur="0.15s"
+                begin={`${delay}s`}
+                fill="freeze"
+              />
+            </circle>
+          </g>
         );
       })}
     </g>
