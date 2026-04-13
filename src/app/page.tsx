@@ -4,6 +4,8 @@ import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { ScanFace, Stethoscope, Download, User, Settings, Play, Sparkles } from "lucide-react";
 import { FileDropzone } from "@/components/FileDropzone";
+import { useFaceStore } from "@/store/useFaceStore";
+
 export default function Home() {
   const router = useRouter();
   const { imageFile, setImageFile } = useFaceStore();
