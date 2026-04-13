@@ -49,8 +49,8 @@ export const LandmarksLayer = memo(function LandmarksLayer({ landmarks, dimensio
     return d;
   });
 
-  // Sub-sample landmarks for cascaded dot animation (every 2nd for higher density)
-  const sampledLandmarks = landmarks.filter((_, i) => i % 2 === 0);
+  // All landmarks for dot animation — every 3rd keeps density readable without cluttering
+  const sampledLandmarks = landmarks.filter((_, i) => i % 3 === 0);
 
   return (
     <g className="biometric-mesh-layer">
@@ -140,84 +140,73 @@ export const LandmarksLayer = memo(function LandmarksLayer({ landmarks, dimensio
         </g>
       ))}
 
-      {/* Landmark dots: pop in one by one - larger and brighter */}
+      {/* Landmark dots: beacon pulse — discrete, modern, non-obstructive */}
       {sampledLandmarks.map((pt, i) => {
-        const delay = (0.8 + i * 0.012).toFixed(3);
+        const cx = pt.x * W;
+        const cy = pt.y * H;
+        // Entry delay: cascade in as mesh finishes
+        const entryDelay = (0.9 + i * 0.008).toFixed(3);
+        // Pulse offset: spread pulses so they don't all beat in sync
+        const pulseOffset = ((i * 0.37) % 2.4).toFixed(3);
+        const pulseDur = (2.2 + (i % 5) * 0.15).toFixed(2);
+
         return (
           <g key={i}>
-            {/* Outer glow */}
-            <circle
-              cx={pt.x * W}
-              cy={pt.y * H}
-              r="0"
-              fill={CYAN}
-              style={{ filter: "blur(5px)" }}
-            >
+            {/* Ping ring — expands outward and fades, loops continuously */}
+            <circle cx={cx} cy={cy} r="1.5" fill="none" stroke={CYAN} strokeWidth="0.8">
+              {/* Wait for entry, then start pulsing */}
               <animate
                 attributeName="r"
-                from={0}
-                to={9}
-                dur="0.25s"
-                begin={`${delay}s`}
-                fill="freeze"
+                values="1.5;7;7"
+                keyTimes="0;0.6;1"
+                dur={`${pulseDur}s`}
+                begin={`${entryDelay}s`}
+                repeatCount="indefinite"
                 calcMode="spline"
-                keySplines="0.34 1.56 0.64 1"
+                keySplines="0.4 0 0.6 1;0 0 1 1"
               />
               <animate
                 attributeName="opacity"
-                from={0}
-                to={0.55}
-                dur="0.15s"
-                begin={`${delay}s`}
-                fill="freeze"
+                values="0.7;0;0"
+                keyTimes="0;0.6;1"
+                dur={`${pulseDur}s`}
+                begin={`${entryDelay}s`}
+                repeatCount="indefinite"
               />
             </circle>
-            {/* Inner glow */}
-            <circle
-              cx={pt.x * W}
-              cy={pt.y * H}
-              r="0"
-              fill={CYAN}
-              style={{ filter: "blur(1.5px)" }}
-            >
+
+            {/* Core dot — tiny, sharp, always visible after entry */}
+            <circle cx={cx} cy={cy} r="0" fill={CYAN}>
+              {/* Entry pop */}
               <animate
                 attributeName="r"
-                from={0}
-                to={5}
-                dur="0.25s"
-                begin={`${delay}s`}
+                values={`0;2.2;1.6`}
+                keyTimes="0;0.5;1"
+                dur="0.35s"
+                begin={`${entryDelay}s`}
                 fill="freeze"
                 calcMode="spline"
-                keySplines="0.34 1.56 0.64 1"
-              />
-              <animate
-                attributeName="opacity"
-                from={0}
-                to={0.8}
-                dur="0.15s"
-                begin={`${delay}s`}
-                fill="freeze"
-              />
-            </circle>
-            {/* Core dot */}
-            <circle cx={pt.x * W} cy={pt.y * H} r="0" fill="white">
-              <animate
-                attributeName="r"
-                from={0}
-                to={2}
-                dur="0.25s"
-                begin={`${delay}s`}
-                fill="freeze"
-                calcMode="spline"
-                keySplines="0.34 1.56 0.64 1"
+                keySplines="0.34 1.56 0.64 1;0.4 0 0.2 1"
               />
               <animate
                 attributeName="opacity"
                 from={0}
                 to={1}
-                dur="0.15s"
-                begin={`${delay}s`}
+                dur="0.2s"
+                begin={`${entryDelay}s`}
                 fill="freeze"
+              />
+            </circle>
+
+            {/* Subtle brightness pulse on the core itself */}
+            <circle cx={cx} cy={cy} r="1.6" fill={CYAN} opacity="0">
+              <animate
+                attributeName="opacity"
+                values="0;0;0.9;0.5;0"
+                keyTimes="0;0.05;0.2;0.5;1"
+                dur={`${pulseDur}s`}
+                begin={`${entryDelay}s`}
+                repeatCount="indefinite"
               />
             </circle>
           </g>
