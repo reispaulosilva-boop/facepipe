@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { ScanFace, Stethoscope, Download, User, Settings, Play, Sparkles } from "lucide-react";
+import { ScanFace, Stethoscope, User, Settings, Play, Sparkles } from "lucide-react";
 import { FileDropzone } from "@/components/FileDropzone";
 import { useFaceStore } from "@/store/useFaceStore";
 
@@ -78,17 +78,7 @@ export default function Home() {
             )}
           </div>
 
-          <div className="glass-panel p-5 rounded-2xl flex flex-col gap-4">
-            <h3 className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Ações do Laudo</h3>
-            <button
-              disabled={!imageFile}
-              title={!imageFile ? "Faça upload de uma foto para habilitar o laudo." : "Exportar análise atual"}
-              className="w-full py-2.5 rounded-lg bg-white/5 text-white/30 text-sm font-medium border border-white/5 flex flex-row items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-white/10 hover:text-white/80 transition-all active:scale-[0.98]"
-            >
-              <Download className="w-4 h-4" />
-              Exportar Laudo PDF
-            </button>
-          </div>
+
         </aside>
 
         {/* Canvas / Preview Area */}
