@@ -206,7 +206,6 @@ export function ClinicalWorkspace() {
         activeRegions={(analysisResults as any).regions}
         trichionOverrideY={trichionOverrideY}
         resetTrichion={resetTrichion}
-        hasLandmarks={landmarks.length > 0}
         showAreasPanel={showAreasPanel}
         toggleAreasPanel={toggleAreasPanel}
         showEvaluationPanel={showEvaluationPanel}
