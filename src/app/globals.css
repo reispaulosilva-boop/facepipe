@@ -1,0 +1,225 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: #050505; /* Deep black/slate */
+  --color-foreground: #f8fafc;
+  --color-primary: #0ea5e9; /* Medical blue */
+  --color-primary-glow: rgba(14, 165, 233, 0.4);
+  --color-glass-bg: rgba(15, 23, 42, 0.4);
+  --color-glass-border: rgba(255, 255, 255, 0.08);
+
+  --font-heading: var(--font-bodoni);
+  --font-ui: var(--font-figtree);
+  --font-body: var(--font-jost);
+}
+
+body {
+  background-color: var(--color-background);
+  background-image: radial-gradient(circle at 50% -20%, var(--color-primary-glow), transparent 40%);
+  color: var(--color-foreground);
+  min-height: 100vh;
+  background-attachment: fixed;
+}
+
+/* Custom Scrollbar for Clinical Studio */
+@layer base {
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    transition: background 0.3s ease;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  /* Firefox */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+  }
+}
+
+.glass-panel {
+  background-color: var(--color-glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--color-glass-border);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* Utility missing from Tailwind v4 defaults */
+.hover\:bg-white\/8:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Progress bar animation */
+@keyframes progress-slide {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-progress-slide {
+  animation: progress-slide 1.5s ease-in-out infinite;
+}
+
+/* ── FileDropzone animations ── */
+
+/* Gentle float for the icon */
+@keyframes dropzone-float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-5px); }
+}
+.animate-dropzone-float {
+  animation: dropzone-float 3s ease-in-out infinite;
+}
+
+/* Concentric ring expand + fade */
+@keyframes dropzone-ring {
+  0%   { transform: scale(0.7); opacity: 0.6; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+.animate-dropzone-ring {
+  animation: dropzone-ring 1.2s ease-out forwards;
+}
+
+/* Particles float upward and fade */
+@keyframes dropzone-particle {
+  0%   { transform: translateY(0px) scale(1);   opacity: 0.6; }
+  80%  { transform: translateY(-28px) scale(1.3); opacity: 0.3; }
+  100% { transform: translateY(-36px) scale(0);  opacity: 0; }
+}
+.animate-dropzone-particle {
+  animation: dropzone-particle var(--duration, 2.4s) ease-in-out infinite;
+}
+
+/* Rotating conic border glow */
+@keyframes dropzone-border-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Scan line sweeps top → bottom */
+@keyframes dropzone-scanline {
+  0%   { top: 8px;  opacity: 0; }
+  15%  { opacity: 1; }
+  85%  { opacity: 1; }
+  100% { top: calc(100% - 8px); opacity: 0; }
+}
+.animate-dropzone-scanline {
+  animation: dropzone-scanline 2s ease-in-out infinite;
+  position: absolute;
+}
+
+/* ── Layer draw-on animations ── */
+
+/* Path stroke drawn from nothing */
+@keyframes draw-path {
+  from { stroke-dashoffset: var(--path-length, 2000); }
+  to   { stroke-dashoffset: 0; }
+}
+.animate-draw-path {
+  animation: draw-path var(--draw-duration, 0.9s) var(--draw-delay, 0s) cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+/* Single landmark dot pop in */
+@keyframes dot-pop {
+  0%   { r: 0;   opacity: 0; }
+  60%  { r: calc(var(--dot-r, 4.5px) * 1.35); opacity: 1; }
+  100% { r: var(--dot-r, 4.5px); opacity: 0.8; }
+}
+.animate-dot-pop {
+  animation: dot-pop 0.3s var(--dot-delay, 0s) cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Label slide-in from right */
+@keyframes label-slide-in {
+  from { opacity: 0; transform: translateX(12px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.animate-label-slide-in {
+  animation: label-slide-in 0.35s var(--label-delay, 0.6s) ease-out both;
+}
+
+/* Horizontal line sweep left-to-right */
+@keyframes line-sweep-h {
+  from { clip-path: inset(0 100% 0 0); }
+  to   { clip-path: inset(0 0% 0 0); }
+}
+.animate-line-sweep-h {
+  animation: line-sweep-h var(--sweep-duration, 0.6s) var(--sweep-delay, 0s) ease-out both;
+}
+
+/* Vertical line sweep top-to-bottom */
+@keyframes line-sweep-v {
+  from { clip-path: inset(0 0 100% 0); }
+  to   { clip-path: inset(0 0 0% 0); }
+}
+.animate-line-sweep-v {
+  animation: line-sweep-v var(--sweep-duration, 0.6s) var(--sweep-delay, 0s) ease-out both;
+}
+
+/* Fade + scale-up for region fills */
+@keyframes region-appear {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.animate-region-appear {
+  animation: region-appear 0.45s var(--region-delay, 0s) ease-out both;
+}
+
+/* Diagnostic Report Markdown Styles */
+.markdown-report h1, .markdown-report h2, .markdown-report h3 {
+  color: #22d3ee; /* cyan-400 */
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.markdown-report h2 { font-size: 0.875rem; }
+.markdown-report h3 { font-size: 0.75rem; }
+
+.markdown-report p {
+  margin-bottom: 1rem;
+}
+
+.markdown-report ul {
+  list-style-type: disc;
+  margin-left: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.markdown-report li {
+  margin-bottom: 0.5rem;
+}
+
+.markdown-report strong {
+  color: #fff;
+  font-weight: 600;
+}
+
+@layer utilities {
+  .font-heading { font-family: var(--font-heading), serif; }
+  .font-ui { font-family: var(--font-ui), sans-serif; }
+  .font-body { font-family: var(--font-body), sans-serif; }
+
+  .transition-premium {
+    transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .cursor-ptr {
+    cursor: pointer;
+  }
+}
+
