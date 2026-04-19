@@ -156,6 +156,8 @@ interface ToolboxProps {
   resetTrichion: () => void;
   showAreasPanel: boolean;
   toggleAreasPanel: () => void;
+  showSkinQualityPanel: boolean;
+  toggleSkinQualityPanel: () => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -177,6 +179,7 @@ export function Toolbox(props: ToolboxProps) {
     toggleSpecificRegion, setAllRegions, activeRegions,
     trichionOverrideY, resetTrichion,
     showAreasPanel, toggleAreasPanel,
+    showSkinQualityPanel, toggleSkinQualityPanel,
   } = props;
 
   // Refs to anchor floating panels to specific buttons
@@ -280,6 +283,15 @@ export function Toolbox(props: ToolboxProps) {
           label="Áreas Topográficas"
           active={showAreasPanel}
           onClick={toggleAreasPanel}
+          colorScheme="cyan"
+        />
+
+        {/* Skin Quality */}
+        <ToolButton
+          icon={<Target className="w-4 h-4" />}
+          label="Qualidade da Pele"
+          active={showSkinQualityPanel}
+          onClick={toggleSkinQualityPanel}
           colorScheme="cyan"
         />
 

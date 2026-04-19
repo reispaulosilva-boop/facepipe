@@ -93,6 +93,10 @@ interface FaceStore {
   // Painel de Áreas Topográficas
   showAreasPanel: boolean;
   toggleAreasPanel: () => void;
+
+  // Painel de Qualidade da Pele (OpenCV)
+  showSkinQualityPanel: boolean;
+  toggleSkinQualityPanel: () => void;
 }
 
 const defaultAnalysisResults: AnalysisResults = {
@@ -212,4 +216,7 @@ export const useFaceStore = create<FaceStore>((set) => ({
 
   showAreasPanel: false,
   toggleAreasPanel: () => set((s) => ({ showAreasPanel: !s.showAreasPanel })),
+
+  showSkinQualityPanel: false,
+  toggleSkinQualityPanel: () => set((s) => ({ showSkinQualityPanel: !s.showSkinQualityPanel })),
 }));
