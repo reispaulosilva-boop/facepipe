@@ -6,7 +6,6 @@ import { Points, PointMaterial, OrbitControls, Float, PerspectiveCamera } from "
 import * as THREE from "three";
 import { motion } from "framer-motion";
 import { Landmark } from "@/utils/facialAnalysis";
-import { cn } from "@/lib/utils";
 
 interface ThreeDFaceViewerProps {
   landmarks: Landmark[] | null;

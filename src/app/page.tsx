@@ -18,10 +18,6 @@ export default function Home() {
     [setImageFile]
   );
 
-  const handleStartAnalysis = () => {
-    router.push("/analysis");
-  };
-
   // Create preview URL from the stored file
   const previewUrl = imageFile ? URL.createObjectURL(imageFile) : null;
 

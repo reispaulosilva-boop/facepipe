@@ -6,13 +6,11 @@ import {
   EyeOff,
   Plus,
   Minus,
-  AlignVerticalDistributeCenter,
-  AlignHorizontalDistributeCenter,
   RotateCcw,
-  Target,
   Ruler,
   PieChart,
   Layers,
+  Hash,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -245,6 +243,13 @@ export function Toolbox(props: ToolboxProps) {
           onClick={() => setShowLandmarks(!showLandmarks)}
           colorScheme="cyan"
         />
+        <ToolButton
+          icon={<Hash className="w-4 h-4" />}
+          label={showLandmarkNumbers ? "Ocultar Números" : "Mostrar Números"}
+          active={showLandmarkNumbers}
+          onClick={toggleLandmarkNumbers}
+          colorScheme="cyan"
+        />
 
         <Divider />
 
@@ -400,7 +405,7 @@ export function Toolbox(props: ToolboxProps) {
               {group.items.map((reg) => (
                 <button
                   key={reg.id}
-                  onClick={() => toggleSpecificRegion(reg.id as any)}
+                  onClick={() => toggleSpecificRegion(reg.id as keyof AnalysisResults["regions"])}
                   className={cn(
                     "w-full flex items-center justify-between px-3 py-2 rounded-xl text-sm transition-all duration-150 border",
                     activeRegions[reg.id]
@@ -478,7 +483,7 @@ export function ZoomPanel({ zoomPercent, setZoomPercent }: ZoomPanelProps) {
             value={zoomPercent}
             onChange={(e) => setZoomPercent(Number(e.target.value))}
             className="absolute inset-0 opacity-0 cursor-ns-resize"
-            style={{ writingMode: "bt-lr" as any, appearance: "slider-vertical" as any }}
+            style={{ writingMode: "bt-lr", appearance: "slider-vertical" } as React.CSSProperties}
           />
         </div>
 

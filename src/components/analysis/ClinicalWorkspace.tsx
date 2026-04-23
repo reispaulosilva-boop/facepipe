@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ReactZoomPanPinchRef } from "react-zoom-pan-pinch";
 import { cn } from "@/lib/utils";
 import { TopographicAreasPanel } from "./TopographicAreasPanel";
-import { ScanFace, ArrowLeft, Image as ImageIcon, AlertCircle } from "lucide-react";
+import { ScanFace, ArrowLeft, Image as ImageIcon } from "lucide-react";
 import type { NormalizedLandmark } from "@mediapipe/tasks-vision";
 import { DownloadAnalysisButton } from "./DownloadAnalysisButton";
 
@@ -63,13 +63,11 @@ export function ClinicalWorkspace() {
 
   const router = useRouter();
 
-  const [activeTool, setActiveTool] = useState("select");
   const [showLandmarks, setShowLandmarks] = useState(true);
   const [landmarks, setLandmarks] = useState<NormalizedLandmark[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   
-  const workspaceRef = useRef<HTMLDivElement>(null);
   const transformRef = useRef<ReactZoomPanPinchRef>(null);
   const baseScaleRef = useRef<number>(1);
   const [zoomPercent, setZoomPercent] = useState(100);
@@ -84,7 +82,7 @@ export function ClinicalWorkspace() {
       console.warn("[ClinicalWorkspace] No image file found. Redirecting to home...");
       router.push("/");
     }
-  }, [imageFile, router]);
+  }, [imageFile, router, mounted]);
 
   // 1. Instant UI update: Convert file to URL for display
   const currentUrlRef = useRef<string | null>(null);
@@ -173,18 +171,13 @@ export function ClinicalWorkspace() {
     return () => {
       mountedAnalysis = false;
     };
-  }, [imageFile, landmarkerLoaded, detectFace, lastAnalyzedFile, imageUrl]);
+  }, [imageFile, landmarkerLoaded, detectFace, lastAnalyzedFile, imageUrl, setLandmarksAndCompute]);
   
 
   // Legacy simulation removed (moved to store as simulateCondition)
 
 
   const [resetKey, setResetKey] = useState(0);
-
-  const handleReset = useCallback(() => {
-    setResetKey(prev => prev + 1);
-    setZoomPercent(100);
-  }, []);
 
   const handleZoomChange = useCallback((currentScale: number, baseScale: number) => {
     baseScaleRef.current = baseScale;

@@ -54,8 +54,9 @@ export const TopographicAreasLayer = memo(function TopographicAreasLayer({
                 const lm = landmarks[idx];
                 if (!lm) return null;
 
-                let px = lm.x * W;
-                let py = lm.y * H;
+                const px = lm.x * W;
+                const pyRaw = lm.y * H;
+                let py = pyRaw;
 
                 // Apply trichion override to crown-curve indices
                 if (

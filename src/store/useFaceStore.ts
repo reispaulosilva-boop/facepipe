@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import {
-  calcThirds, calcFifths, calcPixelsPerMm, calcLipRatio,
+  calcThirds, calcFifths, calcLipRatio,
   calcMorphology, calcBizygomatic, calcBigonial, calcBitemporal, calcMentonian,
   calcInterpupillary, calcInteralar, calcIntercommissural,
   getTopographicRegions, calcTopographicAreas,
@@ -8,7 +8,7 @@ import {
   DistanceMeasurement, TopographicAreaResult, Landmark
 } from "@/utils/facialAnalysis";
 
-import { generateFaceMask } from "@/utils/maskUtils";
+// Mask usage removed after External AI cleanup
 
 
 

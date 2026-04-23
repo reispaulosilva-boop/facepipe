@@ -13,12 +13,12 @@ const MESH_DASH = 8000;
 const CONTOUR_DASH = 3000;
 
 export const LandmarksLayer = memo(function LandmarksLayer({ landmarks, dimensions }: Props) {
-  if (!landmarks.length || !dimensions.width) return null;
-
   const { width: W, height: H } = dimensions;
+
+  if (!landmarks.length || !W) return null;
+
   const CYAN = "#00fbcc";
   const WHITE = "#FFFFFF";
-  const clipId = useId();
 
   // Build mesh path
   let meshPath = "";

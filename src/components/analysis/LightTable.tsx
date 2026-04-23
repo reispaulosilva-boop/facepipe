@@ -1,14 +1,10 @@
 "use client";
 
-import React, { useRef, useState, useMemo, useCallback, useEffect } from "react";
+import React, { useRef, useState, useCallback } from "react";
 import { TransformWrapper, TransformComponent, ReactZoomPanPinchRef } from "react-zoom-pan-pinch";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import {
-  calcThirds, calcFifths, calcPixelsPerMm, calcLipRatio,
-  calcMorphology, calcBizygomatic, calcBigonial, calcBitemporal, calcMentonian,
-  calcInterpupillary, calcInteralar, calcIntercommissural,
-  getTopographicRegions, calcTopographicAreas,
   Landmark,
 } from "@/utils/facialAnalysis";
 import { useFaceStore, AnalysisResults } from "@/store/useFaceStore";
@@ -43,7 +39,6 @@ interface LightTableProps {
   trichionOverrideY:   number | null;
   onTrichionAdjust:    (y: number) => void;
   analysisResults:     AnalysisResults;
-  onLandmarksDetected: (results: Partial<AnalysisResults>) => void;
   onLandmarksLoad?:    (count: number) => void;
   onZoomChange?:       (zoom: number, baseScale: number) => void;
   showAreasLayer?:     boolean;
@@ -62,7 +57,7 @@ export function LightTable({
   showFacialContour = false,
   showRegions = false, activeRegions = {},
   showAreasLayer = false,
-  trichionOverrideY, onTrichionAdjust, analysisResults, onLandmarksDetected,
+  trichionOverrideY, onTrichionAdjust, analysisResults,
   onLandmarksLoad, onZoomChange,
   resetKey = 0, transformRef, activeTool = "select",
 }: LightTableProps) {
@@ -73,8 +68,6 @@ export function LightTable({
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [isLoaded, setIsLoaded]     = useState(false);
   const [isDraggingTrichion, setIsDraggingTrichion] = useState(false);
-
-  const { setAnalysisResults } = useFaceStore();
 
   const handleImageLoad = () => {
     if (!photoRef.current) return;
