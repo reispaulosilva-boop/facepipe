@@ -1,0 +1,9 @@
+
+> facepipe@0.1.0 build
+> next build
+
+unhandledRejection [Error: ETIMEDOUT: connection timed out, read] {
+  errno: -60,
+  code: 'ETIMEDOUT',
+  syscall: 'read'
+}

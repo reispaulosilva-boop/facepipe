@@ -165,6 +165,8 @@ interface ToolboxProps {
   resetTrichion: () => void;
   showAreasPanel: boolean;
   toggleAreasPanel: () => void;
+  showLandmarkNumbers: boolean;
+  toggleLandmarkNumbers: () => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -190,6 +192,7 @@ export function Toolbox(props: ToolboxProps) {
     toggleSpecificRegion, setAllRegions, activeRegions,
     trichionOverrideY, resetTrichion,
     showAreasPanel, toggleAreasPanel,
+    showLandmarkNumbers, toggleLandmarkNumbers,
   } = props;
 
   // Refs to anchor floating panels to specific buttons
