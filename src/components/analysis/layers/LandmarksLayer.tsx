@@ -1,4 +1,4 @@
-import React, { memo, useId } from "react";
+import React, { memo } from "react";
 import { FaceLandmarker } from "@mediapipe/tasks-vision";
 import { Landmark } from "@/utils/facialAnalysis";
 

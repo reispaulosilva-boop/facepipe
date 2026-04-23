@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { X, Sigma } from "lucide-react";
 import { TopographicAreaResult, TopographicGroup } from "@/utils/facialAnalysis";
 import { cn } from "@/lib/utils";

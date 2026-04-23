@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import {
   Landmark,
 } from "@/utils/facialAnalysis";
-import { useFaceStore, AnalysisResults } from "@/store/useFaceStore";
+import { AnalysisResults } from "@/store/useFaceStore";
 
 import { LandmarksLayer }           from "./layers/LandmarksLayer";
 import { ClinicalFacilitatorsLayer } from "./layers/ClinicalFacilitatorsLayer";
@@ -49,7 +49,7 @@ interface LightTableProps {
 
 export function LightTable({
   imageUrl, landmarks, showLandmarks,
-  showThirds, showFifths, showDistances,
+  showThirds, showFifths, 
   showBitemporal = false, showBizygomatic = false, showBigonial = false,
   showMentonian = false,
   showInterpupillary = false, showInteralar = false, showIntercommissural = false,

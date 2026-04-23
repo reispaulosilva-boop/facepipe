@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { FaceLandmarker, FilesetResolver, FaceLandmarkerResult } from "@mediapipe/tasks-vision";
 
 // Using CDN to ensure matching WASM and JS bundle versions
@@ -45,7 +45,7 @@ export function useFaceLandmarker() {
         try {
           await initializationPromise;
           if (active) setIsLoaded(true);
-        } catch (err) {
+        } catch (_err) {
           if (active) setError("Falha ao carregar o motor facial.");
         }
         return;
@@ -61,7 +61,7 @@ export function useFaceLandmarker() {
           
           try {
             instance = await createLandmarker("GPU");
-          } catch (gpuErr) {
+          } catch (_gpuErr) {
             console.warn("GPU failed, attempting CPU fallback...");
             instance = await createLandmarker("CPU");
           }
@@ -79,7 +79,7 @@ export function useFaceLandmarker() {
       try {
         await initializationPromise;
         if (active) setIsLoaded(true);
-      } catch (err) {
+      } catch (_err) {
         if (active) setError("Falha ao carregar o motor facial.");
       }
     }

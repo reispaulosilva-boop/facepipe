@@ -75,22 +75,22 @@ export function ClinicalWorkspace() {
   const { isLoaded: landmarkerLoaded, detectFace } = useFaceLandmarker();
 
   const [lastAnalyzedFile, setLastAnalyzedFile] = useState<File | null>(null);
+  const [componentMounted, setComponentMounted] = useState(false);
+
+  useEffect(() => {
+    setComponentMounted(true);
+  }, []);
 
   // 0. Persistence Check: If no image is in store, go back to home
   useEffect(() => {
-    if (!imageFile && mounted) {
+    if (!imageFile && componentMounted) {
       console.warn("[ClinicalWorkspace] No image file found. Redirecting to home...");
       router.push("/");
     }
-  }, [imageFile, router, mounted]);
+  }, [imageFile, router, componentMounted]);
 
   // 1. Instant UI update: Convert file to URL for display
   const currentUrlRef = useRef<string | null>(null);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   useEffect(() => {
     console.log("[ClinicalWorkspace] imageFile effect triggered. File:", imageFile ? `${imageFile.name}` : "null");
@@ -176,8 +176,6 @@ export function ClinicalWorkspace() {
 
   // Legacy simulation removed (moved to store as simulateCondition)
 
-
-  const [resetKey, setResetKey] = useState(0);
 
   const handleZoomChange = useCallback((currentScale: number, baseScale: number) => {
     baseScaleRef.current = baseScale;

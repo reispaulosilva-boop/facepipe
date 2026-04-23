@@ -8,7 +8,6 @@ import { FileDropzone } from "@/components/FileDropzone";
 import { useFaceStore } from "@/store/useFaceStore";
 
 export default function Home() {
-  const router = useRouter();
   const { imageFile, setImageFile } = useFaceStore();
 
   const handleFileSelect = useCallback(

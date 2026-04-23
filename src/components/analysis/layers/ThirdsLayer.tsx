@@ -1,6 +1,5 @@
 import React, { memo } from "react";
 import { Landmark, ThirdsResult } from "@/utils/facialAnalysis";
-import { AMBER, AMBER_SOLID, AMBER_LABEL_BG } from "./tokens";
 
 interface Props {
   thirdsData: ThirdsResult;
