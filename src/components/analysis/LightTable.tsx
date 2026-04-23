@@ -140,6 +140,7 @@ export function LightTable({
             className="relative rounded-[1px] p-[2px] bg-white/5 overflow-hidden"
             style={{ width: dimensions.width || "auto", height: dimensions.height || "auto", boxShadow: isLoaded ? "0 0 100px rgba(0,0,0,0.8)" : "none" }}
           >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               ref={photoRef} src={imageUrl} alt="Mesa de Luz"
               onLoad={handleImageLoad}
