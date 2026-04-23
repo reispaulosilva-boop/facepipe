@@ -5,6 +5,7 @@ import { Landmark } from "@/utils/facialAnalysis";
 interface Props {
   landmarks: Landmark[];
   dimensions: { width: number; height: number };
+  showNumbers?: boolean;
 }
 
 // Approximate path length used for stroke-dasharray draw-on effect.
@@ -12,7 +13,7 @@ interface Props {
 const MESH_DASH = 8000;
 const CONTOUR_DASH = 3000;
 
-export const LandmarksLayer = memo(function LandmarksLayer({ landmarks, dimensions }: Props) {
+export const LandmarksLayer = memo(function LandmarksLayer({ landmarks, dimensions, showNumbers = false }: Props) {
   const { width: W, height: H } = dimensions;
 
   if (!landmarks.length || !W) return null;
@@ -159,6 +160,20 @@ export const LandmarksLayer = memo(function LandmarksLayer({ landmarks, dimensio
 
             {/* Sharp cyan dot center */}
             <circle cx={cx} cy={cy} r="0.9" fill={CYAN} />
+            {/* Index Number */}
+            {showNumbers && (
+              <text
+                x={cx + 3}
+                y={cy - 3}
+                fill="white"
+                fontSize="6"
+                fontFamily="monospace"
+                fontWeight="bold"
+                style={{ pointerEvents: "none" }}
+              >
+                {i}
+              </text>
+            )}
           </g>
         );
       })}

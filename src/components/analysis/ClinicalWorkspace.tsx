@@ -53,7 +53,6 @@ export function ClinicalWorkspace() {
     toggleRegionsSubmenu,
     toggleSpecificRegion,
     setAllRegions,
-    setAnalysisResults,
     showAreasPanel,
     toggleAreasPanel,
     showLandmarkNumbers,

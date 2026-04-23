@@ -42,9 +42,8 @@ interface LightTableProps {
   onLandmarksLoad?:    (count: number) => void;
   onZoomChange?:       (zoom: number, baseScale: number) => void;
   showAreasLayer?:     boolean;
-  resetKey?:           number;
   transformRef?:       React.RefObject<ReactZoomPanPinchRef | null>;
-  activeTool?:         string;
+  showLandmarkNumbers: boolean;
 }
 
 export function LightTable({
@@ -59,7 +58,8 @@ export function LightTable({
   showAreasLayer = false,
   trichionOverrideY, onTrichionAdjust, analysisResults,
   onLandmarksLoad, onZoomChange,
-  resetKey = 0, transformRef, activeTool = "select",
+  transformRef,
+  showLandmarkNumbers = false,
 }: LightTableProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const photoRef     = useRef<HTMLImageElement>(null);
