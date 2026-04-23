@@ -65,7 +65,7 @@ export const LipRatioLayer = memo(function LipRatioLayer({ lipRatioData, landmar
           "--label-delay": "0.35s",
         } as React.CSSProperties}
       >
-        {lp.superiorMm}mm (S)
+        {lp.superiorMm}mm
       </text>
 
       {/* Inferior measurement label */}
@@ -80,7 +80,7 @@ export const LipRatioLayer = memo(function LipRatioLayer({ lipRatioData, landmar
           "--label-delay": "0.45s",
         } as React.CSSProperties}
       >
-        {lp.inferiorMm}mm (I)
+        {lp.inferiorMm}mm
       </text>
 
       {/* Ratio result label */}
@@ -96,7 +96,7 @@ export const LipRatioLayer = memo(function LipRatioLayer({ lipRatioData, landmar
           "--label-delay": "0.55s",
         } as React.CSSProperties}
       >
-        Ratio 1:{lp.ratio}
+        1:{lp.ratio}
       </text>
     </g>
   );

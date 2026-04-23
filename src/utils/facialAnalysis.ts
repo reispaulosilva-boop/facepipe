@@ -98,6 +98,24 @@ export function horizontalDistancePx(
 }
 
 /**
+ * Calcula o ângulo em graus formado por três pontos (A, B, C) no vértice B.
+ */
+export function calcAngle(a: Landmark, b: Landmark, c: Landmark): number {
+  if (!a || !b || !c) return 0;
+  const v1 = { x: a.x - b.x, y: a.y - b.y };
+  const v2 = { x: c.x - b.x, y: c.y - b.y };
+
+  const dot = v1.x * v2.x + v1.y * v2.y;
+  const mag1 = Math.sqrt(v1.x * v1.x + v1.y * v1.y);
+  const mag2 = Math.sqrt(v2.x * v2.x + v2.y * v2.y);
+
+  if (mag1 === 0 || mag2 === 0) return 0;
+
+  const angleRad = Math.acos(Math.max(-1, Math.min(1, dot / (mag1 * mag2))));
+  return parseFloat(((angleRad * 180) / Math.PI).toFixed(1));
+}
+
+/**
  * Calibração via diâmetro horizontal da íris esquerda.
  * Pontos MediaPipe da íris esquerda: 474 (medial) e 476 (lateral).
  * Diâmetro médio da íris humana = 11.7mm (valor clínico padrão).
@@ -205,12 +223,12 @@ export function calcFifths(
   imageWidth: number,
   imageHeight: number
 ): FifthsResult | null {
-  const limiteR = landmarks[454];
-  const exoR = landmarks[33];
-  const endoR = landmarks[133];
-  const endoL = landmarks[362];
-  const exoL = landmarks[263];
-  const limiteL = landmarks[234];
+  const limiteR = landmarks[234];
+  const exoR    = landmarks[33];
+  const endoR   = landmarks[133];
+  const endoL   = landmarks[362];
+  const exoL    = landmarks[263];
+  const limiteL = landmarks[454];
 
   if (!limiteR || !exoR || !endoR || !endoL || !exoL || !limiteL) return null;
 
@@ -315,7 +333,11 @@ export const ANATOMICAL_POINTS = {
   COMMISSURE_R: 61,
   COMMISSURE_L: 291,
   GONION_R: 172,
-  GONION_L: 397
+  GONION_L: 397,
+  FRONTOTEMPORAL_R: 21,
+  FRONTOTEMPORAL_L: 251,
+  ALARE_R: 129,
+  ALARE_L: 358
 };
 
 export function getTopographicRegions(landmarks: Landmark[]): TopographicRegion[] {
@@ -331,12 +353,13 @@ export function getTopographicRegions(landmarks: Landmark[]): TopographicRegion[
  */
 export function calcMorphology(
   landmarks: Landmark[],
-  imageWidth: number
+  imageWidth: number,
+  imageHeight: number
 ): "Oval" | "Redondo" | "Coração" | "Angular" {
   const forehead = horizontalDistancePx(landmarks[21], landmarks[251], imageWidth);
   const cheekbones = horizontalDistancePx(landmarks[234], landmarks[454], imageWidth);
   const jaw = horizontalDistancePx(landmarks[172], landmarks[397], imageWidth);
-  const height = verticalDistancePx(landmarks[10], landmarks[152], imageWidth); // approximate height
+  const height = verticalDistancePx(landmarks[10], landmarks[152], imageHeight); // approximate height
 
   // Ratios
   const fwToCb = forehead / cheekbones;
@@ -392,31 +415,23 @@ export function calcBigonial(
   };
 }
 
-/**
- * Calcula a distância Bitemporal (Largura da Testa).
- * Pontos: 54 (Esquerdo) e 284 (Direito).
- */
 export function calcBitemporal(
   landmarks: Landmark[],
   imageWidth: number,
   pxPerMm: number
 ): DistanceMeasurement | null {
-  const left = landmarks[54];
-  const right = landmarks[284];
+  const left = landmarks[21];
+  const right = landmarks[251];
   if (!left || !right) return null;
 
   const px = horizontalDistancePx(left, right, imageWidth);
   return {
-    label: "Distância Bitemporal",
+    label: "Largura Bitemporal",
     px,
     mm: pxToMm(px, pxPerMm),
   };
 }
 
-/**
- * Calcula a distância Mentoniana (Largura do Queixo).
- * Pontos: 148 (Esquerdo) e 377 (Direito).
- */
 export function calcMentonian(
   landmarks: Landmark[],
   imageWidth: number,
@@ -428,7 +443,70 @@ export function calcMentonian(
 
   const px = horizontalDistancePx(left, right, imageWidth);
   return {
-    label: "Distância Mentoniana",
+    label: "Largura do Mento",
+    px,
+    mm: pxToMm(px, pxPerMm),
+  };
+}
+
+/**
+ * Calcula a Distância Interpupilar (estabilidade aos 6-8 anos).
+ * Pontos: 468 (L) e 473 (R).
+ */
+export function calcInterpupillary(
+  landmarks: Landmark[],
+  imageWidth: number,
+  pxPerMm: number
+): DistanceMeasurement | null {
+  const left = landmarks[468];
+  const right = landmarks[473];
+  if (!left || !right) return null;
+
+  const px = horizontalDistancePx(left, right, imageWidth);
+  return {
+    label: "Distância Interpupilar",
+    px,
+    mm: pxToMm(px, pxPerMm),
+  };
+}
+
+/**
+ * Calcula a Distância Interalar (largura nasal).
+ * Pontos: 129 (R) e 358 (L).
+ */
+export function calcInteralar(
+  landmarks: Landmark[],
+  imageWidth: number,
+  pxPerMm: number
+): DistanceMeasurement | null {
+  const right = landmarks[129];
+  const left = landmarks[358];
+  if (!left || !right) return null;
+
+  const px = horizontalDistancePx(left, right, imageWidth);
+  return {
+    label: "Distância Interalar",
+    px,
+    mm: pxToMm(px, pxPerMm),
+  };
+}
+
+/**
+ * Calcula a Distância Intercomissural (largura da boca).
+ * Pontos: 61 (R) e 291 (L).
+ */
+export function calcIntercommissural(
+  landmarks: Landmark[],
+  imageWidth: number,
+  pxPerMm: number
+): DistanceMeasurement | null {
+  const right = landmarks[61];
+  const left = landmarks[291];
+  if (!left || !right) return null;
+
+  const px = horizontalDistancePx(left, right, imageWidth);
+  return {
+    label: "Distância Intercomissural",
     px,
     mm: pxToMm(px, pxPerMm),
   };

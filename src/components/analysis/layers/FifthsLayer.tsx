@@ -12,8 +12,8 @@ export const FifthsLayer = memo(function FifthsLayer({ fifthsData, landmarks, di
   const { width: W, height: H } = dimensions;
   const lm = landmarks;
 
-  const limiteR = lm[454]; const exoR = lm[33];  const endoR = lm[133];
-  const endoL   = lm[362]; const exoL = lm[263]; const limiteL = lm[234];
+  const limiteR = lm[234]; const exoR = lm[33];  const endoR = lm[133];
+  const endoL   = lm[362]; const exoL = lm[263]; const limiteL = lm[454];
   const trichion = lm[10]; const menton = lm[152];
 
   if (!limiteR || !exoR || !endoR || !endoL || !exoL || !limiteL || !trichion || !menton) return null;
@@ -27,9 +27,10 @@ export const FifthsLayer = memo(function FifthsLayer({ fifthsData, landmarks, di
   const yBot = menton.y   * H + H * 0.03;
 
   const color    = "#A3E635";
-  const strokeW  = S * 2.5;
-  const dashArr  = `${S * 8},${S * 5}`;
-  const dotR     = S * 4;
+  const strokeW  = S * 3.5;
+  const dashArr  = `${S * 10},${S * 4}`;
+  const dotR     = S * 5;
+
 
   const verticalX = [x_limiteR, x_exoR, x_endoR, x_endoL, x_exoL, x_limiteL];
   const segments = [
@@ -47,7 +48,7 @@ export const FifthsLayer = memo(function FifthsLayer({ fifthsData, landmarks, di
 
         return (
           <g key={i}>
-            {/* Main vertical line */}
+            {/* Main vertical line with glow */}
             <g
               className="animate-line-sweep-v"
               style={{
@@ -57,7 +58,8 @@ export const FifthsLayer = memo(function FifthsLayer({ fifthsData, landmarks, di
             >
               <line 
                 x1={x} y1={yTop} x2={x} y2={yBot} 
-                stroke={color} strokeWidth={strokeW} strokeDasharray={dashArr} opacity="0.8" 
+                stroke={color} strokeWidth={strokeW} strokeDasharray={dashArr} opacity="1" 
+                style={{ filter: `drop-shadow(0 0 6px ${color}80)` }}
               />
             </g>
 
@@ -65,22 +67,31 @@ export const FifthsLayer = memo(function FifthsLayer({ fifthsData, landmarks, di
             <circle 
               cx={x} cy={yTop} r={dotR} fill={color} 
               className="animate-dot-pop"
-              style={{ "--dot-r": `${dotR}px`, "--dot-delay": `${sweepDelay + 0.4}s` } as React.CSSProperties}
+              style={{ 
+                "--dot-r": `${dotR}px`, 
+                "--dot-delay": `${sweepDelay + 0.4}s`,
+                filter: `drop-shadow(0 0 8px ${color})`
+              } as React.CSSProperties}
             />
             <circle 
               cx={x} cy={yBot} r={dotR} fill={color} 
               className="animate-dot-pop"
-              style={{ "--dot-r": `${dotR}px`, "--dot-delay": `${sweepDelay + 0.5}s` } as React.CSSProperties}
+              style={{ 
+                "--dot-r": `${dotR}px`, 
+                "--dot-delay": `${sweepDelay + 0.5}s`,
+                filter: `drop-shadow(0 0 8px ${color})`
+              } as React.CSSProperties}
             />
           </g>
         );
       })}
 
-      {/* Segment labels */}
+      {/* Simplified horizontal segment labels centered within each fifth */}
       {segments.map((seg, i) => {
         const midX = (seg.x1 + seg.x2) / 2;
         const labelDelay = i * 0.12 + 0.4;
-        const rowOff = i % 2 === 0 ? S * 25 : S * 45;
+        // Same height for all, just below the face
+        const rowOff = S * 25;
 
         return (
           <g 
@@ -90,10 +101,10 @@ export const FifthsLayer = memo(function FifthsLayer({ fifthsData, landmarks, di
           >
             <text 
               x={midX} y={yBot + rowOff} 
-              fill="#FFFFFF" fontSize={S * 9} fontWeight="bold" fontFamily="monospace" textAnchor="middle"
-              style={{ textShadow: "0 0 4px rgba(0,0,0,0.8)" }}
+              fill="#FFFFFF" fontSize={S * 9} fontWeight="900" fontFamily="monospace" textAnchor="middle"
+              style={{ textShadow: "0 0 6px rgba(0,0,0,0.9), 1px 1px 0 rgba(0,0,0,1)" }}
             >
-              {seg.data.label}: {seg.data.mm}mm
+              {seg.data.mm}mm
             </text>
           </g>
         );

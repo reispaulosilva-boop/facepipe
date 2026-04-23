@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { AnalysisResults } from "@/store/useFaceStore";
 
 // ---------------------------------------------------------------------------
 // ToolButton — icon-only button with floating tooltip
@@ -143,21 +144,27 @@ interface ToolboxProps {
   toggleBigonial: () => void;
   showMentonian: boolean;
   toggleMentonian: () => void;
+  showInterpupillary: boolean;
+  toggleInterpupillary: () => void;
+  showInteralar: boolean;
+  toggleInteralar: () => void;
+  showIntercommissural: boolean;
+  toggleIntercommissural: () => void;
   showFacialShape: boolean;
   toggleFacialShape: () => void;
+  showFacialContour: boolean;
+  toggleFacialContour: () => void;
   showRegions: boolean;
   toggleRegions: () => void;
   showRegionsSubmenu: boolean;
   toggleRegionsSubmenu: () => void;
-  toggleSpecificRegion: (region: any) => void;
+  toggleSpecificRegion: (region: keyof AnalysisResults["regions"]) => void;
   setAllRegions: (v: boolean) => void;
-  activeRegions: any;
+  activeRegions: AnalysisResults["regions"];
   trichionOverrideY: number | null;
   resetTrichion: () => void;
   showAreasPanel: boolean;
   toggleAreasPanel: () => void;
-  showSkinQualityPanel: boolean;
-  toggleSkinQualityPanel: () => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -173,13 +180,16 @@ export function Toolbox(props: ToolboxProps) {
     showBizygomatic, toggleBizygomatic,
     showBigonial, toggleBigonial,
     showMentonian, toggleMentonian,
+    showInterpupillary, toggleInterpupillary,
+    showInteralar, toggleInteralar,
+    showIntercommissural, toggleIntercommissural,
     showFacialShape, toggleFacialShape,
+    showFacialContour, toggleFacialContour,
     showRegions, toggleRegions,
     showRegionsSubmenu, toggleRegionsSubmenu,
     toggleSpecificRegion, setAllRegions, activeRegions,
     trichionOverrideY, resetTrichion,
     showAreasPanel, toggleAreasPanel,
-    showSkinQualityPanel, toggleSkinQualityPanel,
   } = props;
 
   // Refs to anchor floating panels to specific buttons
@@ -286,16 +296,6 @@ export function Toolbox(props: ToolboxProps) {
           colorScheme="cyan"
         />
 
-        {/* Skin Quality */}
-        <ToolButton
-          icon={<Target className="w-4 h-4" />}
-          label="Qualidade da Pele"
-          active={showSkinQualityPanel}
-          onClick={toggleSkinQualityPanel}
-          colorScheme="cyan"
-        />
-
-
         <Divider />
 
         {/* Trichion reset — only when overridden */}
@@ -328,6 +328,10 @@ export function Toolbox(props: ToolboxProps) {
             { id: "bizygomatic", label: "Distância Bizigomática", active: showBizygomatic, toggle: toggleBizygomatic },
             { id: "bigonial",    label: "Distância Bigonial",    active: showBigonial,    toggle: toggleBigonial },
             { id: "mentoniana",  label: "Distância Mentoniana",  active: showMentonian,   toggle: toggleMentonian },
+            { id: "interpupilar", label: "Distância Interpupilar", active: showInterpupillary, toggle: toggleInterpupillary },
+            { id: "interalar",    label: "Distância Interalar",    active: showInteralar,    toggle: toggleInteralar },
+            { id: "intercomiss",  label: "Distância Intercomissural", active: showIntercommissural, toggle: toggleIntercommissural },
+            { id: "contorno",    label: "Contorno Facial",       active: showFacialContour,       toggle: toggleFacialContour },
           ].map((dist) => (
             <button
               key={dist.id}

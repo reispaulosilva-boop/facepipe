@@ -10,7 +10,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ReactZoomPanPinchRef } from "react-zoom-pan-pinch";
 import { cn } from "@/lib/utils";
 import { TopographicAreasPanel } from "./TopographicAreasPanel";
-import { SkinQualityPanel } from "./SkinQualityPanel";
 import { ScanFace, ArrowLeft, Image as ImageIcon, AlertCircle } from "lucide-react";
 import type { NormalizedLandmark } from "@mediapipe/tasks-vision";
 import { DownloadAnalysisButton } from "./DownloadAnalysisButton";
@@ -38,8 +37,16 @@ export function ClinicalWorkspace() {
     toggleBigonial,
     showMentonian,
     toggleMentonian,
+    showInterpupillary,
+    toggleInterpupillary,
+    showInteralar,
+    toggleInteralar,
+    showIntercommissural,
+    toggleIntercommissural,
     showFacialShape,
     toggleFacialShape,
+    showFacialContour,
+    toggleFacialContour,
     showRegions,
     toggleRegions,
     showRegionsSubmenu,
@@ -51,8 +58,7 @@ export function ClinicalWorkspace() {
     toggleAreasPanel,
     showLandmarkNumbers,
     toggleLandmarkNumbers,
-    showSkinQualityPanel,
-    toggleSkinQualityPanel,
+    setLandmarksAndCompute, 
   } = useFaceStore();
 
   const router = useRouter();
@@ -141,8 +147,15 @@ export function ClinicalWorkspace() {
           if (!mountedAnalysis) return;
 
           if (result && result.faceLandmarks && result.faceLandmarks.length > 0) {
-            console.log(`AI Success: Found ${result.faceLandmarks[0].length} landmarks.`);
-            setLandmarks(result.faceLandmarks[0]);
+            const detectedLandmarks = result.faceLandmarks[0];
+            console.log(`AI Success: Found ${detectedLandmarks.length} landmarks.`);
+            
+            // Set local state for UI responsiveness (LightTable prop)
+            setLandmarks(detectedLandmarks);
+            
+            // Centralized calculation in store
+            setLandmarksAndCompute(detectedLandmarks, img.naturalWidth, img.naturalHeight);
+            
             setLastAnalyzedFile(imageFile);
           } else {
             console.warn("AI Detection: No face found in the current buffer.");
@@ -161,6 +174,9 @@ export function ClinicalWorkspace() {
       mountedAnalysis = false;
     };
   }, [imageFile, landmarkerLoaded, detectFace, lastAnalyzedFile, imageUrl]);
+  
+
+  // Legacy simulation removed (moved to store as simulateCondition)
 
 
   const [resetKey, setResetKey] = useState(0);
@@ -228,8 +244,16 @@ export function ClinicalWorkspace() {
         toggleBigonial={toggleBigonial}
         showMentonian={showMentonian}
         toggleMentonian={toggleMentonian}
+        showInterpupillary={showInterpupillary}
+        toggleInterpupillary={toggleInterpupillary}
+        showInteralar={showInteralar}
+        toggleInteralar={toggleInteralar}
+        showIntercommissural={showIntercommissural}
+        toggleIntercommissural={toggleIntercommissural}
         showFacialShape={showFacialShape}
         toggleFacialShape={toggleFacialShape}
+        showFacialContour={showFacialContour}
+        toggleFacialContour={toggleFacialContour}
         showRegions={showRegions}
         toggleRegions={toggleRegions}
         showRegionsSubmenu={showRegionsSubmenu}
@@ -243,8 +267,6 @@ export function ClinicalWorkspace() {
         toggleAreasPanel={toggleAreasPanel}
         showLandmarkNumbers={showLandmarkNumbers}
         toggleLandmarkNumbers={toggleLandmarkNumbers}
-        showSkinQualityPanel={showSkinQualityPanel}
-        toggleSkinQualityPanel={toggleSkinQualityPanel}
       />
 
       <ZoomPanel 
@@ -318,7 +340,11 @@ export function ClinicalWorkspace() {
             showBizygomatic={showBizygomatic}
             showBigonial={showBigonial}
             showMentonian={showMentonian}
+            showInterpupillary={showInterpupillary}
+            showInteralar={showInteralar}
+            showIntercommissural={showIntercommissural}
             showFacialShape={showFacialShape}
+            showFacialContour={showFacialContour}
             showRegions={showRegions}
             activeRegions={analysisResults.regions}
             showAreasLayer={showAreasPanel}
@@ -349,24 +375,13 @@ export function ClinicalWorkspace() {
       <AnimatePresence>
         {showAreasPanel && (
           <TopographicAreasPanel 
-            results={analysisResults.topographicAreas || []} 
+            areas={analysisResults.topographicAreas || []} 
+            pxPerMm={analysisResults.pxPerMm}
             onClose={toggleAreasPanel}
             className="absolute top-24 right-6 z-40"
           />
         )}
       </AnimatePresence>
-
-      {/* Skin Quality Panel (OpenCV) */}
-      <AnimatePresence>
-        {showSkinQualityPanel && analysisResults.landmarks && (
-          <SkinQualityPanel
-            landmarks={analysisResults.landmarks}
-            onClose={toggleSkinQualityPanel}
-            className="absolute top-24 right-6 z-40"
-          />
-        )}
-      </AnimatePresence>
-
     </div>
   );
 }

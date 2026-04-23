@@ -73,6 +73,14 @@ export const TopographicAreasLayer = memo(function TopographicAreasLayer({
           )
           .join(" ");
 
+        const colors = {
+          Superior: "rgba(52, 211, 153, 0.15)", // Emerald 400
+          Médio:    "rgba(56, 189, 248, 0.15)", // Sky 400
+          Inferior: "rgba(251, 191, 36, 0.15)",  // Amber 400
+        };
+        const fillColor = colors[area.group] || "rgba(255,255,255,0.05)";
+        const strokeColor = colors[area.group].replace("0.15", "0.5") || "rgba(255,255,255,0.55)";
+
         // Centroid from the outer path (first sub-path only)
         const outerPath = paths[0];
         let cx = 0;
@@ -81,8 +89,12 @@ export const TopographicAreasLayer = memo(function TopographicAreasLayer({
         for (const idx of outerPath) {
           const lm = landmarks[idx];
           if (!lm) continue;
+          let py = lm.y * H;
+          if (trichionOverrideY !== null && TRICHION_CURVE_INDICES.includes(idx) && lm10) {
+            py = py + (trichionOverrideY - lm10.y) * H;
+          }
           cx += lm.x * W;
-          cy += lm.y * H;
+          cy += py;
           validPts++;
         }
         if (validPts === 0) return null;
@@ -110,18 +122,18 @@ export const TopographicAreasLayer = memo(function TopographicAreasLayer({
               ease: "easeOut"
             }}
           >
-            {/* Region outline — fill none, solid stroke */}
+            {/* Region fill and outline */}
             <path
               d={d}
-              fill="none"
+              fill={fillColor}
               fillRule="evenodd"
-              stroke="rgba(255,255,255,0.55)"
+              stroke={strokeColor}
               strokeWidth={S * 1.2}
               strokeLinejoin="round"
               style={{ filter: "drop-shadow(0 0 3px rgba(0,0,0,0.6))" }}
             />
 
-            {/* Region code — small, dimmer, with dark halo for readability */}
+            {/* Region code */}
             <text
               x={cx}
               y={cy - lineGap * 0.4}

@@ -109,7 +109,7 @@ export function FileDropzone({ onFileSelect, className }: FileDropzoneProps) {
         type="file"
         accept="image/*"
         onChange={handleFileInput}
-        className="absolute inset-0 opacity-0 cursor-pointer z-10"
+        className="absolute inset-0 opacity-0 cursor-pointer z-20"
       />
 
       {/* Animated border glow that rotates when active */}

@@ -2,6 +2,7 @@
 
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { ScanFace, Stethoscope, User, Settings, Play, Sparkles } from "lucide-react";
 import { FileDropzone } from "@/components/FileDropzone";
 import { useFaceStore } from "@/store/useFaceStore";
@@ -97,10 +98,10 @@ export default function Home() {
               {/* Floating Gradient Overlay at bottom */}
               <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/70 to-transparent rounded-b-xl pointer-events-none" />
 
-              {/* Floating 'Iniciar Análise' CTA Button */}
-              <button
-                onClick={handleStartAnalysis}
-                className="absolute bottom-8 left-1/2 -translate-x-1/2 group flex items-center gap-3 px-7 py-4 rounded-2xl font-semibold text-base text-white transition-all duration-300 z-20"
+              {/* Floating 'Iniciar Análise' CTA Link */}
+              <Link
+                href="/analysis"
+                className="absolute bottom-8 left-1/2 -translate-x-1/2 group flex items-center gap-3 px-7 py-4 rounded-2xl font-semibold text-base text-white transition-all duration-300 z-30"
                 style={{
                   background: "linear-gradient(135deg, rgba(14,165,233,0.9) 0%, rgba(99,102,241,0.9) 100%)",
                   boxShadow: "0 0 40px rgba(14,165,233,0.4), 0 8px 32px rgba(0,0,0,0.4)",
@@ -117,7 +118,7 @@ export default function Home() {
                   Iniciar Análise
                   <Play className="w-4 h-4 text-white/80 fill-white/80 ml-1 group-hover:translate-x-1 transition-transform duration-300" />
                 </span>
-              </button>
+              </Link>
 
               {/* Zero-storage badge */}
               <div className="absolute top-4 left-4 glass-panel px-3 py-1.5 rounded-lg flex items-center gap-2 border border-white/10 z-20">

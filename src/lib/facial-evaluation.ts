@@ -23,6 +23,10 @@ export const DEFAULT_TARGET_VECTOR: EvaluationFeatures = {
   mandibular_angle_deg:  123.0,
   nasolabial_angle_deg:  100.0,
   lip_ratio_lower_upper: 1.40,
+  bitemporal_bizygomatic_ratio: 0.825,
+  interpupillary_bizygomatic_ratio: 0.50,
+  nasal_wing_length: 1,
+  chin_projection: 1,
 };
 
 export const WEIGHTS: Record<keyof EvaluationFeatures, number> = {
@@ -38,6 +42,10 @@ export const WEIGHTS: Record<keyof EvaluationFeatures, number> = {
   mandibular_angle_deg:  0.08,
   nasolabial_angle_deg:  0.06,
   lip_ratio_lower_upper: 0.06,
+  bitemporal_bizygomatic_ratio: 0.10,
+  interpupillary_bizygomatic_ratio: 0.08,
+  nasal_wing_length: 0.05,
+  chin_projection: 0.05,
 };
 
 export const TOLERANCE: Record<keyof EvaluationFeatures, number> = {
@@ -53,6 +61,10 @@ export const TOLERANCE: Record<keyof EvaluationFeatures, number> = {
   mandibular_angle_deg:  6.0,
   nasolabial_angle_deg:  8.0,
   lip_ratio_lower_upper: 0.20,
+  bitemporal_bizygomatic_ratio: 0.025,
+  interpupillary_bizygomatic_ratio: 0.025,
+  nasal_wing_length: 0.20,
+  chin_projection: 0.20,
 };
 
 // =============================================================================
@@ -99,15 +111,20 @@ export function extractEvaluationFeatures(
   };
 
   const p = getP({
-    hairline: 10, glabella: 9, subnasale: 2, menton: 152,
+    hairline: 10,
+    glabella: 9,
+    nasion: 168,
+    subnasale: 2,
+    menton: 152,
     eyeOuterL: 33, eyeInnerL: 133, eyeInnerR: 362, eyeOuterR: 263,
     pupilL: 468, pupilR: 473,
     zygomaticL: 234, zygomaticR: 454,
+    bitemporalL: 21, bitemporalR: 251,
     noseL: 129, noseR: 358, noseTip: 4, columellaBase: 94,
     mouthL: 61, mouthR: 291,
     lipUpperTop: 0, lipUpperBot: 13, lipLowerTop: 14, lipLowerBot: 17,
     upperLipApex: 0,
-    gonionL: 172, ramusL: 132
+    gonionL: 172, gonionR: 397, ramusL: 132
   });
 
   if (!p) return null;
@@ -123,6 +140,10 @@ export function extractEvaluationFeatures(
   const lipUpperH = dist(p.lipUpperTop, p.lipUpperBot, w, h);
   const lipLowerH = dist(p.lipLowerTop, p.lipLowerBot, w, h);
 
+  // New Clinical Distances
+  const bitemporalW = dist(p.bitemporalL, p.bitemporalR, w, h);
+  const bigonialW = dist(p.gonionL, p.gonionR, w, h);
+
   return {
     thirds_upper:           dist(p.hairline, p.glabella, w, h) / faceH,
     thirds_middle:          dist(p.glabella, p.subnasale, w, h) / faceH,
@@ -136,6 +157,22 @@ export function extractEvaluationFeatures(
     mandibular_angle_deg:   angleDeg(p.ramusL, p.gonionL, p.menton, w, h),
     nasolabial_angle_deg:   angleDeg(p.noseTip, p.columellaBase, p.upperLipApex, w, h),
     lip_ratio_lower_upper:  lipUpperH > 0 ? lipLowerH / lipUpperH : 0,
+
+    // Horizontal Distances (in pixels/normalized units scaled by w/h)
+    bitemporal_width:       bitemporalW,
+    bizygomatic_width:      faceW,
+    interpupillary_distance: interpupil,
+    interalar_width:        noseW,
+    bigonial_width:         bigonialW,
+    intercommissural_width: mouthW,
+
+    // Clinical Ratios
+    bitemporal_bizygomatic_ratio: faceW > 0 ? bitemporalW / faceW : 0,
+    interpupillary_bizygomatic_ratio: faceW > 0 ? interpupil / faceW : 0,
+
+    // Profile placeholders (requires specific Z-depth or Profile View detection)
+    nasal_wing_length:      dist(p.noseL, p.noseTip, w, h),
+    chin_projection:        dist(p.gonionL, p.menton, w, h), // Approximation: Jawline length
   };
 }
 

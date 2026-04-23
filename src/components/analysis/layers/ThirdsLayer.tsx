@@ -41,9 +41,9 @@ export const ThirdsLayer = memo(function ThirdsLayer({
   const xEnd      = faceRight + span * 0.15;
 
   const color      = "#A3E635";
-  const strokeW    = S * 2.5;
-  const dashArr    = `${S * 8},${S * 5}`;
-  const dotR       = S * 4;
+  const strokeW    = S * 3.5;
+  const dashArr    = `${S * 10},${S * 4}`;
+  const dotR       = S * 5;
 
   const lines = [
     { y: y_trichion },
@@ -51,6 +51,7 @@ export const ThirdsLayer = memo(function ThirdsLayer({
     { y: y_subnasale },
     { y: y_menton },
   ];
+
 
   const thirds = [
     { label: thirdsData.upperThird.label,  mm: thirdsData.upperThird.mm,  midY: (y_trichion + y_glabela)   / 2 },
@@ -66,7 +67,7 @@ export const ThirdsLayer = memo(function ThirdsLayer({
 
         return (
           <g key={i}>
-            {/* Main horizontal line */}
+            {/* Main horizontal line with glow */}
             <g
               className="animate-line-sweep-h"
               style={{
@@ -76,7 +77,8 @@ export const ThirdsLayer = memo(function ThirdsLayer({
             >
               <line 
                 x1={xStart} y1={line.y} x2={xEnd} y2={line.y} 
-                stroke={lineCol} strokeWidth={strokeW} strokeDasharray={dashArr} opacity="0.8" 
+                stroke={lineCol} strokeWidth={strokeW} strokeDasharray={dashArr} opacity="1" 
+                style={{ filter: `drop-shadow(0 0 6px ${lineCol}80)` }}
               />
             </g>
 
@@ -84,12 +86,20 @@ export const ThirdsLayer = memo(function ThirdsLayer({
             <circle 
               cx={xStart} cy={line.y} r={dotR} fill={lineCol} 
               className="animate-dot-pop"
-              style={{ "--dot-r": `${dotR}px`, "--dot-delay": `${sweepDelay + 0.4}s` } as React.CSSProperties}
+              style={{ 
+                "--dot-r": `${dotR}px`, 
+                "--dot-delay": `${sweepDelay + 0.4}s`,
+                filter: `drop-shadow(0 0 8px ${lineCol})`
+              } as React.CSSProperties}
             />
             <circle 
               cx={xEnd} cy={line.y} r={dotR} fill={lineCol} 
               className="animate-dot-pop"
-              style={{ "--dot-r": `${dotR}px`, "--dot-delay": `${sweepDelay + 0.5}s` } as React.CSSProperties}
+              style={{ 
+                "--dot-r": `${dotR}px`, 
+                "--dot-delay": `${sweepDelay + 0.5}s`,
+                filter: `drop-shadow(0 0 8px ${lineCol})`
+              } as React.CSSProperties}
             />
 
             {/* Trichion adjust handle (invisible hit area) */}
@@ -118,7 +128,7 @@ export const ThirdsLayer = memo(function ThirdsLayer({
         );
       })}
 
-      {/* Labels */}
+      {/* Labels with Abbreviation */}
       {thirds.map((third, i) => {
         const labelDelay = (i + 1) * 0.15 + 0.5;
         return (
@@ -129,10 +139,10 @@ export const ThirdsLayer = memo(function ThirdsLayer({
           >
             <text 
               x={xEnd + S * 10} y={third.midY} 
-              fill="#FFFFFF" fontSize={S * 10} fontWeight="bold" fontFamily="monospace"
-              style={{ textShadow: "0 0 4px rgba(0,0,0,0.8)" }}
+              fill="#FFFFFF" fontSize={S * 12} fontWeight="900" fontFamily="monospace"
+              style={{ textShadow: "0 0 6px rgba(0,0,0,0.9), 1px 1px 0 rgba(0,0,0,1)" }}
             >
-              {third.label}: {third.mm}mm
+              {third.mm}mm
             </text>
           </g>
         );

@@ -7,10 +7,11 @@ import { cn } from "@/lib/utils";
 import {
   calcThirds, calcFifths, calcPixelsPerMm, calcLipRatio,
   calcMorphology, calcBizygomatic, calcBigonial, calcBitemporal, calcMentonian,
+  calcInterpupillary, calcInteralar, calcIntercommissural,
   getTopographicRegions, calcTopographicAreas,
-  ThirdsResult, FifthsResult, LipRatioResult, Landmark,
+  Landmark,
 } from "@/utils/facialAnalysis";
-import { useFaceStore } from "@/store/useFaceStore";
+import { useFaceStore, AnalysisResults } from "@/store/useFaceStore";
 
 import { LandmarksLayer }           from "./layers/LandmarksLayer";
 import { ClinicalFacilitatorsLayer } from "./layers/ClinicalFacilitatorsLayer";
@@ -32,13 +33,17 @@ interface LightTableProps {
   showBizygomatic?: boolean;
   showBigonial?:   boolean;
   showMentonian?:  boolean;
+  showInterpupillary?: boolean;
+  showInteralar?: boolean;
+  showIntercommissural?: boolean;
   showFacialShape?: boolean;
+  showFacialContour?: boolean;
   showRegions?:    boolean;
   activeRegions?:  Record<string, boolean>;
   trichionOverrideY:   number | null;
   onTrichionAdjust:    (y: number) => void;
-  analysisResults:     any;
-  onLandmarksDetected: (results: any) => void;
+  analysisResults:     AnalysisResults;
+  onLandmarksDetected: (results: Partial<AnalysisResults>) => void;
   onLandmarksLoad?:    (count: number) => void;
   onZoomChange?:       (zoom: number, baseScale: number) => void;
   showAreasLayer?:     boolean;
@@ -51,7 +56,10 @@ export function LightTable({
   imageUrl, landmarks, showLandmarks,
   showThirds, showFifths, showDistances,
   showBitemporal = false, showBizygomatic = false, showBigonial = false,
-  showMentonian = false, showFacialShape = false,
+  showMentonian = false,
+  showInterpupillary = false, showInteralar = false, showIntercommissural = false,
+  showFacialShape = false,
+  showFacialContour = false,
   showRegions = false, activeRegions = {},
   showAreasLayer = false,
   trichionOverrideY, onTrichionAdjust, analysisResults, onLandmarksDetected,
@@ -105,55 +113,9 @@ export function LightTable({
     e.stopPropagation(); setIsDraggingTrichion(false);
   }, []);
 
-  // ── Memoised calculations ────────────────────────────────────────────────────
-  const thirdsData = useMemo<ThirdsResult | null>(() =>
-    landmarks.length && dimensions.width
-      ? calcThirds(landmarks, dimensions.width, dimensions.height, trichionOverrideY) : null,
-    [landmarks, dimensions, trichionOverrideY]);
-
-  const fifthsData = useMemo<FifthsResult | null>(() =>
-    landmarks.length && dimensions.width
-      ? calcFifths(landmarks, dimensions.width, dimensions.height) : null,
-    [landmarks, dimensions]);
-
-  const lipRatioData = useMemo<LipRatioResult | null>(() => {
-    if (!landmarks.length || !dimensions.height) return null;
-    const pxPerMm = calcPixelsPerMm(landmarks, dimensions.width, dimensions.height) ?? 1;
-    return calcLipRatio(landmarks, dimensions.height, pxPerMm);
-  }, [landmarks, dimensions]);
-
-  const topographicRegions = useMemo(() =>
-    landmarks.length ? getTopographicRegions(landmarks) : [],
-    [landmarks]);
-
-  const morphology      = useMemo(() => landmarks.length && dimensions.width ? calcMorphology(landmarks, dimensions.width) : null, [landmarks, dimensions]);
-  const bizygomaticData = useMemo(() => landmarks.length && thirdsData?.pxPerMm ? calcBizygomatic(landmarks, dimensions.width, thirdsData.pxPerMm) : null, [landmarks, dimensions, thirdsData]);
-  const bigonialData    = useMemo(() => landmarks.length && thirdsData?.pxPerMm ? calcBigonial(landmarks, dimensions.width, thirdsData.pxPerMm)    : null, [landmarks, dimensions, thirdsData]);
-  const bitemporalData  = useMemo(() => landmarks.length && thirdsData?.pxPerMm ? calcBitemporal(landmarks, dimensions.width, thirdsData.pxPerMm)  : null, [landmarks, dimensions, thirdsData]);
-  const mentonianData   = useMemo(() => landmarks.length && thirdsData?.pxPerMm ? calcMentonian(landmarks, dimensions.width, thirdsData.pxPerMm)   : null, [landmarks, dimensions, thirdsData]);
-
-  const topographicAreas = useMemo(() => {
-    if (!landmarks.length || !dimensions.width) return null;
-    const pxPerMm = thirdsData?.pxPerMm ?? 1;
-    return calcTopographicAreas(landmarks, dimensions.width, dimensions.height, pxPerMm);
-  }, [landmarks, dimensions, thirdsData]);
-
-
-  useEffect(() => {
-    if (landmarks.length > 0 && dimensions.width > 0) {
-      setAnalysisResults({
-        thirds: thirdsData, fifths: fifthsData, lipRatio: lipRatioData,
-        landmarks, topographicRegions,
-        pxPerMm: thirdsData?.pxPerMm ?? null,
-        morphology, bizygomatic: bizygomaticData, bigonial: bigonialData,
-        bitemporal: bitemporalData, mentonian: mentonianData,
-        topographicAreas,
-      });
-    }
-  }, [landmarks, dimensions, thirdsData, fifthsData, lipRatioData, topographicRegions, bizygomaticData, bigonialData, bitemporalData, mentonianData, topographicAreas, setAnalysisResults]);
-
-  const showAnyDistance = showBitemporal || showBizygomatic || showBigonial || showMentonian || showFacialShape;
-  const showAnyRegion   = showRegions || Object.values(activeRegions).some(Boolean);
+  // ── Derived View Checks ──────────────────────────────────────────────────────
+  const showAnyDistance = showBitemporal || showBizygomatic || showBigonial || showMentonian || showFacialShape || showFacialContour || showInterpupillary || showInteralar || showIntercommissural;
+  const showAnyRegion   = showRegions || (analysisResults.regions && Object.values(analysisResults.regions).some(Boolean));
 
   return (
     <div ref={containerRef} className="flex-1 w-full h-full bg-[#000105] relative flex items-center justify-center overflow-hidden">
@@ -214,13 +176,13 @@ export function LightTable({
                 <ClinicalFacilitatorsLayer landmarks={landmarks} dimensions={dimensions} />
 
                 <AnimatePresence mode="wait">
-                  {showAnyRegion && (
-                    <TopographicRegionsLayer key="regions" topographicRegions={topographicRegions} dimensions={dimensions} showRegions={showRegions} activeRegions={activeRegions} trichionOverrideY={trichionOverrideY} landmarks={landmarks} />
+                  {showAnyRegion && analysisResults.topographicRegions && (
+                    <TopographicRegionsLayer key="regions" topographicRegions={analysisResults.topographicRegions} dimensions={dimensions} showRegions={showRegions} activeRegions={activeRegions} trichionOverrideY={trichionOverrideY} landmarks={landmarks} />
                   )}
                 </AnimatePresence>
 
                 <AnimatePresence>
-                  {showAreasLayer && analysisResults.topographicAreas?.length > 0 && (
+                  {showAreasLayer && analysisResults.topographicAreas && analysisResults.topographicAreas.length > 0 && (
                     <TopographicAreasLayer
                       key="areas"
                       landmarks={landmarks}
@@ -232,18 +194,18 @@ export function LightTable({
                 </AnimatePresence>
 
                 <AnimatePresence mode="wait">
-                  {showThirds && thirdsData && (
+                  {showThirds && analysisResults.thirds && (
                     <motion.g key="thirds" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4, ease: "easeInOut" }}>
-                      <ThirdsLayer thirdsData={thirdsData} landmarks={landmarks} dimensions={dimensions} trichionOverrideY={trichionOverrideY} showThirds={showThirds} onTrichionPointerDown={handleTrichionPointerDown} onTrichionPointerMove={handleTrichionPointerMove} onTrichionPointerUp={handleTrichionPointerUp} />
-                      {lipRatioData && <LipRatioLayer lipRatioData={lipRatioData} landmarks={landmarks} dimensions={dimensions} />}
+                      <ThirdsLayer thirdsData={analysisResults.thirds} landmarks={landmarks} dimensions={dimensions} trichionOverrideY={trichionOverrideY} showThirds={showThirds} onTrichionPointerDown={handleTrichionPointerDown} onTrichionPointerMove={handleTrichionPointerMove} onTrichionPointerUp={handleTrichionPointerUp} />
+                      {analysisResults.lipRatio && <LipRatioLayer lipRatioData={analysisResults.lipRatio} landmarks={landmarks} dimensions={dimensions} />}
                     </motion.g>
                   )}
                 </AnimatePresence>
 
                 <AnimatePresence mode="wait">
-                  {showFifths && fifthsData && (
+                  {showFifths && analysisResults.fifths && (
                     <motion.g key="fifths" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4, ease: "easeInOut" }}>
-                      <FifthsLayer fifthsData={fifthsData} landmarks={landmarks} dimensions={dimensions} />
+                      <FifthsLayer fifthsData={analysisResults.fifths} landmarks={landmarks} dimensions={dimensions} />
                     </motion.g>
                   )}
                 </AnimatePresence>
@@ -251,10 +213,30 @@ export function LightTable({
                 <AnimatePresence mode="wait">
                   {showAnyDistance && (
                     <motion.g key="distances" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }}>
-                      <DistancesLayer landmarks={landmarks} dimensions={dimensions} showBitemporal={showBitemporal} showBizygomatic={showBizygomatic} showBigonial={showBigonial} showMentonian={showMentonian} showFacialShape={showFacialShape} bitemporalData={bitemporalData} bizygomaticData={bizygomaticData} bigonialData={bigonialData} mentonianData={mentonianData} />
+                      <DistancesLayer 
+                        landmarks={landmarks} 
+                        dimensions={dimensions}
+                        showBitemporal={showBitemporal} 
+                        showBizygomatic={showBizygomatic} 
+                        showBigonial={showBigonial} 
+                        showMentonian={showMentonian} 
+                        showInterpupillary={showInterpupillary}
+                        showInteralar={showInteralar}
+                        showIntercommissural={showIntercommissural}
+                        showFacialShape={showFacialShape}
+                        showFacialContour={showFacialContour}
+                        bitemporalData={analysisResults.bitemporal}
+                        bizygomaticData={analysisResults.bizygomatic}
+                        bigonialData={analysisResults.bigonial}
+                        mentonianData={analysisResults.mentonian}
+                        interpupillaryData={analysisResults.interpupillary}
+                        interalarData={analysisResults.interalar}
+                        intercommissuralData={analysisResults.intercommissural}
+                      />
                     </motion.g>
                   )}
                 </AnimatePresence>
+
               </svg>
             )}
           </div>
