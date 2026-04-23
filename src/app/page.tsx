@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ScanFace, Stethoscope, User, Settings, Play, Sparkles } from "lucide-react";
 import { FileDropzone } from "@/components/FileDropzone";

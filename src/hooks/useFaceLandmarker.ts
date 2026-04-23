@@ -45,7 +45,7 @@ export function useFaceLandmarker() {
         try {
           await initializationPromise;
           if (active) setIsLoaded(true);
-        } catch (_err) {
+        } catch {
           if (active) setError("Falha ao carregar o motor facial.");
         }
         return;
@@ -61,7 +61,7 @@ export function useFaceLandmarker() {
           
           try {
             instance = await createLandmarker("GPU");
-          } catch (_gpuErr) {
+          } catch {
             console.warn("GPU failed, attempting CPU fallback...");
             instance = await createLandmarker("CPU");
           }
@@ -79,7 +79,7 @@ export function useFaceLandmarker() {
       try {
         await initializationPromise;
         if (active) setIsLoaded(true);
-      } catch (_err) {
+      } catch {
         if (active) setError("Falha ao carregar o motor facial.");
       }
     }

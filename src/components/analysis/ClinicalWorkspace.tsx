@@ -340,11 +340,8 @@ export function ClinicalWorkspace() {
             activeRegions={analysisResults.regions}
             showAreasLayer={showAreasPanel}
             trichionOverrideY={trichionOverrideY}
-            activeTool={activeTool}
             onTrichionAdjust={setTrichionOverrideY}
             analysisResults={analysisResults}
-            onLandmarksDetected={setAnalysisResults}
-            resetKey={resetKey}
             transformRef={transformRef}
             onZoomChange={handleZoomChange}
             showLandmarkNumbers={showLandmarkNumbers}
